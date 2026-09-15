@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Models\Vehicle;
 use App\Services\Protrack\ProtrackClient;
 
 Route::get('/', function () {
@@ -19,6 +20,7 @@ Route::get('/protrack/test', function (
     ];
 });
 
+
 Route::get('/protrack/devices', function (
     ProtrackClient $protrack
 ) {
@@ -26,6 +28,7 @@ Route::get('/protrack/devices', function (
         $protrack->devices()
     );
 });
+
 
 Route::get('/protrack/device-count', function (
     ProtrackClient $protrack
@@ -37,6 +40,7 @@ Route::get('/protrack/device-count', function (
         'devices' => $devices,
     ]);
 });
+
 
 Route::get('/protrack/accounts', function (
     ProtrackClient $protrack
@@ -58,12 +62,57 @@ Route::get('/protrack/accounts', function (
     return response()->json($result);
 });
 
-# delete this late, its a test
+
 Route::get('/protrack/track/{imei}', function (
-    string $imei,
-    ProtrackClient $protrack
+    string $imei
 ) {
-    return response()->json(
-        $protrack->track([$imei])
-    );
+    $vehicle = Vehicle::query()
+        ->where('imei', $imei)
+        ->where('active', true)
+        ->first();
+
+    if (! $vehicle) {
+        return response()->json([
+            'error' => 'Vehicle not found',
+            'imei' => $imei,
+        ], 404);
+    }
+
+    $position = $vehicle->positions()
+        ->whereNotNull('latitude')
+        ->whereNotNull('longitude')
+        ->latest('gps_time')
+        ->first();
+
+    if (! $position) {
+        return response()->json([
+            'error' => 'No GPS position found',
+            'imei' => $imei,
+        ], 404);
+    }
+
+    return response()->json([
+        'imei' => $vehicle->imei,
+
+        'device_name' => $vehicle->device_name,
+
+        'plate_number' => $vehicle->plate_number,
+
+        'latitude' => $position->latitude,
+
+        'longitude' => $position->longitude,
+
+        'speed' => $position->speed,
+
+        'course' => $position->course,
+
+        'gps_time' => $position->gps_time,
+
+        'server_time' => $position->server_time,
+
+        'location' => $vehicle->location_name,
+
+        'location_updated_at' =>
+            $vehicle->location_updated_at,
+    ]);
 });

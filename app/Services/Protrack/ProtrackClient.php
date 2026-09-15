@@ -342,4 +342,240 @@ class ProtrackClient
 
         return $data['record'] ?? [];
     }
+# Sync Vehicles to the Database
+    public function syncVehicles(): int
+{
+    $devices = $this->devices();
+
+    $count = 0;
+
+    foreach ($devices as $device) {
+        if (empty($device['imei'])) {
+            continue;
+        }
+
+        \App\Models\Vehicle::updateOrCreate(
+            [
+                'imei' => $device['imei'],
+            ],
+            [
+                'device_name' => $device['devicename'] ?? null,
+                'plate_number' => $device['platenumber'] ?? null,
+                'device_type' => $device['devicetype'] ?? null,
+                'simcard' => $device['simcard'] ?? null,
+                'iccid' => $device['iccid'] ?? null,
+
+                'activated_at' => !empty($device['activatedtime'])
+                    ? \Carbon\Carbon::createFromTimestamp(
+                        $device['activatedtime']
+                    )
+                    : null,
+
+                'online_at' => !empty($device['onlinetime'])
+                    ? \Carbon\Carbon::createFromTimestamp(
+                        $device['onlinetime']
+                    )
+                    : null,
+
+                'platform_due_at' => !empty($device['platformduetime'])
+                    ? \Carbon\Carbon::createFromTimestamp(
+                        $device['platformduetime']
+                    )
+                    : null,
+
+                'active' => true,
+            ]
+        );
+
+        $count++;
+    }
+
+    return $count;
+}
+
+#fleet tracking synchronization
+public function syncPositions(): int
+{
+    $vehicles = \App\Models\Vehicle::query()
+        ->where('active', true)
+        ->get();
+
+    if ($vehicles->isEmpty()) {
+        return 0;
+    }
+
+    $imeis = $vehicles
+        ->pluck('imei')
+        ->filter()
+        ->values()
+        ->all();
+
+    $records = $this->track($imeis);
+
+    $count = 0;
+
+    foreach ($records as $record) {
+        $imei = $record['imei'] ?? null;
+
+        if (!$imei) {
+            continue;
+        }
+
+        $vehicle = $vehicles->firstWhere('imei', $imei);
+
+        if (!$vehicle) {
+            continue;
+        }
+
+        $gpsTime = $this->nullableTimestamp(
+            $record['gpstime'] ?? null
+        );
+
+        /*
+         * Don't insert the same GPS position twice.
+         */
+        if (
+            $gpsTime !== null &&
+            $vehicle->last_position_at !== null &&
+            $gpsTime <= $vehicle->last_position_at->timestamp
+        ) {
+            continue;
+        }
+
+        $vehicle->positions()->create([
+            'latitude' => $this->nullableNumber(
+                $record['latitude'] ?? null
+            ),
+
+            'longitude' => $this->nullableNumber(
+                $record['longitude'] ?? null
+            ),
+
+            'speed' => $this->nullableNumber(
+                $record['speed'] ?? null
+            ),
+
+            'course' => $this->nullableNumber(
+                $record['course'] ?? null
+            ),
+
+            'battery' => $this->nullableNumber(
+                $record['battery'] ?? null
+            ),
+
+            'mileage' => $this->nullableInteger(
+                $record['mileage'] ?? null
+            ),
+
+            'today_mileage' => $this->nullableInteger(
+                $record['todaymileage'] ?? null
+            ),
+
+            'odometer' => $this->nullableInteger(
+                $record['odometer'] ?? null
+            ),
+
+            'acc_status' => $this->nullableInteger(
+                $record['accstatus'] ?? null
+            ),
+
+            'charge_status' => $this->nullableInteger(
+                $record['chargestatus'] ?? null
+            ),
+
+            'oil_power_status' => $this->nullableInteger(
+                $record['oilpowerstatus'] ?? null
+            ),
+
+            'door_status' => $this->nullableInteger(
+                $record['doorstatus'] ?? null
+            ),
+
+            'defence_status' => $this->nullableInteger(
+                $record['defencestatus'] ?? null
+            ),
+
+            'data_status' => $this->nullableInteger(
+                $record['datastatus'] ?? null
+            ),
+
+            'fuel' => $record['fuel'] ?: null,
+
+            'external_power' => $record['externalpower'] ?: null,
+
+            'heart_time' => $this->nullableTimestamp(
+                $record['hearttime'] ?? null
+            ),
+
+            'gps_time' => $gpsTime,
+
+            'server_time' => $this->nullableTimestamp(
+                $record['servertime'] ?? null
+            ),
+
+            'system_time' => $this->nullableTimestamp(
+                $record['systemtime'] ?? null
+            ),
+
+            'temperature' => !empty($record['temperature'])
+                ? $record['temperature']
+                : null,
+        ]);
+
+        if ($gpsTime !== null) {
+            $vehicle->update([
+                'last_position_at' =>
+                    \Carbon\Carbon::createFromTimestamp($gpsTime),
+            ]);
+        }
+
+        $count++;
+    }
+
+    return $count;
+}
+
+private function nullableNumber(mixed $value): ?float
+{
+    if ($value === null || $value === '') {
+        return null;
+    }
+
+    if (!is_numeric($value)) {
+        return null;
+    }
+
+    return (float) $value;
+}
+
+private function nullableInteger(mixed $value): ?int
+{
+    if ($value === null || $value === '') {
+        return null;
+    }
+
+    if (!is_numeric($value)) {
+        return null;
+    }
+
+    $value = (int) $value;
+
+    return $value >= 0 ? $value : null;
+}
+
+private function nullableTimestamp(mixed $value): ?int
+{
+    if ($value === null || $value === '') {
+        return null;
+    }
+
+    if (!is_numeric($value)) {
+        return null;
+    }
+
+    $value = (int) $value;
+
+    return $value > 0 ? $value : null;
+}
+
 }
