@@ -11,6 +11,7 @@ class ProtrackClient
     private string $account;
     private string $password;
     private int $timeout;
+    private string $vehicleAccount;
 
     public function __construct()
     {
@@ -18,6 +19,11 @@ class ProtrackClient
         $this->account = config('protrack.account');
         $this->password = config('protrack.password');
         $this->timeout = (int) config('protrack.timeout', 30);
+
+        $this->vehicleAccount = config(
+            'protrack.vehicle_account',
+            'kpfctrack1'
+        );
     }
 
     /**
@@ -73,11 +79,16 @@ class ProtrackClient
     }
 
     /**
-     * Get all devices associated with the Protrack account.
+     * Get all devices associated with the configured
+     * Protrack vehicle account.
      *
-     * Protrack endpoint:
+     * Authentication is performed using the admin account,
+     * while the device list is requested for the configured
+     * vehicle account.
      *
-     * GET /api/device/list
+     * Default vehicle account:
+     *
+     * kpfctrack1
      */
     public function devices(): array
     {
@@ -88,7 +99,7 @@ class ProtrackClient
                 $this->baseUrl . '/api/device/list',
                 [
                     'access_token' => $token,
-                    'account' => $this->account,
+                    'account' => $this->vehicleAccount,
                 ]
             );
 
@@ -163,9 +174,9 @@ class ProtrackClient
     /**
      * Get historical playback data for a device.
      *
-     * $imei     Device IMEI
-     * $begintime Unix timestamp
-     * $endtime   Unix timestamp
+     * $imei       Device IMEI
+     * $begintime   Unix timestamp
+     * $endtime     Unix timestamp
      */
     public function playback(
         string $imei,
@@ -241,6 +252,10 @@ class ProtrackClient
 
     /**
      * Get mileage information for devices.
+     *
+     * $imeis       Array of device IMEIs
+     * $begintime   Unix timestamp
+     * $endtime     Unix timestamp
      */
     public function mileage(
         array $imeis,
@@ -281,6 +296,10 @@ class ProtrackClient
 
     /**
      * Get alarm records.
+     *
+     * $begintime   Unix timestamp
+     * $endtime     Unix timestamp
+     * $imeis       Optional array of device IMEIs
      */
     public function alarms(
         int $begintime,

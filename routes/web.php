@@ -37,3 +37,33 @@ Route::get('/protrack/device-count', function (
         'devices' => $devices,
     ]);
 });
+
+Route::get('/protrack/accounts', function (
+    ProtrackClient $protrack
+) {
+    $accounts = config('protrack.accounts', []);
+
+    $result = [];
+
+    foreach ($accounts as $account) {
+        $devices = $protrack->devicesForAccount($account);
+
+        $result[] = [
+            'account' => $account,
+            'device_count' => count($devices),
+            'devices' => $devices,
+        ];
+    }
+
+    return response()->json($result);
+});
+
+# delete this late, its a test
+Route::get('/protrack/track/{imei}', function (
+    string $imei,
+    ProtrackClient $protrack
+) {
+    return response()->json(
+        $protrack->track([$imei])
+    );
+});
