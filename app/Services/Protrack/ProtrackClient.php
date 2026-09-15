@@ -2,19 +2,27 @@
 
 namespace App\Services\Protrack;
 
+use App\Models\Vehicle;
+use App\Services\VehicleRouteService;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
 class ProtrackClient
 {
     private string $baseUrl;
+
     private string $account;
+
     private string $password;
+
     private int $timeout;
+
     private string $vehicleAccount;
 
-    public function __construct()
-    {
+    public function __construct(
+        private VehicleRouteService $routeService
+    ) {
         $this->baseUrl = config('protrack.base_url');
         $this->account = config('protrack.account');
         $this->password = config('protrack.password');
@@ -38,12 +46,12 @@ class ProtrackClient
         $timestamp = time();
 
         $signature = md5(
-            md5($this->password) . $timestamp
+            md5($this->password).$timestamp
         );
 
         $response = Http::timeout($this->timeout)
             ->get(
-                $this->baseUrl . '/api/authorization',
+                $this->baseUrl.'/api/authorization',
                 [
                     'time' => $timestamp,
                     'account' => $this->account,
@@ -53,7 +61,7 @@ class ProtrackClient
 
         if ($response->failed()) {
             throw new RuntimeException(
-                'Protrack HTTP request failed: ' .
+                'Protrack HTTP request failed: '.
                 $response->status()
             );
         }
@@ -62,14 +70,14 @@ class ProtrackClient
 
         if (($data['code'] ?? null) !== 0) {
             throw new RuntimeException(
-                'Protrack authentication failed: ' .
+                'Protrack authentication failed: '.
                 $response->body()
             );
         }
 
         $token = $data['record']['access_token'] ?? null;
 
-        if (!$token) {
+        if (! $token) {
             throw new RuntimeException(
                 'Protrack did not return an access token.'
             );
@@ -96,7 +104,7 @@ class ProtrackClient
 
         $response = Http::timeout($this->timeout)
             ->get(
-                $this->baseUrl . '/api/device/list',
+                $this->baseUrl.'/api/device/list',
                 [
                     'access_token' => $token,
                     'account' => $this->vehicleAccount,
@@ -105,7 +113,7 @@ class ProtrackClient
 
         if ($response->failed()) {
             throw new RuntimeException(
-                'Protrack device request failed: ' .
+                'Protrack device request failed: '.
                 $response->status()
             );
         }
@@ -114,7 +122,7 @@ class ProtrackClient
 
         if (($data['code'] ?? null) !== 0) {
             throw new RuntimeException(
-                'Protrack device request failed: ' .
+                'Protrack device request failed: '.
                 $response->body()
             );
         }
@@ -142,19 +150,19 @@ class ProtrackClient
             'access_token' => $token,
         ];
 
-        if (!empty($imeis)) {
+        if (! empty($imeis)) {
             $params['imeis'] = implode(',', $imeis);
         }
 
         $response = Http::timeout($this->timeout)
             ->get(
-                $this->baseUrl . '/api/track',
+                $this->baseUrl.'/api/track',
                 $params
             );
 
         if ($response->failed()) {
             throw new RuntimeException(
-                'Protrack tracking request failed: ' .
+                'Protrack tracking request failed: '.
                 $response->status()
             );
         }
@@ -163,7 +171,7 @@ class ProtrackClient
 
         if (($data['code'] ?? null) !== 0) {
             throw new RuntimeException(
-                'Protrack tracking request failed: ' .
+                'Protrack tracking request failed: '.
                 $response->body()
             );
         }
@@ -187,7 +195,7 @@ class ProtrackClient
 
         $response = Http::timeout($this->timeout)
             ->get(
-                $this->baseUrl . '/api/playback',
+                $this->baseUrl.'/api/playback',
                 [
                     'access_token' => $token,
                     'imei' => $imei,
@@ -198,7 +206,7 @@ class ProtrackClient
 
         if ($response->failed()) {
             throw new RuntimeException(
-                'Protrack playback request failed: ' .
+                'Protrack playback request failed: '.
                 $response->status()
             );
         }
@@ -207,7 +215,7 @@ class ProtrackClient
 
         if (($data['code'] ?? null) !== 0) {
             throw new RuntimeException(
-                'Protrack playback request failed: ' .
+                'Protrack playback request failed: '.
                 $response->body()
             );
         }
@@ -224,7 +232,7 @@ class ProtrackClient
 
         $response = Http::timeout($this->timeout)
             ->get(
-                $this->baseUrl . '/api/device/detail',
+                $this->baseUrl.'/api/device/detail',
                 [
                     'access_token' => $token,
                     'imei' => $imei,
@@ -233,7 +241,7 @@ class ProtrackClient
 
         if ($response->failed()) {
             throw new RuntimeException(
-                'Protrack device detail request failed: ' .
+                'Protrack device detail request failed: '.
                 $response->status()
             );
         }
@@ -242,7 +250,7 @@ class ProtrackClient
 
         if (($data['code'] ?? null) !== 0) {
             throw new RuntimeException(
-                'Protrack device detail request failed: ' .
+                'Protrack device detail request failed: '.
                 $response->body()
             );
         }
@@ -266,7 +274,7 @@ class ProtrackClient
 
         $response = Http::timeout($this->timeout)
             ->get(
-                $this->baseUrl . '/api/device/mileage',
+                $this->baseUrl.'/api/device/mileage',
                 [
                     'access_token' => $token,
                     'imeis' => implode(',', $imeis),
@@ -277,7 +285,7 @@ class ProtrackClient
 
         if ($response->failed()) {
             throw new RuntimeException(
-                'Protrack mileage request failed: ' .
+                'Protrack mileage request failed: '.
                 $response->status()
             );
         }
@@ -286,7 +294,7 @@ class ProtrackClient
 
         if (($data['code'] ?? null) !== 0) {
             throw new RuntimeException(
-                'Protrack mileage request failed: ' .
+                'Protrack mileage request failed: '.
                 $response->body()
             );
         }
@@ -314,19 +322,19 @@ class ProtrackClient
             'endtime' => $endtime,
         ];
 
-        if (!empty($imeis)) {
+        if (! empty($imeis)) {
             $params['imeis'] = implode(',', $imeis);
         }
 
         $response = Http::timeout($this->timeout)
             ->get(
-                $this->baseUrl . '/api/alarm/list2',
+                $this->baseUrl.'/api/alarm/list2',
                 $params
             );
 
         if ($response->failed()) {
             throw new RuntimeException(
-                'Protrack alarm request failed: ' .
+                'Protrack alarm request failed: '.
                 $response->status()
             );
         }
@@ -335,68 +343,69 @@ class ProtrackClient
 
         if (($data['code'] ?? null) !== 0) {
             throw new RuntimeException(
-                'Protrack alarm request failed: ' .
+                'Protrack alarm request failed: '.
                 $response->body()
             );
         }
 
         return $data['record'] ?? [];
     }
-# Sync Vehicles to the Database
+
+    // Sync Vehicles to the Database
     public function syncVehicles(): int
-{
-    $devices = $this->devices();
+    {
+        $devices = $this->devices();
 
-    $count = 0;
+        $count = 0;
 
-    foreach ($devices as $device) {
-        if (empty($device['imei'])) {
-            continue;
+        foreach ($devices as $device) {
+            if (empty($device['imei'])) {
+                continue;
+            }
+
+            Vehicle::updateOrCreate(
+                [
+                    'imei' => $device['imei'],
+                ],
+                [
+                    'device_name' => $device['devicename'] ?? null,
+                    'plate_number' => $device['platenumber'] ?? null,
+                    'device_type' => $device['devicetype'] ?? null,
+                    'simcard' => $device['simcard'] ?? null,
+                    'iccid' => $device['iccid'] ?? null,
+
+                    'activated_at' => ! empty($device['activatedtime'])
+                        ? Carbon::createFromTimestamp(
+                            $device['activatedtime']
+                        )
+                        : null,
+
+                    'online_at' => ! empty($device['onlinetime'])
+                        ? Carbon::createFromTimestamp(
+                            $device['onlinetime']
+                        )
+                        : null,
+
+                    'platform_due_at' => ! empty($device['platformduetime'])
+                        ? Carbon::createFromTimestamp(
+                            $device['platformduetime']
+                        )
+                        : null,
+
+                    'active' => true,
+                ]
+            );
+
+            $count++;
         }
 
-        \App\Models\Vehicle::updateOrCreate(
-            [
-                'imei' => $device['imei'],
-            ],
-            [
-                'device_name' => $device['devicename'] ?? null,
-                'plate_number' => $device['platenumber'] ?? null,
-                'device_type' => $device['devicetype'] ?? null,
-                'simcard' => $device['simcard'] ?? null,
-                'iccid' => $device['iccid'] ?? null,
-
-                'activated_at' => !empty($device['activatedtime'])
-                    ? \Carbon\Carbon::createFromTimestamp(
-                        $device['activatedtime']
-                    )
-                    : null,
-
-                'online_at' => !empty($device['onlinetime'])
-                    ? \Carbon\Carbon::createFromTimestamp(
-                        $device['onlinetime']
-                    )
-                    : null,
-
-                'platform_due_at' => !empty($device['platformduetime'])
-                    ? \Carbon\Carbon::createFromTimestamp(
-                        $device['platformduetime']
-                    )
-                    : null,
-
-                'active' => true,
-            ]
-        );
-
-        $count++;
+        return $count;
     }
 
-    return $count;
-}
-
-#fleet tracking synchronization
+// fleet tracking synchronization
 public function syncPositions(): int
 {
-    $vehicles = \App\Models\Vehicle::query()
+    $vehicles = Vehicle::query()
         ->where('active', true)
         ->get();
 
@@ -417,13 +426,13 @@ public function syncPositions(): int
     foreach ($records as $record) {
         $imei = $record['imei'] ?? null;
 
-        if (!$imei) {
+        if (! $imei) {
             continue;
         }
 
         $vehicle = $vehicles->firstWhere('imei', $imei);
 
-        if (!$vehicle) {
+        if (! $vehicle) {
             continue;
         }
 
@@ -442,6 +451,9 @@ public function syncPositions(): int
             continue;
         }
 
+        /*
+         * Store the new GPS position.
+         */
         $vehicle->positions()->create([
             'latitude' => $this->nullableNumber(
                 $record['latitude'] ?? null
@@ -517,16 +529,48 @@ public function syncPositions(): int
                 $record['systemtime'] ?? null
             ),
 
-            'temperature' => !empty($record['temperature'])
+            'temperature' => ! empty($record['temperature'])
                 ? $record['temperature']
                 : null,
         ]);
 
+        /*
+         * Update the vehicle's latest GPS timestamp.
+         */
         if ($gpsTime !== null) {
             $vehicle->update([
-                'last_position_at' =>
-                    \Carbon\Carbon::createFromTimestamp($gpsTime),
+                'last_position_at' => Carbon::createFromTimestamp(
+                    $gpsTime
+                ),
             ]);
+        }
+
+        /*
+         * Route calculation must never prevent GPS synchronization.
+         *
+         * VehicleRouteService itself decides whether OSRM is needed:
+         *
+         * - destination changed -> recalculate
+         * - first route -> calculate
+         * - vehicle moved more than 800m -> recalculate
+         * - otherwise -> skip
+         *
+         * If OSRM or route calculation fails, the GPS position
+         * has already been safely stored.
+         */
+        try {
+            $this->routeService->updateRoute(
+                $vehicle->fresh()
+            );
+        } catch (\Throwable $e) {
+            \Log::error(
+                'Vehicle route calculation failed.',
+                [
+                    'vehicle_id' => $vehicle->id,
+                    'imei' => $vehicle->imei,
+                    'error' => $e->getMessage(),
+                ]
+            );
         }
 
         $count++;
@@ -535,47 +579,46 @@ public function syncPositions(): int
     return $count;
 }
 
-private function nullableNumber(mixed $value): ?float
-{
-    if ($value === null || $value === '') {
-        return null;
+    private function nullableNumber(mixed $value): ?float
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if (! is_numeric($value)) {
+            return null;
+        }
+
+        return (float) $value;
     }
 
-    if (!is_numeric($value)) {
-        return null;
+    private function nullableInteger(mixed $value): ?int
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if (! is_numeric($value)) {
+            return null;
+        }
+
+        $value = (int) $value;
+
+        return $value >= 0 ? $value : null;
     }
 
-    return (float) $value;
-}
+    private function nullableTimestamp(mixed $value): ?int
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
 
-private function nullableInteger(mixed $value): ?int
-{
-    if ($value === null || $value === '') {
-        return null;
+        if (! is_numeric($value)) {
+            return null;
+        }
+
+        $value = (int) $value;
+
+        return $value > 0 ? $value : null;
     }
-
-    if (!is_numeric($value)) {
-        return null;
-    }
-
-    $value = (int) $value;
-
-    return $value >= 0 ? $value : null;
-}
-
-private function nullableTimestamp(mixed $value): ?int
-{
-    if ($value === null || $value === '') {
-        return null;
-    }
-
-    if (!is_numeric($value)) {
-        return null;
-    }
-
-    $value = (int) $value;
-
-    return $value > 0 ? $value : null;
-}
-
 }

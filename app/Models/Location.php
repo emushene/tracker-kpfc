@@ -5,30 +5,28 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Shop extends Model
+class Location extends Model
 {
     protected $fillable = [
         'name',
-        'code',
+        'type',
         'address',
         'latitude',
         'longitude',
-        'radius_meters',
         'active',
     ];
 
     protected $casts = [
         'latitude' => 'float',
         'longitude' => 'float',
-        'radius_meters' => 'integer',
         'active' => 'boolean',
     ];
 
-    public function vehicles(): HasMany
+    public function deployments(): HasMany
     {
         return $this->hasMany(
-            Vehicle::class,
-            'assigned_shop_id'
+            VehicleDeployment::class,
+            'destination_location_id'
         );
     }
 }
