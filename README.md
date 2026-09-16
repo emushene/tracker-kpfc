@@ -22,3 +22,10 @@ Monitoring/health checks
 Deployment process
 
 The important distinction now is testing what we've already built vs. finishing the system.
+
+
+# Commands
+php artisan schedule:list
+php artisan protrack:sync-positions
+php artisan schedule:work
+php artisan vehicles:update-locations

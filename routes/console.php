@@ -26,15 +26,17 @@ Schedule::command('protrack:sync-positions')
 
 /*
 |--------------------------------------------------------------------------
-| Vehicle Location Resolution
+| Protrack Location + Google Sheets Synchronization
 |--------------------------------------------------------------------------
 |
-| Resolve human-readable vehicle locations every 10 minutes,
-| but only between 06:00 and 18:00.
+| Every 10 minutes between 06:00 and 18:00:
+|
+| 1. Resolve human-readable vehicle locations
+| 2. Update the existing Google Sheet
 |
 */
 
-Schedule::command('vehicles:update-locations')
+Schedule::command('protrack:refresh-locations')
     ->everyTenMinutes()
     ->between('06:00', '18:00')
     ->withoutOverlapping();
