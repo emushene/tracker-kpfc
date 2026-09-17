@@ -46,7 +46,7 @@ class ShopLocationService
     /**
      * Calculate distance between two GPS coordinates in metres.
      */
-    private function distanceInMeters(
+    public function distanceInMeters(
         float $latitude1,
         float $longitude1,
         float $latitude2,

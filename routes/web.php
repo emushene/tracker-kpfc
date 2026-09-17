@@ -1,25 +1,28 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Models\Vehicle;
 use App\Services\Protrack\ProtrackClient;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
+// THIS IS A TEST ROUTE FOR THE DASHBOARD, REMOVE IT WHEN DONE
+Route::get('/test-dashboard', function () {
+    return response()->file(public_path('test-dashboard.html'));
+});
 
 Route::get('/protrack/test', function (
     ProtrackClient $protrack
 ) {
     return [
         'status' => 'connected',
-        'token_received' => !empty(
+        'token_received' => ! empty(
             $protrack->getAccessToken()
         ),
     ];
 });
-
 
 Route::get('/protrack/devices', function (
     ProtrackClient $protrack
@@ -28,7 +31,6 @@ Route::get('/protrack/devices', function (
         $protrack->devices()
     );
 });
-
 
 Route::get('/protrack/device-count', function (
     ProtrackClient $protrack
@@ -40,7 +42,6 @@ Route::get('/protrack/device-count', function (
         'devices' => $devices,
     ]);
 });
-
 
 Route::get('/protrack/accounts', function (
     ProtrackClient $protrack
@@ -61,7 +62,6 @@ Route::get('/protrack/accounts', function (
 
     return response()->json($result);
 });
-
 
 Route::get('/protrack/track/{imei}', function (
     string $imei
@@ -112,7 +112,6 @@ Route::get('/protrack/track/{imei}', function (
 
         'location' => $vehicle->location_name,
 
-        'location_updated_at' =>
-            $vehicle->location_updated_at,
+        'location_updated_at' => $vehicle->location_updated_at,
     ]);
 });

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\DeploymentController;
+use App\Http\Controllers\Api\ShopController;
 use App\Http\Controllers\Api\VehicleController;
 use Illuminate\Support\Facades\Route;
 
@@ -14,6 +15,9 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+// GET /api/shops - List active shops for map geofences and vehicle operations
+Route::get('/shops', [ShopController::class, 'index'])->name('api.shops.index');
+
 Route::prefix('vehicles')->group(function (): void {
     // GET /api/vehicles - List all vehicles with live locations, status, home shops, and active missions
     Route::get('/', [VehicleController::class, 'index'])->name('api.vehicles.index');
@@ -26,4 +30,10 @@ Route::prefix('vehicles')->group(function (): void {
 
     // POST /api/vehicles/{vehicle}/deployments - Dispatch the vehicle to another shop or custom location
     Route::post('/{vehicle}/deployments', [DeploymentController::class, 'store'])->name('api.vehicles.deployments.store');
+
+    // PATCH /api/vehicles/{vehicle}/deployments/{deployment}/release - Complete the active deployment
+    Route::patch('/{vehicle}/deployments/{deployment}/release', [DeploymentController::class, 'release'])->name('api.vehicles.deployments.release');
+
+    // PATCH /api/vehicles/{vehicle}/deployments/{deployment}/cancel - Cancel a planned or dispatched deployment
+    Route::patch('/{vehicle}/deployments/{deployment}/cancel', [DeploymentController::class, 'cancel'])->name('api.vehicles.deployments.cancel');
 });

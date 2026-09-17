@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Location;
 use App\Models\Shop;
 use App\Models\Vehicle;
+use App\Models\VehicleDeployment;
 use App\Models\VehiclePosition;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -56,6 +57,7 @@ class VehicleApiTest extends TestCase
             'location_name' => 'Nairobi Central',
             'location_latitude' => -1.286389,
             'location_longitude' => 36.817223,
+            'road_distance_meters' => 15000,
         ]);
 
         VehiclePosition::create([
@@ -73,6 +75,8 @@ class VehicleApiTest extends TestCase
         $response->assertStatus(200)
             ->assertJsonPath('data.0.plate_number', 'KDD 123A')
             ->assertJsonPath('data.0.assigned_shop.name', 'Nairobi Branch')
+            ->assertJsonPath('data.0.homebase_distance.distance_meters', 15000)
+            ->assertJsonPath('data.0.homebase_distance.distance_km', 15)
             ->assertJsonPath('data.0.status', 'moving')
             ->assertJsonPath('data.0.location_name', 'Nairobi Central');
     }
@@ -338,5 +342,105 @@ class VehicleApiTest extends TestCase
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['destination_type']);
+    }
+
+    public function test_can_release_an_active_deployment(): void
+    {
+        $shop = Shop::create([
+            'name' => 'Release Branch',
+            'latitude' => -0.497628,
+            'longitude' => 36.319689,
+            'active' => true,
+        ]);
+
+        $vehicle = Vehicle::create([
+            'imei' => '101010101010101',
+            'plate_number' => 'KDA 101A',
+            'active' => true,
+        ]);
+
+        $deployment = VehicleDeployment::create([
+            'vehicle_id' => $vehicle->id,
+            'destination_type' => 'shop',
+            'destination_id' => $shop->id,
+            'purpose' => 'Release Test',
+            'status' => 'dispatched',
+        ]);
+
+        $response = $this->patchJson("/api/vehicles/{$vehicle->id}/deployments/{$deployment->id}/release");
+
+        $response->assertOk()
+            ->assertJsonPath('deployment.status', 'completed');
+
+        $this->assertDatabaseHas('vehicle_deployments', [
+            'id' => $deployment->id,
+            'status' => 'completed',
+        ]);
+    }
+
+    public function test_can_cancel_a_dispatched_deployment(): void
+    {
+        $shop = Shop::create([
+            'name' => 'Cancel Branch',
+            'latitude' => -0.497628,
+            'longitude' => 36.319689,
+            'active' => true,
+        ]);
+
+        $vehicle = Vehicle::create([
+            'imei' => '202020202020202',
+            'plate_number' => 'KDB 202B',
+            'active' => true,
+        ]);
+
+        $deployment = VehicleDeployment::create([
+            'vehicle_id' => $vehicle->id,
+            'destination_type' => 'shop',
+            'destination_id' => $shop->id,
+            'purpose' => 'Cancel Test',
+            'status' => 'dispatched',
+        ]);
+
+        $response = $this->patchJson("/api/vehicles/{$vehicle->id}/deployments/{$deployment->id}/cancel");
+
+        $response->assertOk()
+            ->assertJsonPath('deployment.status', 'cancelled');
+
+        $this->assertDatabaseHas('vehicle_deployments', [
+            'id' => $deployment->id,
+            'status' => 'cancelled',
+        ]);
+    }
+
+    public function test_cannot_cancel_an_in_progress_deployment(): void
+    {
+        $shop = Shop::create([
+            'name' => 'In Progress Branch',
+            'latitude' => -0.497628,
+            'longitude' => 36.319689,
+            'active' => true,
+        ]);
+
+        $vehicle = Vehicle::create([
+            'imei' => '303030303030303',
+            'plate_number' => 'KDC 303C',
+            'active' => true,
+        ]);
+
+        $deployment = VehicleDeployment::create([
+            'vehicle_id' => $vehicle->id,
+            'destination_type' => 'shop',
+            'destination_id' => $shop->id,
+            'purpose' => 'Invalid Cancel Test',
+            'status' => 'in_progress',
+        ]);
+
+        $response = $this->patchJson("/api/vehicles/{$vehicle->id}/deployments/{$deployment->id}/cancel");
+
+        $response->assertStatus(422);
+        $this->assertDatabaseHas('vehicle_deployments', [
+            'id' => $deployment->id,
+            'status' => 'in_progress',
+        ]);
     }
 }

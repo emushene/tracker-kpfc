@@ -36,6 +36,10 @@ class VehicleResource extends JsonResource
             $operationalStatus = 'parked';
         }
 
+        $homebaseDistanceMeters = $activeDeployment === null && $this->assigned_shop_id !== null
+            ? $this->road_distance_meters
+            : null;
+
         return [
             // Vehicle identity
             'id' => $this->id,
@@ -70,6 +74,14 @@ class VehicleResource extends JsonResource
             // Permanent Home Shop assignment
             'assigned_shop_id' => $this->assigned_shop_id,
             'assigned_shop' => $this->assignedShop ? new ShopResource($this->assignedShop) : null,
+            'homebase_distance' => [
+                'distance_meters' => $homebaseDistanceMeters !== null
+                    ? (int) round($homebaseDistanceMeters)
+                    : null,
+                'distance_km' => $homebaseDistanceMeters !== null
+                    ? round($homebaseDistanceMeters / 1000, 2)
+                    : null,
+            ],
 
             // Active mission / deployment
             'active_deployment' => $activeDeployment ? new VehicleDeploymentResource($activeDeployment) : null,

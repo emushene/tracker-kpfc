@@ -6,10 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreDeploymentRequest;
 use App\Http\Resources\VehicleDeploymentResource;
 use App\Models\Vehicle;
+use App\Models\VehicleDeployment;
 use App\Services\VehicleDeploymentService;
 use App\Services\VehicleRouteService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
+use RuntimeException;
 
 class DeploymentController extends Controller
 {
@@ -67,5 +69,70 @@ class DeploymentController extends Controller
                 : 'Vehicle deployment successfully planned.',
             'deployment' => new VehicleDeploymentResource($deployment),
         ], 201);
+    }
+
+    public function release(
+        Vehicle $vehicle,
+        int $deployment,
+        VehicleDeploymentService $deploymentService,
+        VehicleRouteService $routeService
+    ): JsonResponse {
+        $deploymentModel = $this->deploymentForVehicle($vehicle, $deployment);
+
+        try {
+            $deploymentModel = $deploymentService->complete($deploymentModel);
+        } catch (RuntimeException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 422);
+        }
+
+        $this->recalculateRoute($vehicle, $routeService, $deploymentModel->id);
+
+        return response()->json([
+            'message' => 'Vehicle deployment released successfully.',
+            'deployment' => new VehicleDeploymentResource($deploymentModel->load('destination')),
+        ]);
+    }
+
+    public function cancel(
+        Vehicle $vehicle,
+        int $deployment,
+        VehicleDeploymentService $deploymentService,
+        VehicleRouteService $routeService
+    ): JsonResponse {
+        $deploymentModel = $this->deploymentForVehicle($vehicle, $deployment);
+
+        try {
+            $deploymentModel = $deploymentService->cancel($deploymentModel);
+        } catch (RuntimeException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 422);
+        }
+
+        $this->recalculateRoute($vehicle, $routeService, $deploymentModel->id);
+
+        return response()->json([
+            'message' => 'Vehicle deployment cancelled successfully.',
+            'deployment' => new VehicleDeploymentResource($deploymentModel->load('destination')),
+        ]);
+    }
+
+    private function deploymentForVehicle(Vehicle $vehicle, int $deployment): VehicleDeployment
+    {
+        return $vehicle->deployments()->whereKey($deployment)->firstOrFail();
+    }
+
+    private function recalculateRoute(
+        Vehicle $vehicle,
+        VehicleRouteService $routeService,
+        int $deploymentId
+    ): void {
+        try {
+            $routeService->updateRoute($vehicle->fresh());
+        } catch (\Throwable $exception) {
+            Log::warning('OSRM route calculation failed after deployment status change.', [
+                'vehicle_id' => $vehicle->id,
+                'deployment_id' => $deploymentId,
+                'error' => $exception->getMessage(),
+            ]);
+        }
     }
 }

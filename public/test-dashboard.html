@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- 
+  ======================================================================================
+  [TEST ONLY FILE] - KPFC FLEET TRACKER DEMONSTRATION & TESTING DASHBOARD
+  This file is for client testing and demonstration only.
+  Can be safely deleted at any time without affecting any backend functionality.
+  ======================================================================================
+-->
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[TEST] KPFC Fleet Tracker & Logistics Dashboard</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Leaflet Map CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    #map { height: 480px; border-radius: 0.75rem; }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen">
+
+  <!-- Top Navigation -->
+  <header class="bg-slate-800 border-b border-slate-700 px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <div class="bg-indigo-600 p-2 rounded-lg">
+        <i data-lucide="navigation" class="w-6 h-6 text-white"></i>
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="text-xl font-bold tracking-tight">KPFC Fleet Tracker</h1>
+          <span class="bg-amber-500/20 text-amber-400 text-xs font-semibold px-2 py-0.5 rounded border border-amber-500/30">TEST / DEMO UI</span>
+        </div>
+        <p class="text-xs text-slate-400">Real-time GPS telematics, Home Base assignments & Mission Dispatching</p>
+      </div>
+    </div>
+
+    <!-- Quick Diagnostics Bar -->
+    <div class="flex items-center gap-3">
+      <button onclick="testProtrackConnection()" class="flex items-center gap-2 text-xs bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded-lg transition border border-slate-600">
+        <i data-lucide="activity" class="w-4 h-4 text-emerald-400"></i>
+        <span>Test Protrack API</span>
+      </button>
+      <button onclick="loadFleetData()" class="flex items-center gap-2 text-xs bg-indigo-600 hover:bg-indigo-500 px-3 py-2 rounded-lg font-medium transition shadow-sm">
+        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+        <span>Refresh Fleet</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-7xl mx-auto px-6 py-6 space-y-6">
+
+    <!-- Fleet Stats Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="bg-slate-800/80 border border-slate-700 p-4 rounded-xl">
+        <p class="text-xs font-medium text-slate-400">Total Monitored Fleet</p>
+        <p id="stat-total" class="text-2xl font-bold mt-1 text-white">--</p>
+      </div>
+      <div class="bg-slate-800/80 border border-slate-700 p-4 rounded-xl">
+        <p class="text-xs font-medium text-slate-400">Active / Moving</p>
+        <p id="stat-moving" class="text-2xl font-bold mt-1 text-emerald-400">--</p>
+      </div>
+      <div class="bg-slate-800/80 border border-slate-700 p-4 rounded-xl">
+        <p class="text-xs font-medium text-slate-400">Assigned Home Bases</p>
+        <p id="stat-assigned" class="text-2xl font-bold mt-1 text-indigo-400">--</p>
+      </div>
+      <div class="bg-slate-800/80 border border-slate-700 p-4 rounded-xl">
+        <p class="text-xs font-medium text-slate-400">Active Deployments (On Duty)</p>
+        <p id="stat-deployed" class="text-2xl font-bold mt-1 text-amber-400">--</p>
+      </div>
+    </div>
+
+    <!-- Live Map Section -->
+    <div class="bg-slate-800 border border-slate-700 p-4 rounded-xl shadow-lg">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2">
+          <i data-lucide="map-pin" class="w-5 h-5 text-indigo-400"></i>
+          <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-300">Live GPS Fleet & Branch Geofences</h2>
+        </div>
+        <div class="flex items-center gap-4 text-xs text-slate-400">
+          <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Moving</span>
+          <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Deployed</span>
+          <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-slate-400"></span> Parked</span>
+          <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span> Shop Geofence</span>
+        </div>
+      </div>
+      <div id="map"></div>
+    </div>
+
+    <!-- Fleet Table & Detail Controls -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <!-- Vehicles List (2 Cols) -->
+      <div class="lg:col-span-2 bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-lg">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-base font-semibold text-slate-200">Fleet Vehicles</h2>
+          <input id="search-input" oninput="filterVehicles()" type="text" placeholder="Search plate or IMEI..." class="bg-slate-900 border border-slate-700 px-3 py-1.5 text-xs rounded-lg focus:outline-none focus:border-indigo-500 text-slate-200 w-48">
+        </div>
+        
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-300">
+            <thead class="bg-slate-900/60 uppercase text-[10px] text-slate-400 border-b border-slate-700">
+              <tr>
+                <th class="py-3 px-3">Vehicle</th>
+                <th class="py-3 px-3">Status</th>
+                <th class="py-3 px-3">Live Location</th>
+                <th class="py-3 px-3">Home Base / Distance</th>
+                <th class="py-3 px-3">Mission / Route</th>
+                <th class="py-3 px-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="vehicle-table-body" class="divide-y divide-slate-700/60">
+              <tr>
+                <td colspan="6" class="text-center py-8 text-slate-500">Loading fleet data...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Action Panel (Home Base & Deployments) (1 Col) -->
+      <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-lg space-y-6">
+        
+        <!-- Selection Header -->
+        <div>
+          <h2 class="text-base font-semibold text-slate-200">Vehicle Operations</h2>
+          <p id="selected-vehicle-title" class="text-xs text-slate-400 mt-0.5">Select a vehicle from the list to test assignments.</p>
+        </div>
+
+        <div id="operations-panel" class="space-y-6 opacity-40 pointer-events-none transition-opacity">
+
+          <!-- 1. Assign Permanent Home Base -->
+          <div class="bg-slate-900/70 border border-slate-700/80 p-4 rounded-lg space-y-3">
+            <div class="flex items-center gap-2">
+              <i data-lucide="home" class="w-4 h-4 text-indigo-400"></i>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Assign Permanent Home Base</h3>
+            </div>
+            <p class="text-[11px] text-slate-400">Default base branch used for OSRM return distance & duration calculations.</p>
+            <select id="assign-shop-select" class="w-full bg-slate-800 border border-slate-700 text-xs rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-indigo-500"></select>
+            <div class="flex gap-2">
+              <button onclick="submitAssignShop()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold py-2 rounded-lg transition">Save Home Base</button>
+              <button onclick="submitClearShop()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs px-3 py-2 rounded-lg transition">Clear</button>
+            </div>
+          </div>
+
+          <!-- 2. Dispatch Deployment Mission -->
+          <div class="bg-slate-900/70 border border-slate-700/80 p-4 rounded-lg space-y-3">
+            <div class="flex items-center gap-2">
+              <i data-lucide="send" class="w-4 h-4 text-amber-400"></i>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Dispatch on Temporary Mission</h3>
+            </div>
+            <p class="text-[11px] text-slate-400">Assigns a temporary destination (another shop or client site). Overrides home base routing.</p>
+            
+            <div>
+              <label class="text-[10px] uppercase text-slate-400 block mb-1">Destination Shop</label>
+              <select id="deploy-shop-select" class="w-full bg-slate-800 border border-slate-700 text-xs rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-amber-500"></select>
+            </div>
+
+            <div>
+              <label class="text-[10px] uppercase text-slate-400 block mb-1">Mission Purpose</label>
+              <input id="deploy-purpose" type="text" placeholder="e.g. Urgent Branch Delivery" class="w-full bg-slate-800 border border-slate-700 text-xs rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-amber-500">
+            </div>
+
+            <button onclick="submitDispatch()" class="w-full bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold text-xs py-2 rounded-lg transition">Dispatch Vehicle</button>
+
+            <div id="deployment-actions" class="hidden border-t border-slate-700 pt-3 space-y-2">
+              <p id="deployment-status" class="text-[11px] text-slate-400"></p>
+              <div class="flex gap-2">
+                <button onclick="releaseDeployment()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold py-2 rounded-lg transition">Release Vehicle</button>
+                <button id="cancel-deployment-button" onclick="cancelDeployment()" class="flex-1 bg-red-600/90 hover:bg-red-500 text-white text-xs font-semibold py-2 rounded-lg transition">Cancel Deployment</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="fixed bottom-6 right-6 max-w-sm bg-slate-800 border border-slate-700 text-white p-4 rounded-xl shadow-2xl flex items-start gap-3 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none z-50">
+    <div id="toast-icon" class="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400">
+      <i data-lucide="check-circle" class="w-5 h-5"></i>
+    </div>
+    <div>
+      <h4 id="toast-title" class="text-xs font-bold">Success</h4>
+      <p id="toast-message" class="text-[11px] text-slate-400 mt-0.5">Operation completed.</p>
+    </div>
+  </div>
+
+  <script>
+    let KPFC_SHOPS = [];
+
+    let vehicles = [];
+    let selectedVehicleId = null;
+    let map, mapMarkers = [];
+
+    // Initialize Map on load
+    document.addEventListener("DOMContentLoaded", async () => {
+      lucide.createIcons();
+
+      try {
+        await loadShops();
+        initMap();
+        populateShopDropdowns();
+        await loadFleetData();
+      } catch (err) {
+        console.error(err);
+        showToast("Error", err.message || "Could not load dashboard data.", true);
+      }
+    });
+
+    async function loadShops() {
+      const res = await fetch("/api/shops", {
+        headers: { "Accept": "application/json" }
+      });
+
+      if (!res.ok) {
+        throw new Error("Could not load shops from the database.");
+      }
+
+      const json = await res.json();
+      KPFC_SHOPS = (json.data || []).map(shop => ({
+        id: shop.id,
+        name: shop.name,
+        code: shop.code,
+        address: shop.address,
+        lat: Number(shop.latitude),
+        lng: Number(shop.longitude),
+        radius: Number(shop.radius_meters || 500)
+      }));
+    }
+
+    function initMap() {
+      // Centered on Kenya (-0.5, 36.5)
+      map = L.map('map').setView([-0.5, 36.5], 7);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+
+      // Render Shop Geofences
+      KPFC_SHOPS.forEach(shop => {
+        L.circle([shop.lat, shop.lng], {
+          color: '#6366f1',
+          fillColor: '#818cf8',
+          fillOpacity: 0.2,
+          radius: shop.radius
+        }).addTo(map).bindPopup(`<b>${shop.name}</b><br>Code: ${shop.code}<br>Radius: ${shop.radius}m`);
+      });
+    }
+
+    function populateShopDropdowns() {
+      const assignSelect = document.getElementById("assign-shop-select");
+      const deploySelect = document.getElementById("deploy-shop-select");
+
+      assignSelect.innerHTML = '<option value="">-- Choose Home Base --</option>';
+      deploySelect.innerHTML = '<option value="">-- Choose Destination --</option>';
+
+      KPFC_SHOPS.forEach(shop => {
+        assignSelect.innerHTML += `<option value="${shop.id}">${shop.name} (${shop.code})</option>`;
+        deploySelect.innerHTML += `<option value="${shop.id}">${shop.name} (${shop.code})</option>`;
+      });
+    }
+
+    async function loadFleetData() {
+      try {
+        const res = await fetch("/api/vehicles?all=1");
+        const json = await res.json();
+        vehicles = json.data || [];
+        renderFleet();
+        showToast("Fleet Refreshed", `Loaded ${vehicles.length} vehicles.`);
+      } catch (err) {
+        console.error(err);
+        showToast("Error", "Could not load /api/vehicles. Make sure php artisan serve is running.", true);
+      }
+    }
+
+    function renderFleet() {
+      const tbody = document.getElementById("vehicle-table-body");
+      tbody.innerHTML = "";
+
+      // Clear existing markers
+      mapMarkers.forEach(m => map.removeLayer(m));
+      mapMarkers = [];
+
+      let movingCount = 0, assignedCount = 0, deployedCount = 0;
+
+      vehicles.forEach(v => {
+        if (v.status === 'moving') movingCount++;
+        if (v.assigned_shop_id) assignedCount++;
+        if (v.active_deployment) deployedCount++;
+
+        // Add Marker on map if coordinates exist
+        const lat = v.location_latitude || v.latest_telemetry?.latitude;
+        const lng = v.location_longitude || v.latest_telemetry?.longitude;
+
+        if (lat && lng) {
+          const markerColor = v.status === 'moving' ? '#10b981' : (v.status === 'deployed' ? '#f59e0b' : '#64748b');
+          const marker = L.circleMarker([lat, lng], {
+            color: markerColor,
+            fillColor: markerColor,
+            fillOpacity: 0.8,
+            radius: 8
+          }).addTo(map);
+
+          marker.bindPopup(`
+            <b>${v.plate_number || v.imei}</b><br>
+            Status: ${v.status}<br>
+            Location: ${v.location_name || 'In Transit'}<br>
+            Speed: ${v.latest_telemetry?.speed || 0} km/h<br>
+            Deployed to: ${v.active_deployment?.destination?.name || '--'}<br>
+            Home: ${v.assigned_shop?.name || 'Unassigned'}<br>
+            Distance to home: ${v.homebase_distance?.distance_km ?? '--'} km
+          `);
+
+          mapMarkers.push(marker);
+        }
+
+        // Table Row
+        const isSelected = selectedVehicleId === v.id;
+        const deploymentDestination = v.active_deployment?.destination?.name || null;
+        const statusBadge = v.status === 'moving'
+          ? '<span class="bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded text-[10px]">Moving</span>'
+          : (v.status === 'deployed'
+            ? `<span class="bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded text-[10px]">Deployed</span><br><span class="text-[10px] text-amber-300">To: ${deploymentDestination || '--'}</span>`
+            : '<span class="bg-slate-700 text-slate-300 px-2 py-0.5 rounded text-[10px]">Parked</span>');
+
+        const routingInfo = v.routing?.distance_km
+          ? `<span class="text-indigo-300 font-mono">${v.routing.distance_km} km</span> <span class="text-slate-500">(~${v.routing.duration_minutes}m)</span>`
+          : '<span class="text-slate-500">--</span>';
+
+        const homebaseInfo = v.assigned_shop
+          ? `<span>${v.assigned_shop.name}</span><br><span class="text-[10px] text-slate-500">${v.homebase_distance?.distance_km ?? '--'} km away</span>`
+          : '<span class="text-slate-500">Unassigned</span>';
+
+        tbody.innerHTML += `
+          <tr class="hover:bg-slate-750 cursor-pointer ${isSelected ? 'bg-indigo-950/40 border-l-2 border-indigo-500' : ''}" onclick="selectVehicle(${v.id})">
+            <td class="py-3 px-3 font-semibold text-white">${v.plate_number || 'No Plate'}<br><span class="text-[10px] font-normal text-slate-500 font-mono">${v.imei}</span></td>
+            <td class="py-3 px-3">${statusBadge}</td>
+            <td class="py-3 px-3 max-w-[150px] truncate text-slate-300" title="${v.location_name || ''}">${v.location_name || 'Resolving...'}</td>
+            <td class="py-3 px-3 font-medium text-slate-300">${homebaseInfo}</td>
+            <td class="py-3 px-3 text-xs">${routingInfo}</td>
+            <td class="py-3 px-3 text-right">
+              <button onclick="selectVehicle(${v.id})" class="text-xs text-indigo-400 hover:text-indigo-300 font-medium">Manage</button>
+            </td>
+          </tr>
+        `;
+      });
+
+      // Update Top Stats
+      document.getElementById("stat-total").innerText = vehicles.length;
+      document.getElementById("stat-moving").innerText = movingCount;
+      document.getElementById("stat-assigned").innerText = assignedCount;
+      document.getElementById("stat-deployed").innerText = deployedCount;
+
+      updateDeploymentActions();
+    }
+
+    function updateDeploymentActions() {
+      const actions = document.getElementById("deployment-actions");
+      const status = document.getElementById("deployment-status");
+      const cancelButton = document.getElementById("cancel-deployment-button");
+      const vehicle = vehicles.find(item => item.id === selectedVehicleId);
+      const deployment = vehicle?.active_deployment;
+
+      if (!actions || !status) return;
+
+      if (!deployment) {
+        actions.classList.add("hidden");
+        return;
+      }
+
+      actions.classList.remove("hidden");
+      status.innerText = `Active deployment: ${deployment.purpose || "Delivery Mission"} (${deployment.status})`;
+      cancelButton.classList.toggle("hidden", deployment.status === "in_progress");
+    }
+
+    function selectVehicle(id) {
+      selectedVehicleId = id;
+      const v = vehicles.find(item => item.id === id);
+      if (!v) return;
+
+      const panel = document.getElementById("operations-panel");
+      panel.classList.remove("opacity-40", "pointer-events-none");
+
+      document.getElementById("selected-vehicle-title").innerHTML = `Managing: <strong class="text-indigo-300">${v.plate_number || v.imei}</strong>`;
+
+      // Set current shop in dropdown
+      document.getElementById("assign-shop-select").value = v.assigned_shop_id || "";
+
+      // Center map on vehicle if it has coordinates
+      const lat = v.location_latitude || v.latest_telemetry?.latitude;
+      const lng = v.location_longitude || v.latest_telemetry?.longitude;
+      if (lat && lng && map) {
+        map.flyTo([lat, lng], 12);
+      }
+
+      renderFleet();
+    }
+
+    async function submitAssignShop() {
+      if (!selectedVehicleId) return;
+      const shopId = document.getElementById("assign-shop-select").value;
+
+      try {
+        const res = await fetch(`/api/vehicles/${selectedVehicleId}/assign-shop`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ shop_id: shopId ? parseInt(shopId) : null })
+        });
+        const json = await res.json();
+        showToast("Home Base Assigned", json.message || "Updated successfully");
+        await loadFleetData();
+        selectVehicle(selectedVehicleId);
+      } catch (e) {
+        showToast("Assignment Failed", e.message, true);
+      }
+    }
+
+    async function submitClearShop() {
+      document.getElementById("assign-shop-select").value = "";
+      await submitAssignShop();
+    }
+
+    async function submitDispatch() {
+      if (!selectedVehicleId) return;
+      const destinationId = document.getElementById("deploy-shop-select").value;
+      const purpose = document.getElementById("deploy-purpose").value;
+
+      if (!destinationId) {
+        alert("Please choose a destination shop.");
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/vehicles/${selectedVehicleId}/deployments`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            destination_type: "shop",
+            destination_id: parseInt(destinationId),
+            purpose: purpose || "Delivery Mission",
+            status: "dispatched"
+          })
+        });
+
+        const json = await res.json();
+        if (res.ok) {
+          showToast("Vehicle Dispatched!", `Mission destination set.`);
+          document.getElementById("deploy-purpose").value = "";
+          await loadFleetData();
+          selectVehicle(selectedVehicleId);
+        } else {
+          showToast("Dispatch Failed", json.message || "Error creating deployment", true);
+        }
+      } catch (e) {
+        showToast("Dispatch Failed", e.message, true);
+      }
+    }
+
+    async function releaseDeployment() {
+      await updateDeploymentStatus("release", "Vehicle Released", "Deployment completed and vehicle returned to normal routing.");
+    }
+
+    async function cancelDeployment() {
+      await updateDeploymentStatus("cancel", "Deployment Cancelled", "The deployment was cancelled.");
+    }
+
+    async function updateDeploymentStatus(action, title, successMessage) {
+      if (!selectedVehicleId) return;
+
+      const vehicle = vehicles.find(item => item.id === selectedVehicleId);
+      const deploymentId = vehicle?.active_deployment?.id;
+
+      if (!deploymentId) {
+        showToast("No Active Deployment", "This vehicle has no active deployment.", true);
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/vehicles/${selectedVehicleId}/deployments/${deploymentId}/${action}`, {
+          method: "PATCH",
+          headers: {
+            "Accept": "application/json",
+            "Content-Type": "application/json"
+          }
+        });
+        const json = await res.json();
+
+        if (!res.ok) {
+          throw new Error(json.message || `Could not ${action} deployment.`);
+        }
+
+        showToast(title, successMessage);
+        await loadFleetData();
+        selectVehicle(selectedVehicleId);
+      } catch (error) {
+        showToast(`${title} Failed`, error.message, true);
+      }
+    }
+
+    async function testProtrackConnection() {
+      try {
+        const res = await fetch("/protrack/test");
+        const json = await res.json();
+        showToast("Protrack API Status", `Connected: ${json.status} | Token: ${json.token_received}`);
+      } catch (e) {
+        showToast("Protrack Offline", e.message, true);
+      }
+    }
+
+    function showToast(title, message, isError = false) {
+      const toast = document.getElementById("toast");
+      document.getElementById("toast-title").innerText = title;
+      document.getElementById("toast-message").innerText = message;
+      
+      const icon = document.getElementById("toast-icon");
+      if (isError) {
+        icon.className = "p-1.5 rounded-lg bg-red-500/20 text-red-400";
+      } else {
+        icon.className = "p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400";
+      }
+
+      toast.classList.remove("translate-y-20", "opacity-0", "pointer-events-none");
+      setTimeout(() => {
+        toast.classList.add("translate-y-20", "opacity-0", "pointer-events-none");
+      }, 4000);
+    }
+
+    function filterVehicles() {
+      const q = document.getElementById("search-input").value.toLowerCase();
+      document.querySelectorAll("#vehicle-table-body tr").forEach(row => {
+        const text = row.innerText.toLowerCase();
+        row.style.display = text.includes(q) ? "" : "none";
+      });
+    }
+  </script>
+</body>
+</html>
