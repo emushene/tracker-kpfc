@@ -12,7 +12,10 @@ use Illuminate\Support\Facades\Route;
 |
 | These routes provide endpoints for fleet managers to monitor vehicles,
 | assign permanent home shops, and dispatch vehicles on deployments.
-|
+|Deployment operations include dispatching vehicles to other shops or custom locations,
+| as well as releasing or canceling active deployments. All routes are
+| protected by authentication and authorization middleware to ensure that only
+| authorized fleet managers can access these endpoints.
 */
 
 // GET /api/shops - List active shops for map geofences and vehicle operations
