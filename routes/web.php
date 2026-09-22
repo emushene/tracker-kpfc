@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\KpfcSsoController;
 use App\Models\Vehicle;
 use App\Services\Protrack\ProtrackClient;
 use Illuminate\Support\Facades\Route;
@@ -7,6 +8,15 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+// KPFC Admin SSO Authentication Routes
+Route::get('/login', [KpfcSsoController::class, 'showLogin'])->name('login');
+Route::get('/auth/kpfc/redirect', [KpfcSsoController::class, 'redirect'])->name('auth.kpfc.redirect');
+Route::get('/auth/kpfc/callback', [KpfcSsoController::class, 'callback'])->name('auth.kpfc.callback');
+Route::post('/logout', [KpfcSsoController::class, 'logout'])->name('logout');
+Route::post('/auth/kpfc/logout', [KpfcSsoController::class, 'logout'])->name('auth.kpfc.logout');
+Route::post('/auth/kpfc/webhook', [KpfcSsoController::class, 'webhook'])->name('auth.kpfc.webhook');
+Route::post('/api/sso/webhook', [KpfcSsoController::class, 'webhook'])->name('api.sso.webhook');
 
 // THIS IS A TEST ROUTE FOR THE DASHBOARD, REMOVE IT WHEN DONE
 Route::get('/test-dashboard', function () {

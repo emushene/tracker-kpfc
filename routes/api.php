@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\DeploymentController;
 use App\Http\Controllers\Api\ShopController;
 use App\Http\Controllers\Api\VehicleController;
+use App\Http\Controllers\Auth\KpfcSsoController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -39,4 +40,21 @@ Route::prefix('vehicles')->group(function (): void {
 
     // PATCH /api/vehicles/{vehicle}/deployments/{deployment}/cancel - Cancel a planned or dispatched deployment
     Route::patch('/{vehicle}/deployments/{deployment}/cancel', [DeploymentController::class, 'cancel'])->name('api.vehicles.deployments.cancel');
+});
+
+/*
+|--------------------------------------------------------------------------
+| KPFC Admin Single Sign-On (SSO) & Identity Routes
+|--------------------------------------------------------------------------
+*/
+
+// Lifecycle Webhook Receiver from KPFC Admin
+Route::post('/sso/webhook', [KpfcSsoController::class, 'webhook'])->name('api.sso.webhook');
+Route::post('/auth/kpfc/webhook', [KpfcSsoController::class, 'webhook'])->name('api.auth.kpfc.webhook');
+
+// OAuth PKCE browser flows (requires session state for state and verifier)
+Route::middleware('web')->group(function (): void {
+    Route::get('/auth/kpfc/redirect', [KpfcSsoController::class, 'redirect'])->name('api.auth.kpfc.redirect');
+    Route::get('/auth/kpfc/callback', [KpfcSsoController::class, 'callback'])->name('api.auth.kpfc.callback');
+    Route::post('/auth/kpfc/logout', [KpfcSsoController::class, 'logout'])->name('api.auth.kpfc.logout');
 });

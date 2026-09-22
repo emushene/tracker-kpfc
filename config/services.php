@@ -41,4 +41,14 @@ return [
         ],
     ],
 
+    'kpfc_sso' => [
+        'issuer' => env('KPFC_SSO_ISSUER', 'https://admin-staging.kpfcbuilders.com'),
+        'client_id' => env('KPFC_SSO_CLIENT_ID'),
+        'client_secret' => env('KPFC_SSO_CLIENT_SECRET'),
+        'redirect_uri' => env('KPFC_SSO_REDIRECT_URI'),
+        'scopes' => env('KPFC_SSO_SCOPES', 'fleet:login fleet:profile'),
+        'webhook_secret' => env('KPFC_SSO_WEBHOOK_SECRET'),
+        'webhook_secret_old' => env('KPFC_SSO_WEBHOOK_SECRET_OLD'),
+    ],
+
 ];

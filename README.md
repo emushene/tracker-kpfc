@@ -1,7 +1,7 @@
 # KPFC Fleet Tracker & Telematics Backend
 An automated GPS fleet tracking, telematics ingestion, and dispatch management backend built with Laravel.
 
-The application continuously collects real-time vehicle telematics from **Protrack365** GPS trackers, resolves coordinates into human-readable locations and branch geofences using a multi-tier cache, calculates road network distances and ETAs via **OSRM**, manages vehicle missions via **Deployments**, exposes a **Fleet Management REST API**, and synchronizes operational status to **Google Sheets**.
+The application continuously collects real-time vehicle telematics from **Protrack365** GPS trackers, resolves coordinates into human-readable locations and branch geofences using a multi-tier cache, calculates road network distances and ETAs via **OSRM**, manages vehicle missions via **Deployments**, exposes a **Fleet Management REST API**, synchronizes operational status to **Google Sheets**, and integrates centralized authentication and user lifecycle management with **KPFC Admin Single Sign-On (SSO)**.
 
 ---
 ## Architecture Overview
@@ -10,6 +10,8 @@ The application continuously collects real-time vehicle telematics from **Protra
 flowchart TD
 
       subgraph External["External Services"]
+
+            KPFCAdmin["KPFC Admin (OAuth 2.0 IdP & SSO)"]
 
             P365["Protrack365 GPS Trackers"]
 
@@ -129,6 +131,11 @@ The application uses **`routes/api.php` as the production Fleet Management API**
 | `POST` | `/api/vehicles/{vehicle}/deployments` | `DeploymentController@store` | Dispatch a vehicle to a shop or custom location. |
 | `PATCH` | `/api/vehicles/{vehicle}/deployments/{deployment}/release` | `DeploymentController@release` | Complete/release an active deployment. |
 | `PATCH` | `/api/vehicles/{vehicle}/deployments/{deployment}/cancel` | `DeploymentController@cancel` | Cancel a planned or dispatched deployment. |
+| `POST` | `/api/sso/webhook` | `KpfcSsoController@webhook` | Replay-safe, signature-verified user lifecycle event webhook receiver from KPFC Admin. |
+| `POST` | `/api/auth/kpfc/webhook` | `KpfcSsoController@webhook` | Alternate lifecycle webhook receiver endpoint. |
+| `GET` | `/api/auth/kpfc/redirect` | `KpfcSsoController@redirect` | Initiate PKCE OAuth authorization flow with KPFC Admin. |
+| `GET` | `/api/auth/kpfc/callback` | `KpfcSsoController@callback` | OAuth code exchange callback (also matched at `/auth/kpfc/callback` per registered URI). |
+| `POST` | `/api/auth/kpfc/logout` | `KpfcSsoController@logout` | Revoke tokens via HTTP Basic Auth and terminate local session. |
 
 ### Temporary Development / Diagnostic Routes
 The routes in **`routes/web.php`** that expose `/test-dashboard` and the `/protrack/*` endpoints were created for development, diagnostics, and testing. They are **not the production Fleet Management API** and should not be used as the primary integration interface for the operational dashboard.
@@ -194,7 +201,40 @@ The system cleanly separates permanent base locations from temporary assignments
 ### 5. Automated Google Sheets Synchronization
 * Directly mints Google OAuth2 JWTs using RS256/OpenSSL and a Google Service Account key (zero bulky Google client SDKs).
 
-* Every 10 minutes (06:00â€“18:00), matches spreadsheet rows by vehicle IMEI on the `Protrack365` tab and updates Column F with the latest human-readable location.
+* Every 10 minutes (06:00–18:00), matches spreadsheet rows by vehicle IMEI on the `Protrack365` tab and updates Column F with the latest human-readable location.
+
+### 6. KPFC Admin Single Sign-On (SSO) & Identity Federation
+The Fleet application operates as an OAuth 2.0 confidential client federated with **KPFC Admin** (`admin-staging.kpfcbuilders.com` / `admin.kpfcbuilders.com`) as the authoritative Identity Provider:
+
+* **Authorization Code Grant with PKCE (`S256`)**:
+  * Fleet generates a cryptographically random `state` and `code_verifier`, derives `code_challenge = BASE64URL(SHA256(code_verifier))`, and stores both in server-side session state.
+  * Enforces single-use consumption and timing-safe comparison (`hash_equals`) of `state` on the callback to prevent CSRF and authorization code injection.
+  * Exchanges code server-side via `POST /oauth/token` with `code_verifier`.
+
+* **Immutable Account Linking by `sub`**:
+  * Local shadow user records in `users` are keyed strictly by the immutable Admin `sub` (`kpfc_sub`).
+  * Mutable attributes (`name`, `email`, `phone`, `role`) are synchronized on login and through webhooks, but are **never** used to merge accounts.
+  * Local passwords are not collected, copied, or required for shadow users.
+
+* **Encrypted Server-Side Token Persistence**:
+  * OAuth access tokens and refresh tokens are stored encrypted in the database (`user_sso_tokens`) using Laravel Eloquent's native `'encrypted'` casts backed by `APP_KEY`.
+  * Tokens are never stored in browser localStorage or client-readable cookies.
+
+* **Atomic Token Refresh & Rotation**:
+  * Access tokens expire in 15 minutes; refresh tokens last 30 days and rotate on use.
+  * Concurrently refreshed tokens are protected by atomic database transactions and row-locking before old tokens are discarded.
+
+* **Token Revocation & Introspection**:
+  * On Fleet logout, active access tokens are revoked at `POST /api/oauth/revoke` using HTTP Basic Authentication (`client_id:client_secret`).
+  * Local Fleet sessions and stored tokens are purged immediately.
+  * Supports session validation via `POST /api/oauth/introspect`.
+
+* **Replay-Safe Lifecycle Webhook Receiver**:
+  * Listens on `POST /api/sso/webhook` for Admin lifecycle events (`user.updated`, `user.disabled`, `user.restored`, `user.access_revoked`).
+  * Rejects timestamps skewed by more than 5 minutes (`300s`).
+  * Validates HMAC-SHA256 signature (`X-KPFC-Signature: v1=<hex>`) against raw payload and timestamp header using `hash_equals` (supporting dual-secret rotation windows).
+  * Enforces idempotency by inserting `X-KPFC-Event-Id` into `sso_event_receipts` before applying events; duplicated events return `200 OK` without side effects.
+  * Terminates active sessions and discards tokens immediately upon `user.disabled` or `user.access_revoked`.
 
 ---
 ## Complete API Reference
@@ -462,6 +502,14 @@ GOOGLE_SHEETS_SPREADSHEET_ID=your_spreadsheet_id
 
 GOOGLE_SHEETS_CREDENTIALS=storage/app/google-credentials.json
 
+# KPFC Admin Single Sign-On (OAuth 2.0 & Lifecycle Webhooks)
+KPFC_SSO_ISSUER=https://admin-staging.kpfcbuilders.com
+KPFC_SSO_CLIENT_ID=01a0c3e5-0bcc-71f7-877f-d82dfb0f1d6c
+KPFC_SSO_CLIENT_SECRET=your_client_secret
+KPFC_SSO_REDIRECT_URI=http://localhost:8000/auth/kpfc/callback
+KPFC_SSO_SCOPES="fleet:login fleet:profile"
+KPFC_SSO_WEBHOOK_SECRET=your_webhook_signing_secret
+
 ```
 
 ---
@@ -487,7 +535,9 @@ GOOGLE_SHEETS_CREDENTIALS=storage/app/google-credentials.json
 3. **Run Automated Test Suite**:
 
      ```sh
-
+     # Run entire test suite
      php artisan test
 
-   ```
+     # Run dedicated KPFC SSO certification suite
+     vendor/bin/phpunit tests/Feature/KpfcSsoTest.php
+     ```
