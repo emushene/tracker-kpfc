@@ -18,16 +18,18 @@ class KpfcSsoTest extends TestCase
     use RefreshDatabase;
 
     protected string $issuer = 'https://admin-staging.kpfcbuilders.com';
-
-    protected string $clientId = '01a0c3e5-0bcc-71f7-877f-d82dfb0f1d6c';
-
-    protected string $clientSecret = '8DtnTzQel3oZ9kqRV7wwyykrGFp7gFnOVCro26oS';
-
-    protected string $webhookSecret = 'staging_webhook_secret_fleet_2026';
+    protected string $clientId;
+    protected string $clientSecret;
+    protected string $webhookSecret;
 
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Assign environment properties inside setUp to handle cached configs
+        $this->clientId = env('KPFC_SSO_CLIENT_ID', 'test-client-id');
+        $this->clientSecret = env('KPFC_SSO_CLIENT_SECRET', 'test-client-secret');
+        $this->webhookSecret = env('KPFC_SSO_WEBHOOK_SECRET', 'test-webhook-secret');
 
         config([
             'services.kpfc_sso.issuer' => $this->issuer,
@@ -38,6 +40,10 @@ class KpfcSsoTest extends TestCase
             'services.kpfc_sso.webhook_secret' => $this->webhookSecret,
         ]);
     }
+
+    /* -------------------------------------------------------------------------- */
+    /* 1. LOGIN & PKCE AUTHORIZATION FLOW                                         */
+    /* -------------------------------------------------------------------------- */
 
     /**
      * Test the login view renders with the sign-in button.
@@ -63,7 +69,7 @@ class KpfcSsoTest extends TestCase
         $this->assertTrue(session()->has('kpfc_code_verifier'));
 
         $targetUrl = $response->headers->get('Location');
-        $this->assertStringStartsWith($this->issuer.'/oauth/authorize', $targetUrl);
+        $this->assertStringStartsWith($this->issuer . '/oauth/authorize', $targetUrl);
 
         parse_str((string) parse_url($targetUrl, PHP_URL_QUERY), $queryParams);
 
@@ -77,6 +83,22 @@ class KpfcSsoTest extends TestCase
     }
 
     /**
+     * Test /api/auth/kpfc/redirect initiates PKCE session.
+     */
+    public function test_api_auth_kpfc_redirect_initiates_pkce(): void
+    {
+        $response = $this->get('/api/auth/kpfc/redirect');
+
+        $response->assertStatus(302);
+        $this->assertTrue(session()->has('kpfc_sso_state'));
+        $this->assertTrue(session()->has('kpfc_code_verifier'));
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /* 2. AUTHENTICATION, CALLBACK & USER PROVISIONING                           */
+    /* -------------------------------------------------------------------------- */
+
+    /**
      * Test first login creates exactly one shadow user and encrypted token record.
      */
     public function test_first_login_creates_exactly_one_shadow_user(): void
@@ -86,13 +108,13 @@ class KpfcSsoTest extends TestCase
         $sub = 'bca7909f-cdf0-4f59-a69d-6cb61f7d34a6';
 
         Http::fake([
-            $this->issuer.'/oauth/token' => Http::response([
+            $this->issuer . '/oauth/token' => Http::response([
                 'access_token' => 'access_token_mock_123',
                 'refresh_token' => 'refresh_token_mock_456',
                 'token_type' => 'Bearer',
                 'expires_in' => 900,
             ], 200),
-            $this->issuer.'/api/sso/user' => Http::response([
+            $this->issuer . '/api/sso/user' => Http::response([
                 'sub' => $sub,
                 'name' => 'Leah Example',
                 'email' => 'leah@example.com',
@@ -159,13 +181,13 @@ class KpfcSsoTest extends TestCase
         $verifier = 'test_verifier_repeat';
 
         Http::fake([
-            $this->issuer.'/oauth/token' => Http::response([
+            $this->issuer . '/oauth/token' => Http::response([
                 'access_token' => 'new_access_token',
                 'refresh_token' => 'new_refresh_token',
                 'token_type' => 'Bearer',
                 'expires_in' => 900,
             ], 200),
-            $this->issuer.'/api/sso/user' => Http::response([
+            $this->issuer . '/api/sso/user' => Http::response([
                 'sub' => $sub,
                 'name' => 'Leah Updated',
                 'email' => 'leah.updated@example.com',
@@ -225,13 +247,13 @@ class KpfcSsoTest extends TestCase
         $verifier = 'verifier_denied';
 
         Http::fake([
-            $this->issuer.'/oauth/token' => Http::response([
+            $this->issuer . '/oauth/token' => Http::response([
                 'access_token' => 'access_token_denied',
                 'refresh_token' => 'refresh_token_denied',
                 'token_type' => 'Bearer',
                 'expires_in' => 900,
             ], 200),
-            $this->issuer.'/api/sso/user' => Http::response([
+            $this->issuer . '/api/sso/user' => Http::response([
                 'sub' => 'denied-user-sub',
                 'name' => 'Denied User',
                 'email' => 'denied@example.com',
@@ -248,6 +270,10 @@ class KpfcSsoTest extends TestCase
         $response->assertSessionHasErrors('sso');
         $this->assertFalse(Auth::check());
     }
+
+    /* -------------------------------------------------------------------------- */
+    /* 3. TOKEN MANAGEMENT & INTROSPECTION                                       */
+    /* -------------------------------------------------------------------------- */
 
     /**
      * Test token refresh rotates refresh token atomically and updates database record.
@@ -269,7 +295,7 @@ class KpfcSsoTest extends TestCase
         ]);
 
         Http::fake([
-            $this->issuer.'/oauth/token' => Http::response([
+            $this->issuer . '/oauth/token' => Http::response([
                 'access_token' => 'new_rotated_access_token',
                 'refresh_token' => 'new_rotated_refresh_token',
                 'token_type' => 'Bearer',
@@ -305,7 +331,7 @@ class KpfcSsoTest extends TestCase
         ]);
 
         Http::fake([
-            $this->issuer.'/oauth/token' => Http::response([
+            $this->issuer . '/oauth/token' => Http::response([
                 'error' => 'invalid_grant',
                 'error_description' => 'The refresh token is invalid.',
             ], 400),
@@ -317,6 +343,33 @@ class KpfcSsoTest extends TestCase
         $this->assertNull($result);
         $this->assertDatabaseMissing('user_sso_tokens', ['user_id' => $user->id]);
     }
+
+    /**
+     * Test token introspection via HTTP Basic Auth.
+     */
+    public function test_token_introspection(): void
+    {
+        Http::fake([
+            $this->issuer . '/api/oauth/introspect' => Http::response([
+                'active' => true,
+                'client_id' => $this->clientId,
+                'sub' => 'sub-intro-test',
+                'scope' => 'fleet:login fleet:profile',
+                'iat' => time() - 60,
+                'exp' => time() + 840,
+            ], 200),
+        ]);
+
+        $service = app(KpfcSsoService::class);
+        $result = $service->introspectToken('valid_access_token');
+
+        $this->assertTrue($result['active']);
+        $this->assertSame('sub-intro-test', $result['sub']);
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /* 4. LOGOUT & SESSION TERMINATION                                            */
+    /* -------------------------------------------------------------------------- */
 
     /**
      * Test Fleet logout revokes token at identity provider and destroys session.
@@ -337,7 +390,7 @@ class KpfcSsoTest extends TestCase
         ]);
 
         Http::fake([
-            $this->issuer.'/api/oauth/revoke' => Http::response(['revoked' => true], 200),
+            $this->issuer . '/api/oauth/revoke' => Http::response(['revoked' => true], 200),
         ]);
 
         $response = $this->actingAs($user)->post('/logout');
@@ -355,28 +408,9 @@ class KpfcSsoTest extends TestCase
         });
     }
 
-    /**
-     * Test token introspection via HTTP Basic Auth.
-     */
-    public function test_token_introspection(): void
-    {
-        Http::fake([
-            $this->issuer.'/api/oauth/introspect' => Http::response([
-                'active' => true,
-                'client_id' => $this->clientId,
-                'sub' => 'sub-intro-test',
-                'scope' => 'fleet:login fleet:profile',
-                'iat' => time() - 60,
-                'exp' => time() + 840,
-            ], 200),
-        ]);
-
-        $service = app(KpfcSsoService::class);
-        $result = $service->introspectToken('valid_access_token');
-
-        $this->assertTrue($result['active']);
-        $this->assertSame('sub-intro-test', $result['sub']);
-    }
+    /* -------------------------------------------------------------------------- */
+    /* 5. WEBHOOK PROCESSING, SECURITY & IDEMPOTENCY                              */
+    /* -------------------------------------------------------------------------- */
 
     /**
      * Test lifecycle webhook rejects timestamps older than five minutes.
@@ -385,15 +419,25 @@ class KpfcSsoTest extends TestCase
     {
         $oldTimestamp = time() - 301; // > 5 minutes
         $payload = ['id' => 'evt_1', 'event' => 'user.updated'];
-        $rawBody = json_encode($payload);
+        $rawBody = json_encode($payload, JSON_UNESCAPED_SLASHES);
 
-        $sig = 'v1='.hash_hmac('sha256', $oldTimestamp.'.'.$rawBody, $this->webhookSecret);
+        $sig = 'v1=' . hash_hmac('sha256', $oldTimestamp . '.' . $rawBody, $this->webhookSecret);
 
-        $response = $this->postJson('/auth/kpfc/webhook', $payload, [
-            'X-KPFC-Event-Id' => 'evt_1',
-            'X-KPFC-Timestamp' => (string) $oldTimestamp,
-            'X-KPFC-Signature' => $sig,
-        ]);
+        $response = $this->call(
+            'POST',
+            '/auth/kpfc/webhook',
+            [],
+            [],
+            [],
+            [
+                'HTTP_X-KPFC-Event-Id' => 'evt_1',
+                'HTTP_X-KPFC-Timestamp' => (string) $oldTimestamp,
+                'HTTP_X-KPFC-Signature' => $sig,
+                'CONTENT_TYPE' => 'application/json',
+                'HTTP_ACCEPT' => 'application/json',
+            ],
+            $rawBody
+        );
 
         $response->assertStatus(400);
     }
@@ -405,12 +449,23 @@ class KpfcSsoTest extends TestCase
     {
         $timestamp = time();
         $payload = ['id' => 'evt_2', 'event' => 'user.updated'];
+        $rawBody = json_encode($payload, JSON_UNESCAPED_SLASHES);
 
-        $response = $this->postJson('/auth/kpfc/webhook', $payload, [
-            'X-KPFC-Event-Id' => 'evt_2',
-            'X-KPFC-Timestamp' => (string) $timestamp,
-            'X-KPFC-Signature' => 'v1=invalidhexhmacsignature000000000000000000000000000000000000000000',
-        ]);
+        $response = $this->call(
+            'POST',
+            '/auth/kpfc/webhook',
+            [],
+            [],
+            [],
+            [
+                'HTTP_X-KPFC-Event-Id' => 'evt_2',
+                'HTTP_X-KPFC-Timestamp' => (string) $timestamp,
+                'HTTP_X-KPFC-Signature' => 'v1=invalidhexhmacsignature000000000000000000000000000000000000000000',
+                'CONTENT_TYPE' => 'application/json',
+                'HTTP_ACCEPT' => 'application/json',
+            ],
+            $rawBody
+        );
 
         $response->assertStatus(401);
     }
@@ -435,14 +490,24 @@ class KpfcSsoTest extends TestCase
             'subject' => 'bca7909f-cdf0-4f59-a69d-6cb61f7d34a6',
         ];
 
-        $rawBody = json_encode($payload);
-        $sig = 'v1='.hash_hmac('sha256', $timestamp.'.'.$rawBody, $this->webhookSecret);
+        $rawBody = json_encode($payload, JSON_UNESCAPED_SLASHES);
+        $sig = 'v1=' . hash_hmac('sha256', $timestamp . '.' . $rawBody, $this->webhookSecret);
 
-        $response = $this->postJson('/auth/kpfc/webhook', $payload, [
-            'X-KPFC-Event-Id' => $eventId,
-            'X-KPFC-Timestamp' => (string) $timestamp,
-            'X-KPFC-Signature' => $sig,
-        ]);
+        $response = $this->call(
+            'POST',
+            '/auth/kpfc/webhook',
+            [],
+            [],
+            [],
+            [
+                'HTTP_X-KPFC-Event-Id' => $eventId,
+                'HTTP_X-KPFC-Timestamp' => (string) $timestamp,
+                'HTTP_X-KPFC-Signature' => $sig,
+                'CONTENT_TYPE' => 'application/json',
+                'HTTP_ACCEPT' => 'application/json',
+            ],
+            $rawBody
+        );
 
         $response->assertStatus(200);
         $response->assertJson(['status' => 'already_processed']);
@@ -493,14 +558,24 @@ class KpfcSsoTest extends TestCase
             ],
         ];
 
-        $rawBody = json_encode($payload);
-        $sig = 'v1='.hash_hmac('sha256', $timestamp.'.'.$rawBody, $this->webhookSecret);
+        $rawBody = json_encode($payload, JSON_UNESCAPED_SLASHES);
+        $sig = 'v1=' . hash_hmac('sha256', $timestamp . '.' . $rawBody, $this->webhookSecret);
 
-        $response = $this->postJson('/auth/kpfc/webhook', $payload, [
-            'X-KPFC-Event-Id' => $eventId,
-            'X-KPFC-Timestamp' => (string) $timestamp,
-            'X-KPFC-Signature' => $sig,
-        ]);
+        $response = $this->call(
+            'POST',
+            '/auth/kpfc/webhook',
+            [],
+            [],
+            [],
+            [
+                'HTTP_X-KPFC-Event-Id' => $eventId,
+                'HTTP_X-KPFC-Timestamp' => (string) $timestamp,
+                'HTTP_X-KPFC-Signature' => $sig,
+                'CONTENT_TYPE' => 'application/json',
+                'HTTP_ACCEPT' => 'application/json',
+            ],
+            $rawBody
+        );
 
         $response->assertStatus(200);
         $response->assertJson(['status' => 'processed_revocation']);
@@ -550,14 +625,24 @@ class KpfcSsoTest extends TestCase
             ],
         ];
 
-        $rawBody = json_encode($payload);
-        $sig = 'v1='.hash_hmac('sha256', $timestamp.'.'.$rawBody, $this->webhookSecret);
+        $rawBody = json_encode($payload, JSON_UNESCAPED_SLASHES);
+        $sig = 'v1=' . hash_hmac('sha256', $timestamp . '.' . $rawBody, $this->webhookSecret);
 
-        $response = $this->postJson('/auth/kpfc/webhook', $payload, [
-            'X-KPFC-Event-Id' => $eventId,
-            'X-KPFC-Timestamp' => (string) $timestamp,
-            'X-KPFC-Signature' => $sig,
-        ]);
+        $response = $this->call(
+            'POST',
+            '/auth/kpfc/webhook',
+            [],
+            [],
+            [],
+            [
+                'HTTP_X-KPFC-Event-Id' => $eventId,
+                'HTTP_X-KPFC-Timestamp' => (string) $timestamp,
+                'HTTP_X-KPFC-Signature' => $sig,
+                'CONTENT_TYPE' => 'application/json',
+                'HTTP_ACCEPT' => 'application/json',
+            ],
+            $rawBody
+        );
 
         $response->assertStatus(200);
         $response->assertJson(['status' => 'processed_upsert']);
@@ -596,29 +681,27 @@ class KpfcSsoTest extends TestCase
             ],
         ];
 
-        $rawBody = json_encode($payload);
-        $sig = 'v1='.hash_hmac('sha256', $timestamp.'.'.$rawBody, $this->webhookSecret);
+        $rawBody = json_encode($payload, JSON_UNESCAPED_SLASHES);
+        $sig = 'v1=' . hash_hmac('sha256', $timestamp . '.' . $rawBody, $this->webhookSecret);
 
-        $response = $this->postJson('/api/sso/webhook', $payload, [
-            'X-KPFC-Event-Id' => $eventId,
-            'X-KPFC-Timestamp' => (string) $timestamp,
-            'X-KPFC-Signature' => $sig,
-        ]);
+        $response = $this->call(
+            'POST',
+            '/api/sso/webhook',
+            [],
+            [],
+            [],
+            [
+                'HTTP_X-KPFC-Event-Id' => $eventId,
+                'HTTP_X-KPFC-Timestamp' => (string) $timestamp,
+                'HTTP_X-KPFC-Signature' => $sig,
+                'CONTENT_TYPE' => 'application/json',
+                'HTTP_ACCEPT' => 'application/json',
+            ],
+            $rawBody
+        );
 
         $response->assertStatus(200);
         $response->assertJson(['status' => 'processed_revocation']);
         $this->assertFalse($user->fresh()->fleet_access);
-    }
-
-    /**
-     * Test /api/auth/kpfc/redirect initiates PKCE session.
-     */
-    public function test_api_auth_kpfc_redirect_initiates_pkce(): void
-    {
-        $response = $this->get('/api/auth/kpfc/redirect');
-
-        $response->assertStatus(302);
-        $this->assertTrue(session()->has('kpfc_sso_state'));
-        $this->assertTrue(session()->has('kpfc_code_verifier'));
     }
 }
