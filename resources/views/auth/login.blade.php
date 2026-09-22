@@ -4,14 +4,15 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Sign In - {{ config('app.name', 'KPFC Fleet Tracker') }}</title>
+    @fonts
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     @endif
     <style>
         body {
-            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background: #0f172a;
-            color: #f8fafc;
+            font-family: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+            background: #f3f4f6;
+            color: #172033;
             margin: 0;
             display: flex;
             align-items: center;
@@ -21,22 +22,22 @@
             box-sizing: border-box;
         }
         .login-card {
-            background: #1e293b;
-            border: 1px solid #334155;
-            border-radius: 1rem;
-            padding: 2.5rem;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            padding: 2rem;
             width: 100%;
             max-width: 440px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 12px 24px -12px rgba(23, 32, 51, 0.28);
             text-align: center;
         }
         .brand-badge {
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            background: #1e1b4b;
-            color: #818cf8;
-            border: 1px solid #3730a3;
+            background: #eff6ff;
+            color: #174a8b;
+            border: 1px solid #bfdbfe;
             padding: 0.35rem 0.85rem;
             border-radius: 9999px;
             font-size: 0.75rem;
@@ -48,12 +49,12 @@
         .title {
             font-size: 1.5rem;
             font-weight: 700;
-            color: #ffffff;
+            color: #172033;
             margin: 0 0 0.5rem 0;
         }
         .subtitle {
             font-size: 0.875rem;
-            color: #94a3b8;
+            color: #475569;
             margin: 0 0 2rem 0;
             line-height: 1.4;
         }
@@ -63,7 +64,7 @@
             justify-content: center;
             gap: 0.75rem;
             width: 100%;
-            background: #4f46e5;
+            background: #2563eb;
             color: #ffffff;
             border: none;
             padding: 0.85rem 1.25rem;
@@ -76,16 +77,16 @@
             box-sizing: border-box;
         }
         .sso-btn:hover {
-            background: #4338ca;
+            background: #1d4ed8;
             transform: translateY(-1px);
         }
         .sso-btn:active {
             transform: translateY(0);
         }
         .alert-error {
-            background: rgba(239, 68, 68, 0.15);
-            border: 1px solid #ef4444;
-            color: #fca5a5;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #b91c1c;
             padding: 0.75rem 1rem;
             border-radius: 0.5rem;
             font-size: 0.85rem;
@@ -93,9 +94,9 @@
             text-align: left;
         }
         .alert-status {
-            background: rgba(16, 185, 129, 0.15);
-            border: 1px solid #10b981;
-            color: #6ee7b7;
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            color: #047857;
             padding: 0.75rem 1rem;
             border-radius: 0.5rem;
             font-size: 0.85rem;
@@ -109,7 +110,7 @@
             line-height: 1.4;
         }
         .footer-note a {
-            color: #818cf8;
+            color: #2563eb;
             text-decoration: none;
         }
     </style>

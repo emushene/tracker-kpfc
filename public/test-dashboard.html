@@ -49,33 +49,39 @@
     }
   </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen">
+<body class="bg-[#f3f4f6] text-[#172033] min-h-screen">
 
   <!-- Top Navigation -->
-  <header class="bg-slate-800 border-b border-slate-700 px-6 py-4 flex flex-wrap items-center justify-between gap-4">
-    <div class="flex items-center gap-3">
-      <div class="bg-indigo-600 p-2 rounded-lg">
-        <i data-lucide="navigation" class="w-6 h-6 text-white"></i>
-      </div>
-      <div>
-        <div class="flex items-center gap-2">
-          <h1 class="text-xl font-bold tracking-tight">KPFC Fleet Tracker</h1>
-          <span class="bg-amber-500/20 text-amber-400 text-xs font-semibold px-2 py-0.5 rounded border border-amber-500/30">TEST / DEMO UI</span>
-        </div>
-        <p class="text-xs text-slate-400">Real-time GPS telematics, Home Base assignments & Mission Dispatching</p>
-      </div>
-    </div>
+  <header class="sticky top-0 z-[1000] border-b border-slate-200 bg-[#f3f4f6]/95 px-4 py-4 backdrop-blur-sm sm:px-6">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <a href="/" class="flex items-center gap-3" aria-label="KPFC Fleet Management home">
+        <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-[#2563eb] text-white shadow-lg shadow-blue-500/20">
+          <i data-lucide="truck" class="h-5 w-5"></i>
+        </span>
+        <span>
+          <span class="block text-xs font-semibold uppercase tracking-[0.2em] text-[#174a8b]">KPFC</span>
+          <span class="block text-base font-semibold tracking-tight text-[#172033]">Fleet Management</span>
+        </span>
+      </a>
 
-    <!-- Quick Diagnostics Bar -->
-    <div class="flex items-center gap-3">
-      <button onclick="testProtrackConnection()" class="flex items-center gap-2 text-xs bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded-lg transition border border-slate-600">
-        <i data-lucide="activity" class="w-4 h-4 text-emerald-400"></i>
-        <span>Test Protrack API</span>
-      </button>
-      <button onclick="loadFleetData()" class="flex items-center gap-2 text-xs bg-indigo-600 hover:bg-indigo-500 px-3 py-2 rounded-lg font-medium transition shadow-sm">
-        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
-        <span>Refresh Fleet</span>
-      </button>
+      <nav class="order-3 flex w-full items-center gap-4 overflow-x-auto border-t border-slate-200 pt-3 text-xs font-medium text-slate-500 lg:order-2 lg:w-auto lg:border-t-0 lg:pt-0" aria-label="Fleet management navigation">
+        <a href="/" class="whitespace-nowrap transition hover:text-[#2563eb]">Home</a>
+        <a href="/test-dashboard" class="whitespace-nowrap text-[#2563eb]">Dashboard</a>
+        <a href="#live-map" class="whitespace-nowrap transition hover:text-[#2563eb]">Live map</a>
+        <a href="#fleet-vehicles" class="whitespace-nowrap transition hover:text-[#2563eb]">Vehicles</a>
+        <a href="#operations" class="whitespace-nowrap transition hover:text-[#2563eb]">Operations</a>
+      </nav>
+
+      <div class="order-2 flex items-center gap-2 lg:order-3">
+        <button onclick="testProtrackConnection()" class="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs transition hover:border-slate-400">
+          <i data-lucide="activity" class="h-4 w-4 text-emerald-400"></i>
+          <span class="hidden sm:inline">Test Protrack API</span>
+        </button>
+        <button onclick="loadFleetData()" class="flex items-center gap-2 rounded-lg bg-[#2563eb] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#1d4ed8]">
+          <i data-lucide="refresh-cw" class="h-4 w-4"></i>
+          <span class="hidden sm:inline">Refresh Fleet</span>
+        </button>
+      </div>
     </div>
   </header>
 
@@ -84,32 +90,32 @@
 
     <!-- Fleet Stats Overview -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <div class="bg-slate-800/80 border border-slate-700 p-4 rounded-xl">
-        <p class="text-xs font-medium text-slate-400">Total Monitored Fleet</p>
-        <p id="stat-total" class="text-2xl font-bold mt-1 text-white">--</p>
+      <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+        <p class="text-xs font-medium text-slate-500">Total Monitored Fleet</p>
+        <p id="stat-total" class="text-2xl font-bold mt-1 text-[#172033]">--</p>
       </div>
-      <div class="bg-slate-800/80 border border-slate-700 p-4 rounded-xl">
-        <p class="text-xs font-medium text-slate-400">Active / Moving</p>
-        <p id="stat-moving" class="text-2xl font-bold mt-1 text-emerald-400">--</p>
+      <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+        <p class="text-xs font-medium text-slate-500">Active / Moving</p>
+        <p id="stat-moving" class="text-2xl font-bold mt-1 text-emerald-600">--</p>
       </div>
-      <div class="bg-slate-800/80 border border-slate-700 p-4 rounded-xl">
-        <p class="text-xs font-medium text-slate-400">Assigned Home Bases</p>
-        <p id="stat-assigned" class="text-2xl font-bold mt-1 text-indigo-400">--</p>
+      <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+        <p class="text-xs font-medium text-slate-500">Assigned Home Bases</p>
+        <p id="stat-assigned" class="text-2xl font-bold mt-1 text-[#2563eb]">--</p>
       </div>
-      <div class="bg-slate-800/80 border border-slate-700 p-4 rounded-xl">
-        <p class="text-xs font-medium text-slate-400">Active Deployments (On Duty)</p>
+      <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+        <p class="text-xs font-medium text-slate-500">Active Deployments (On Duty)</p>
         <p id="stat-deployed" class="text-2xl font-bold mt-1 text-amber-400">--</p>
       </div>
     </div>
 
     <!-- Live Map Section -->
-    <div class="bg-slate-800 border border-slate-700 p-4 rounded-xl shadow-lg">
+    <div id="live-map" class="relative z-0 bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
       <div class="flex items-center justify-between mb-3">
         <div class="flex items-center gap-2">
           <i data-lucide="map-pin" class="w-5 h-5 text-indigo-400"></i>
-          <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-300">Live GPS Fleet & Branch Geofences</h2>
+          <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-700">Live GPS Fleet & Branch Geofences</h2>
         </div>
-        <div class="flex items-center gap-4 text-xs text-slate-400">
+        <div class="flex items-center gap-4 text-xs text-slate-500">
           <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Moving</span>
           <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Deployed</span>
           <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-slate-400"></span> Parked</span>
@@ -123,21 +129,21 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
       <!-- Vehicles List (2 Cols) -->
-      <div class="lg:col-span-2 bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-lg">
+      <div id="fleet-vehicles" class="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-base font-semibold text-slate-200">Fleet Vehicles</h2>
-          <input id="search-input" oninput="filterVehicles()" type="text" placeholder="Search plate or IMEI..." class="bg-slate-900 border border-slate-700 px-3 py-1.5 text-xs rounded-lg focus:outline-none focus:border-indigo-500 text-slate-200 w-48">
+          <h2 class="text-base font-semibold text-[#172033]">Fleet Vehicles</h2>
+          <input id="search-input" oninput="filterVehicles()" type="text" placeholder="Search plate or IMEI..." class="bg-white border border-slate-300 px-3 py-1.5 text-xs rounded-lg focus:outline-none focus:border-[#2563eb] text-slate-700 w-48">
         </div>
         
         <div class="overflow-x-auto">
-          <table class="w-full text-left text-xs text-slate-300">
-            <thead class="bg-slate-900/60 uppercase text-[10px] text-slate-400 border-b border-slate-700">
+          <table class="w-full text-left text-xs text-slate-700">
+            <thead class="bg-slate-50 uppercase text-[10px] text-slate-500 border-b border-slate-200">
               <tr>
-                <th class="py-3 px-3">Vehicle</th>
-                <th class="py-3 px-3">Status</th>
-                <th class="py-3 px-3">Live Location</th>
-                <th class="py-3 px-3">Home Base / Distance</th>
-                <th class="py-3 px-3">Mission / Route</th>
+                <th class="py-3 px-3"><button type="button" onclick="sortVehicles('vehicle')" class="flex items-center gap-1 font-semibold transition hover:text-[#2563eb]">Vehicle <span id="sort-vehicle" aria-hidden="true"></span></button></th>
+                <th class="py-3 px-3"><button type="button" onclick="sortVehicles('status')" class="flex items-center gap-1 font-semibold transition hover:text-[#2563eb]">Status <span id="sort-status" aria-hidden="true"></span></button></th>
+                <th class="py-3 px-3"><button type="button" onclick="sortVehicles('location')" class="flex items-center gap-1 font-semibold transition hover:text-[#2563eb]">Live Location <span id="sort-location" aria-hidden="true"></span></button></th>
+                <th class="py-3 px-3"><button type="button" onclick="sortVehicles('homebase')" class="flex items-center gap-1 font-semibold transition hover:text-[#2563eb]">Home Base / Distance <span id="sort-homebase" aria-hidden="true"></span></button></th>
+                <th class="py-3 px-3"><button type="button" onclick="sortVehicles('mission')" class="flex items-center gap-1 font-semibold transition hover:text-[#2563eb]">Mission / Route <span id="sort-mission" aria-hidden="true"></span></button></th>
                 <th class="py-3 px-3 text-right">Actions</th>
               </tr>
             </thead>
@@ -148,49 +154,57 @@
             </tbody>
           </table>
         </div>
+        <div class="mt-4 flex items-center justify-between gap-3 border-t border-slate-200 pt-3 text-xs text-slate-500">
+          <span id="pagination-info">Showing 0 vehicles</span>
+          <div class="flex items-center gap-2">
+            <button id="previous-page" type="button" onclick="changeVehiclePage(-1)" class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">Previous</button>
+            <span id="pagination-page" class="min-w-16 text-center">Page 1 of 1</span>
+            <button id="next-page" type="button" onclick="changeVehiclePage(1)" class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">Next</button>
+          </div>
+        </div>
       </div>
 
       <!-- Action Panel (Home Base & Deployments) (1 Col) -->
-      <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-lg space-y-6">
+      <div id="operations" class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-6">
         
         <!-- Selection Header -->
         <div>
-          <h2 class="text-base font-semibold text-slate-200">Vehicle Operations</h2>
-          <p id="selected-vehicle-title" class="text-xs text-slate-400 mt-0.5">Select a vehicle from the list to test assignments.</p>
+          <h2 class="text-base font-semibold text-[#172033]">Vehicle Operations</h2>
+          <p id="selected-vehicle-title" class="text-xs text-slate-500 mt-0.5">Select a vehicle from the list to test assignments.</p>
         </div>
 
         <div id="operations-panel" class="space-y-6 opacity-40 pointer-events-none transition-opacity">
 
           <!-- 1. Assign Permanent Home Base -->
-          <div class="bg-slate-900/70 border border-slate-700/80 p-4 rounded-lg space-y-3">
+          <div class="bg-slate-50 border border-slate-200 p-4 rounded-lg space-y-3">
             <div class="flex items-center gap-2">
               <i data-lucide="home" class="w-4 h-4 text-indigo-400"></i>
-              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Assign Permanent Home Base</h3>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700">Assign Permanent Home Base</h3>
             </div>
-            <p class="text-[11px] text-slate-400">Default base branch used for OSRM return distance & duration calculations.</p>
-            <select id="assign-shop-select" class="w-full bg-slate-800 border border-slate-700 text-xs rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-indigo-500"></select>
+            <p class="text-[11px] text-slate-600">Default base branch used for OSRM return distance & duration calculations.</p>
+            <select id="assign-shop-select" class="w-full bg-white border border-slate-300 text-xs rounded-lg px-3 py-2 text-slate-700 focus:outline-none focus:border-[#2563eb]"></select>
             <div class="flex gap-2">
-              <button onclick="submitAssignShop()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold py-2 rounded-lg transition">Save Home Base</button>
-              <button onclick="submitClearShop()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs px-3 py-2 rounded-lg transition">Clear</button>
+              <button onclick="submitAssignShop()" class="flex-1 bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-xs font-semibold py-2 rounded-lg transition">Save Home Base</button>
+              <button onclick="submitClearShop()" class="bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 text-xs px-3 py-2 rounded-lg transition">Clear</button>
             </div>
           </div>
 
           <!-- 2. Dispatch Deployment Mission -->
-          <div class="bg-slate-900/70 border border-slate-700/80 p-4 rounded-lg space-y-3">
+          <div class="bg-slate-50 border border-slate-200 p-4 rounded-lg space-y-3">
             <div class="flex items-center gap-2">
               <i data-lucide="send" class="w-4 h-4 text-amber-400"></i>
-              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Dispatch on Temporary Mission</h3>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700">Dispatch on Temporary Mission</h3>
             </div>
-            <p class="text-[11px] text-slate-400">Assigns a temporary destination (another shop or client site). Overrides home base routing.</p>
+            <p class="text-[11px] text-slate-600">Assigns a temporary destination (another shop or client site). Overrides home base routing.</p>
             
             <div>
               <label class="text-[10px] uppercase text-slate-400 block mb-1">Destination Shop</label>
-              <select id="deploy-shop-select" class="w-full bg-slate-800 border border-slate-700 text-xs rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-amber-500"></select>
+              <select id="deploy-shop-select" class="w-full bg-white border border-slate-300 text-xs rounded-lg px-3 py-2 text-slate-700 focus:outline-none focus:border-amber-500"></select>
             </div>
 
             <div>
               <label class="text-[10px] uppercase text-slate-400 block mb-1">Mission Purpose</label>
-              <input id="deploy-purpose" type="text" placeholder="e.g. Urgent Branch Delivery" class="w-full bg-slate-800 border border-slate-700 text-xs rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-amber-500">
+              <input id="deploy-purpose" type="text" placeholder="e.g. Urgent Branch Delivery" class="w-full bg-white border border-slate-300 text-xs rounded-lg px-3 py-2 text-slate-700 focus:outline-none focus:border-amber-500">
             </div>
 
             <button onclick="submitDispatch()" class="w-full bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold text-xs py-2 rounded-lg transition">Dispatch Vehicle</button>
@@ -228,7 +242,11 @@
 
     let vehicles = [];
     let selectedVehicleId = null;
+    let currentVehiclePage = 1;
+    let currentSortKey = "vehicle";
+    let currentSortDirection = "asc";
     let map, mapMarkers = [];
+    const vehiclesPerPage = 10;
 
     // Initialize Map on load
     document.addEventListener("DOMContentLoaded", async () => {
@@ -302,6 +320,7 @@
         const res = await fetch("/api/vehicles?all=1");
         const json = await res.json();
         vehicles = json.data || [];
+        currentVehiclePage = 1;
         renderFleet();
         showToast("Fleet Refreshed", `Loaded ${vehicles.length} vehicles.`);
       } catch (err) {
@@ -319,6 +338,16 @@
       mapMarkers = [];
 
       let movingCount = 0, assignedCount = 0, deployedCount = 0;
+      const query = document.getElementById("search-input").value.trim().toLowerCase();
+      const filteredVehicles = vehicles.filter(vehicle => {
+        const searchableText = `${vehicle.plate_number || ""} ${vehicle.imei || ""}`.toLowerCase();
+        return searchableText.includes(query);
+      });
+      const sortedVehicles = [...filteredVehicles].sort(compareVehicles);
+      const totalPages = Math.max(1, Math.ceil(filteredVehicles.length / vehiclesPerPage));
+      currentVehiclePage = Math.min(currentVehiclePage, totalPages);
+      const firstVehicleIndex = (currentVehiclePage - 1) * vehiclesPerPage;
+      const pagedVehicles = sortedVehicles.slice(firstVehicleIndex, firstVehicleIndex + vehiclesPerPage);
 
       vehicles.forEach(v => {
         const isSelected = selectedVehicleId === v.id;
@@ -362,6 +391,8 @@
         }
 
         // Table Row
+        if (!pagedVehicles.includes(v)) return;
+
         const deploymentDestination = v.active_deployment?.destination?.name || null;
         const statusBadge = v.status === 'moving'
           ? '<span class="bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded text-[10px]">Moving</span>'
@@ -379,13 +410,13 @@
 
         tbody.innerHTML += `
           <tr class="hover:bg-slate-750 cursor-pointer ${isSelected ? 'bg-indigo-950/40 border-l-2 border-indigo-500' : ''}" onclick="selectVehicle(${v.id})">
-            <td class="py-3 px-3 font-semibold text-white">${v.plate_number || 'No Plate'}<br><span class="text-[10px] font-normal text-slate-500 font-mono">${v.imei}</span></td>
+            <td class="py-3 px-3 font-semibold text-[#172033]">${v.plate_number || 'No Plate'}<br><span class="text-[10px] font-normal text-slate-500 font-mono">${v.imei}</span></td>
             <td class="py-3 px-3">${statusBadge}</td>
-            <td class="py-3 px-3 max-w-[150px] truncate text-slate-300" title="${v.location_name || ''}">${v.location_name || 'Resolving...'}</td>
-            <td class="py-3 px-3 font-medium text-slate-300">${homebaseInfo}</td>
+            <td class="py-3 px-3 max-w-[150px] truncate text-slate-700" title="${v.location_name || ''}">${v.location_name || 'Resolving...'}</td>
+            <td class="py-3 px-3 font-medium text-slate-700">${homebaseInfo}</td>
             <td class="py-3 px-3 text-xs">${routingInfo}</td>
             <td class="py-3 px-3 text-right">
-              <button onclick="selectVehicle(${v.id})" class="text-xs text-indigo-400 hover:text-indigo-300 font-medium">Manage</button>
+              <button onclick="selectVehicle(${v.id})" class="text-xs text-[#2563eb] hover:text-[#1d4ed8] font-medium">Manage</button>
             </td>
           </tr>
         `;
@@ -396,8 +427,84 @@
       document.getElementById("stat-moving").innerText = movingCount;
       document.getElementById("stat-assigned").innerText = assignedCount;
       document.getElementById("stat-deployed").innerText = deployedCount;
+      updateVehiclePagination(filteredVehicles.length, totalPages, firstVehicleIndex);
 
       updateDeploymentActions();
+    }
+
+    function sortVehicles(sortKey) {
+      if (currentSortKey === sortKey) {
+        currentSortDirection = currentSortDirection === "asc" ? "desc" : "asc";
+      } else {
+        currentSortKey = sortKey;
+        currentSortDirection = "asc";
+      }
+
+      currentVehiclePage = 1;
+      updateSortIndicators();
+      renderFleet();
+    }
+
+    function compareVehicles(firstVehicle, secondVehicle) {
+      const firstValue = getVehicleSortValue(firstVehicle, currentSortKey);
+      const secondValue = getVehicleSortValue(secondVehicle, currentSortKey);
+      let comparison = 0;
+
+      if (typeof firstValue === "number" && typeof secondValue === "number") {
+        comparison = firstValue - secondValue;
+      } else {
+        comparison = String(firstValue).localeCompare(String(secondValue), undefined, { numeric: true, sensitivity: "base" });
+      }
+
+      return currentSortDirection === "asc" ? comparison : -comparison;
+    }
+
+    function getVehicleSortValue(vehicle, sortKey) {
+      switch (sortKey) {
+        case "status":
+          return vehicle.status || "";
+        case "location":
+          return vehicle.location_name || "";
+        case "homebase":
+          return vehicle.homebase_distance?.distance_km ?? Number.POSITIVE_INFINITY;
+        case "mission":
+          return vehicle.routing?.distance_km ?? Number.POSITIVE_INFINITY;
+        case "vehicle":
+        default:
+          return vehicle.plate_number || vehicle.imei || "";
+      }
+    }
+
+    function updateSortIndicators() {
+      ["vehicle", "status", "location", "homebase", "mission"].forEach(sortKey => {
+        const indicator = document.getElementById(`sort-${sortKey}`);
+        if (indicator) {
+          indicator.innerText = sortKey === currentSortKey
+            ? (currentSortDirection === "asc" ? "↑" : "↓")
+            : "↕";
+        }
+      });
+    }
+
+    function updateVehiclePagination(totalVehicles, totalPages, firstVehicleIndex) {
+      const paginationInfo = document.getElementById("pagination-info");
+      const paginationPage = document.getElementById("pagination-page");
+      const previousPage = document.getElementById("previous-page");
+      const nextPage = document.getElementById("next-page");
+      const lastVehicleIndex = Math.min(firstVehicleIndex + vehiclesPerPage, totalVehicles);
+
+      paginationInfo.innerText = totalVehicles === 0
+        ? "No vehicles found"
+        : `Showing ${firstVehicleIndex + 1}-${lastVehicleIndex} of ${totalVehicles} vehicles`;
+      paginationPage.innerText = `Page ${currentVehiclePage} of ${totalPages}`;
+      previousPage.disabled = currentVehiclePage === 1;
+      nextPage.disabled = currentVehiclePage === totalPages;
+    }
+
+    function changeVehiclePage(direction) {
+      currentVehiclePage += direction;
+      renderFleet();
+      document.getElementById("fleet-vehicles").scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
     function updateDeploymentActions() {
@@ -572,11 +679,8 @@
     }
 
     function filterVehicles() {
-      const q = document.getElementById("search-input").value.toLowerCase();
-      document.querySelectorAll("#vehicle-table-body tr").forEach(row => {
-        const text = row.innerText.toLowerCase();
-        row.style.display = text.includes(q) ? "" : "none";
-      });
+      currentVehiclePage = 1;
+      renderFleet();
     }
   </script>
 </body>
