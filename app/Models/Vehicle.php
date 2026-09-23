@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -52,12 +53,10 @@ class Vehicle extends Model
     ];
 
     /**
-     * Retrieve the model for a bound value.
+     * Resolve a vehicle from a route parameter by ID, plate number, or IMEI.
      *
-     * Supports resolving by numeric ID, plate number (including with/without spaces and hyphens), or IMEI.
-     *
-     * @param  mixed  $value
-     * @param  string|null  $field
+     * This lets URL parameters like /vehicles/109 or /vehicles/KBZ-001Q resolve
+     * to the correct vehicle record without extra controller logic.
      */
     public function resolveRouteBinding($value, $field = null): ?Model
     {
@@ -80,6 +79,44 @@ class Vehicle extends Model
             ->first();
     }
 
+    /**
+     * Compute the current fleet status from live telemetry instead of storing it in the database.
+     *
+     * Priority order:
+     * 1. active deployment => deployed
+     * 2. non-zero speed => moving
+     * 3. ignition on => idling
+     * 4. active vehicle => parked
+     * 5. otherwise => idle
+     */
+    protected function status(): Attribute
+    {
+        return new Attribute(
+            get: function () {
+                $position = $this->positions()->latest('gps_time')->first();
+
+                if ($this->deployments()
+                    ->whereIn('status', ['planned', 'dispatched', 'in_progress'])
+                    ->exists()) {
+                    return 'deployed';
+                }
+
+                if ($position && ($position->speed ?? 0) > 0) {
+                    return 'moving';
+                }
+
+                if ($position && ($position->acc_status ?? 0) === 1) {
+                    return 'idling';
+                }
+
+                return $this->active ? 'parked' : 'idle';
+            }
+        );
+    }
+    /**
+     * Return the permanent home shop assigned to this vehicle.
+     * Used for home-base routing, distance calculations, and operational assignment.
+     */
     public function assignedShop(): BelongsTo
     {
         return $this->belongsTo(
@@ -88,31 +125,51 @@ class Vehicle extends Model
         );
     }
 
+    /**
+     * Return all GPS/telemetry position records for this vehicle.
+     * The latest record is used to determine movement, last location, and speed.
+     */
     public function positions(): HasMany
     {
         return $this->hasMany(VehiclePosition::class);
     }
 
+    /**
+     * Return vehicle alarm events generated from telematics or system rules.
+     */
     public function alarms(): HasMany
     {
         return $this->hasMany(VehicleAlarm::class);
     }
 
+    /**
+     * Return vehicle event records such as state changes, ingest updates, and system notices.
+     */
     public function events(): HasMany
     {
         return $this->hasMany(VehicleEvent::class);
     }
 
+    /**
+     * Return mileage or odometer-related records for this vehicle.
+     */
     public function mileage(): HasMany
     {
         return $this->hasMany(VehicleMileage::class);
     }
 
+    /**
+     * Return playback history records for route reconstruction or historical review.
+     */
     public function playbacks(): HasMany
     {
         return $this->hasMany(VehiclePlayback::class);
     }
 
+    /**
+     * Return temporary or active deployments assigned to this vehicle.
+     * These control routing, dispatch status, and destination mission logic.
+     */
     public function deployments(): HasMany
     {
         return $this->hasMany(
