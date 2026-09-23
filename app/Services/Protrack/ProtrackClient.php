@@ -35,6 +35,22 @@ class ProtrackClient
     }
 
     /**
+     * Create the HTTP client used for Protrack365.
+     *
+     * The production Debian server has a proxy environment
+     * that interferes with PHP cURL connections to Protrack365.
+     * Explicitly disabling the proxy keeps Protrack traffic
+     * direct while leaving the rest of the application unchanged.
+     */
+    private function http()
+    {
+        return Http::timeout($this->timeout)
+            ->withOptions([
+                'proxy' => '',
+            ]);
+    }
+
+    /**
      * Authenticate with Protrack365.
      *
      * Protrack signature:
@@ -49,7 +65,7 @@ class ProtrackClient
             md5($this->password) . $timestamp
         );
 
-        $response = Http::timeout($this->timeout)
+        $response = $this->http()
             ->get(
                 $this->baseUrl . '/api/authorization',
                 [
@@ -102,7 +118,7 @@ class ProtrackClient
     {
         $token = $this->getAccessToken();
 
-        $response = Http::timeout($this->timeout)
+        $response = $this->http()
             ->get(
                 $this->baseUrl . '/api/device/list',
                 [
@@ -154,7 +170,7 @@ class ProtrackClient
             $params['imeis'] = implode(',', $imeis);
         }
 
-        $response = Http::timeout($this->timeout)
+        $response = $this->http()
             ->get(
                 $this->baseUrl . '/api/track',
                 $params
@@ -193,7 +209,7 @@ class ProtrackClient
     ): array {
         $token = $this->getAccessToken();
 
-        $response = Http::timeout($this->timeout)
+        $response = $this->http()
             ->get(
                 $this->baseUrl . '/api/playback',
                 [
@@ -230,7 +246,7 @@ class ProtrackClient
     {
         $token = $this->getAccessToken();
 
-        $response = Http::timeout($this->timeout)
+        $response = $this->http()
             ->get(
                 $this->baseUrl . '/api/device/detail',
                 [
@@ -272,7 +288,7 @@ class ProtrackClient
     ): array {
         $token = $this->getAccessToken();
 
-        $response = Http::timeout($this->timeout)
+        $response = $this->http()
             ->get(
                 $this->baseUrl . '/api/device/mileage',
                 [
@@ -326,7 +342,7 @@ class ProtrackClient
             $params['imeis'] = implode(',', $imeis);
         }
 
-        $response = Http::timeout($this->timeout)
+        $response = $this->http()
             ->get(
                 $this->baseUrl . '/api/alarm/list2',
                 $params
@@ -391,7 +407,6 @@ class ProtrackClient
                             $device['platformduetime']
                         )
                         : null,
-
 
                     'active' => true,
                 ]
@@ -622,5 +637,4 @@ class ProtrackClient
 
         return $value > 0 ? $value : null;
     }
-
 }
