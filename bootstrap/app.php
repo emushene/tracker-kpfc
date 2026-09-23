@@ -13,7 +13,18 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->alias([
+            'fleet.access' => \App\Http\Middleware\EnsureFleetAccess::class,
+            'fleet.write' => \App\Http\Middleware\EnsureCanWrite::class,
+        ]);
+
+        $middleware->redirectTo(
+            guests: '/login',
+            users: '/',
+        );
+
         $middleware->validateCsrfTokens(except: [
+            'api/*',
             'auth/kpfc/webhook',
             'api/sso/webhook',
         ]);

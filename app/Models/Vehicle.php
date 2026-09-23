@@ -51,6 +51,35 @@ class Vehicle extends Model
         'route_destination_id' => 'integer',
     ];
 
+    /**
+     * Retrieve the model for a bound value.
+     *
+     * Supports resolving by numeric ID, plate number (including with/without spaces and hyphens), or IMEI.
+     *
+     * @param  mixed  $value
+     * @param  string|null  $field
+     */
+    public function resolveRouteBinding($value, $field = null): ?Model
+    {
+        if ($field !== null) {
+            return parent::resolveRouteBinding($value, $field);
+        }
+
+        if (is_numeric($value)) {
+            $vehicle = $this->where('id', $value)->first();
+            if ($vehicle !== null) {
+                return $vehicle;
+            }
+        }
+
+        $normalizedPlate = str_replace([' ', '-'], '', (string) $value);
+
+        return $this->where('plate_number', $value)
+            ->orWhereRaw("REPLACE(REPLACE(plate_number, ' ', ''), '-', '') = ?", [$normalizedPlate])
+            ->orWhere('imei', (string) $value)
+            ->first();
+    }
+
     public function assignedShop(): BelongsTo
     {
         return $this->belongsTo(

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Location;
 use App\Models\Shop;
+use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleDeployment;
 use App\Models\VehiclePosition;
@@ -18,6 +19,9 @@ class VehicleApiTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Authenticate as fleet administrator for protected endpoints
+        $this->actingAs(User::factory()->admin()->create());
 
         // Fake OSRM HTTP requests to keep tests hermetic and fast
         Http::fake([

@@ -41,4 +41,34 @@ class User extends Authenticatable
     {
         return $this->hasOne(UserSsoToken::class);
     }
+
+    /**
+     * Check if the user has fleet access enabled.
+     */
+    public function hasFleetAccess(): bool
+    {
+        return (bool) $this->fleet_access;
+    }
+
+    /**
+     * Check if the user is authorized to perform database write/mutation operations.
+     */
+    public function canWrite(): bool
+    {
+        if (! $this->hasFleetAccess()) {
+            return false;
+        }
+
+        $writeRoles = (array) config('fleet.write_roles', ['admin', 'manager', 'fleet_manager']);
+
+        return in_array(strtolower((string) $this->role), array_map('strtolower', $writeRoles), true);
+    }
+
+    /**
+     * Check if the user has an administrative role.
+     */
+    public function isAdmin(): bool
+    {
+        return strtolower((string) $this->role) === 'admin';
+    }
 }

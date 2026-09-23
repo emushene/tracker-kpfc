@@ -5,23 +5,29 @@ use App\Models\Vehicle;
 use App\Services\Protrack\ProtrackClient;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
-
-// KPFC Admin SSO Authentication Routes
+// KPFC Admin SSO Authentication Routes (Public)
 Route::get('/login', [KpfcSsoController::class, 'showLogin'])->name('login');
 Route::get('/auth/kpfc/redirect', [KpfcSsoController::class, 'redirect'])->name('auth.kpfc.redirect');
 Route::get('/auth/kpfc/callback', [KpfcSsoController::class, 'callback'])->name('auth.kpfc.callback');
-Route::post('/logout', [KpfcSsoController::class, 'logout'])->name('logout');
-Route::post('/auth/kpfc/logout', [KpfcSsoController::class, 'logout'])->name('auth.kpfc.logout');
 Route::post('/auth/kpfc/webhook', [KpfcSsoController::class, 'webhook'])->name('auth.kpfc.webhook');
 Route::post('/api/sso/webhook', [KpfcSsoController::class, 'webhook'])->name('api.sso.webhook');
 
-// THIS IS A TEST ROUTE FOR THE DASHBOARD, REMOVE IT WHEN DONE
-Route::get('/test-dashboard', function () {
-    return response()->file(public_path('test-dashboard.html'));
+// Authenticated Session Actions
+Route::middleware('auth')->group(function (): void {
+    Route::post('/logout', [KpfcSsoController::class, 'logout'])->name('logout');
+    Route::post('/auth/kpfc/logout', [KpfcSsoController::class, 'logout'])->name('auth.kpfc.logout');
 });
+
+// Protected Application Routes (Requires Authentication & Fleet Access)
+Route::middleware(['auth', 'fleet.access'])->group(function (): void {
+    Route::get('/', function () {
+        return view('welcome');
+    })->name('dashboard');
+
+    // THIS IS A TEST ROUTE FOR THE DASHBOARD, REMOVE IT WHEN DONE
+    Route::get('/test-dashboard', function () {
+        return response()->file(public_path('test-dashboard.html'));
+    });
 
 Route::get('/protrack/test', function (
     ProtrackClient $protrack
@@ -124,4 +130,5 @@ Route::get('/protrack/track/{imei}', function (
 
         'location_updated_at' => $vehicle->location_updated_at,
     ]);
+});
 });

@@ -19,27 +19,56 @@ use Illuminate\Support\Facades\Route;
 | authorized fleet managers can access these endpoints.
 */
 
-// GET /api/shops - List active shops for map geofences and vehicle operations
-Route::get('/shops', [ShopController::class, 'index'])->name('api.shops.index');
+// Protected Fleet API Routes (Requires Authentication, Fleet Access & Role-Based Write Enforcement)
+Route::middleware(['web', 'auth', 'fleet.access', 'fleet.write'])->group(function (): void {
+    // GET /api/shops - List active shops for map geofences and vehicle operations
+    Route::get('/shops', [ShopController::class, 'index'])->name('api.shops.index');
 
-Route::prefix('vehicles')->group(function (): void {
-    // GET /api/vehicles - List all vehicles with live locations, status, home shops, and active missions
-    Route::get('/', [VehicleController::class, 'index'])->name('api.vehicles.index');
+    Route::prefix('vehicles')->group(function (): void {
+        // GET /api/vehicles - List all vehicles with live locations, status, home shops, and active missions
+        Route::get('/', [VehicleController::class, 'index'])->name('api.vehicles.index');
 
-    // GET /api/vehicles/{vehicle} - Retrieve detailed information for a single vehicle
-    Route::get('/{vehicle}', [VehicleController::class, 'show'])->name('api.vehicles.show');
+        // POST /api/vehicles - Create a new vehicle record (write role required)
+        Route::post('/', [VehicleController::class, 'store'])->name('api.vehicles.store');
 
-    // PATCH /api/vehicles/{vehicle}/assign-shop - Set or update the vehicle's permanent home shop
-    Route::patch('/{vehicle}/assign-shop', [VehicleController::class, 'assignShop'])->name('api.vehicles.assign-shop');
+        // GET /api/vehicles/location - Query vehicle location by ?plate_number=, ?imei=, or ?id=
+        Route::get('/location', [VehicleController::class, 'queryLocation'])->name('api.vehicles.query-location');
 
-    // POST /api/vehicles/{vehicle}/deployments - Dispatch the vehicle to another shop or custom location
-    Route::post('/{vehicle}/deployments', [DeploymentController::class, 'store'])->name('api.vehicles.deployments.store');
+        // GET /api/vehicles/{vehicle} - Retrieve detailed information for a single vehicle
+        Route::get('/{vehicle}', [VehicleController::class, 'show'])->name('api.vehicles.show');
 
-    // PATCH /api/vehicles/{vehicle}/deployments/{deployment}/release - Complete the active deployment
-    Route::patch('/{vehicle}/deployments/{deployment}/release', [DeploymentController::class, 'release'])->name('api.vehicles.deployments.release');
+        // GET /api/vehicles/{vehicle}/location - Retrieve vehicle live location and telemetry details
+        Route::get('/{vehicle}/location', [VehicleController::class, 'location'])->name('api.vehicles.location');
 
-    // PATCH /api/vehicles/{vehicle}/deployments/{deployment}/cancel - Cancel a planned or dispatched deployment
-    Route::patch('/{vehicle}/deployments/{deployment}/cancel', [DeploymentController::class, 'cancel'])->name('api.vehicles.deployments.cancel');
+        // POST /api/vehicles/{vehicle}/location - Update or ingest GPS position and location for vehicle (write role required)
+        Route::post('/{vehicle}/location', [VehicleController::class, 'updateLocation'])->name('api.vehicles.update-location');
+
+        // PATCH /api/vehicles/{vehicle}/assign-shop - Set or update the vehicle's permanent home shop (write role required)
+        Route::patch('/{vehicle}/assign-shop', [VehicleController::class, 'assignShop'])->name('api.vehicles.assign-shop');
+
+        // POST /api/vehicles/{vehicle}/deployments - Dispatch the vehicle to another shop or custom location (write role required)
+        Route::post('/{vehicle}/deployments', [DeploymentController::class, 'store'])->name('api.vehicles.deployments.store');
+
+        // PATCH /api/vehicles/{vehicle}/deployments/{deployment}/release - Complete the active deployment (write role required)
+        Route::patch('/{vehicle}/deployments/{deployment}/release', [DeploymentController::class, 'release'])->name('api.vehicles.deployments.release');
+
+        // PATCH /api/vehicles/{vehicle}/deployments/{deployment}/cancel - Cancel a planned or dispatched deployment (write role required)
+        Route::patch('/{vehicle}/deployments/{deployment}/cancel', [DeploymentController::class, 'cancel'])->name('api.vehicles.deployments.cancel');
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Integration API Routes (External Systems / KPFC Admin & Business)
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('integration/vehicles')->group(function (): void {
+        Route::get('/', [VehicleController::class, 'index'])->name('api.integration.vehicles.index');
+        Route::post('/', [VehicleController::class, 'store'])->name('api.integration.vehicles.store');
+        Route::get('/location', [VehicleController::class, 'queryLocation'])->name('api.integration.vehicles.query-location');
+        Route::get('/{vehicle}', [VehicleController::class, 'show'])->name('api.integration.vehicles.show');
+        Route::get('/{vehicle}/location', [VehicleController::class, 'location'])->name('api.integration.vehicles.location');
+        Route::post('/{vehicle}/location', [VehicleController::class, 'updateLocation'])->name('api.integration.vehicles.update-location');
+    });
 });
 
 /*

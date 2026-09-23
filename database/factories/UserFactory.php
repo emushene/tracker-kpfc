@@ -42,4 +42,47 @@ class UserFactory extends Factory
             'email_verified_at' => null,
         ]);
     }
+
+    /**
+     * Indicate that the user is an administrator with full write access.
+     */
+    public function admin(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'admin',
+            'fleet_access' => true,
+        ]);
+    }
+
+    /**
+     * Indicate that the user is a manager with write access.
+     */
+    public function manager(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'manager',
+            'fleet_access' => true,
+        ]);
+    }
+
+    /**
+     * Indicate that the user is a standard read-only user.
+     */
+    public function readOnly(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'user',
+            'fleet_access' => true,
+        ]);
+    }
+
+    /**
+     * Indicate that the user has their fleet access revoked.
+     */
+    public function withoutFleetAccess(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'fleet_access' => false,
+        ]);
+    }
 }
