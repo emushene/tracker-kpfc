@@ -26,3 +26,14 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 /storage/app/google/*.json
+
+# Android Studio & Gradle
+.gradle/
+build/
+**/build/
+local.properties
+*.apk
+*.aab
+*.dex
+.cxx/
+captures/

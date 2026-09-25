@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\Api\DeploymentController;
+use App\Http\Controllers\Api\DriverTripController;
 use App\Http\Controllers\Api\InventoryController;
 use App\Http\Controllers\Api\MaintenanceController;
+use App\Http\Controllers\Api\ReturnToBaseController;
 use App\Http\Controllers\Api\ShopController;
 use App\Http\Controllers\Api\VehicleController;
 use App\Http\Controllers\Auth\KpfcSsoController;
@@ -101,6 +103,37 @@ Route::middleware(['web', 'auth', 'fleet.access', 'fleet.write'])->group(functio
         Route::get('/{vehicle}/location', [VehicleController::class, 'location'])->name('api.integration.vehicles.location');
         Route::post('/{vehicle}/location', [VehicleController::class, 'updateLocation'])->name('api.integration.vehicles.update-location');
     });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Fleet Manager Return-to-Base Review Routes
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('fleet/return-requests')->group(function (): void {
+        Route::get('/', [ReturnToBaseController::class, 'index'])->name('api.fleet.return-requests.index');
+        Route::post('/{returnRequest}/decision', [ReturnToBaseController::class, 'decision'])->name('api.fleet.return-requests.decision');
+    });
+});
+
+/*
+|--------------------------------------------------------------------------
+| Driver Mobile Application API Routes
+|--------------------------------------------------------------------------
+|
+| These endpoints power the driver mobile application: retrieving assigned
+| trips and vehicles, starting trips, recording sequential stop arrivals,
+| requesting return-to-base authorizations, and completing trips.
+|
+*/
+Route::middleware(['web', 'auth', 'fleet.access'])->prefix('driver')->group(function (): void {
+    Route::get('/trips/active', [DriverTripController::class, 'activeTrip'])->name('api.driver.trips.active');
+    Route::get('/trips/upcoming', [DriverTripController::class, 'upcomingTrips'])->name('api.driver.trips.upcoming');
+    Route::get('/assigned-vehicle', [DriverTripController::class, 'assignedVehicle'])->name('api.driver.assigned-vehicle');
+    Route::post('/trips/{trip}/start', [DriverTripController::class, 'startTrip'])->name('api.driver.trips.start');
+    Route::get('/trips/{trip}/stops', [DriverTripController::class, 'stops'])->name('api.driver.trips.stops');
+    Route::post('/stops/{stop}/arrive', [DriverTripController::class, 'arriveStop'])->name('api.driver.stops.arrive');
+    Route::post('/trips/{trip}/return-to-base', [DriverTripController::class, 'returnToBase'])->name('api.driver.trips.return-to-base');
+    Route::post('/trips/{trip}/complete', [DriverTripController::class, 'completeTrip'])->name('api.driver.trips.complete');
 });
 
 /*

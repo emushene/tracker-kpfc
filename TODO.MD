@@ -85,16 +85,16 @@
 
 ## Phase 6 — Driver Operations
 
-- [ ] Driver API: get active trip
-- [ ] Driver API: get upcoming trips
-- [ ] Driver API: get assigned vehicle
-- [ ] Driver API: manually start a trip (records actual start time, starting mileage, starting location)
-- [ ] Driver API: get ordered stops for current trip
-- [ ] Driver API: mark stop as arrived
-- [ ] Driver API: submit return-to-base request
-- [ ] Fleet Manager API: review and approve/deny return-to-base requests
-  - [ ] Record: driver, trip, reason, current location, undelivered stops, request time, decision, decision maker, decision time, manager comments
-- [ ] Driver API: complete trip
+- [x] Driver API: get active trip
+- [x] Driver API: get upcoming trips
+- [x] Driver API: get assigned vehicle
+- [x] Driver API: manually start a trip (records actual start time, starting mileage, starting location)
+- [x] Driver API: get ordered stops for current trip
+- [x] Driver API: mark stop as arrived
+- [x] Driver API: submit return-to-base request
+- [x] Fleet Manager API: review and approve/deny return-to-base requests
+  - [x] Record: driver, trip, reason, current location, undelivered stops, request time, decision, decision maker, decision time, manager comments
+- [x] Driver API: complete trip
 
 ---
 
