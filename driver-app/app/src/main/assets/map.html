@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Trip Map</title>
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        crossorigin=""
+    />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body, #map { width: 100%; height: 100%; }
+        .stop-number-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid white;
+            font-weight: 700;
+            font-size: 13px;
+            font-family: sans-serif;
+            color: white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+        }
+        .legend {
+            position: absolute;
+            bottom: 24px;
+            left: 12px;
+            background: rgba(255,255,255,0.92);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-family: sans-serif;
+            font-size: 11px;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            line-height: 1.8;
+        }
+        .legend-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <div class="legend">
+        <div><span class="legend-dot" style="background:#22c55e"></span>Completed / Arrived</div>
+        <div><span class="legend-dot" style="background:#1e3a5f"></span>Active Stop</div>
+        <div><span class="legend-dot" style="background:#64748b"></span>Pending</div>
+    </div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script>
+        var map = L.map('map', { zoomControl: true, attributionControl: false });
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+        }).addTo(map);
+
+        // Default center: Nairobi
+        map.setView([-1.2921, 36.8219], 11);
+
+        var markers = [];
+        var routeLine = null;
+
+        function colorForStatus(status, isActive) {
+            if (isActive) return '#1e3a5f';
+            if (status === 'completed' || status === 'arrived') return '#22c55e';
+            return '#64748b';
+        }
+
+        function makeIcon(sequence, status, isActive) {
+            var bg = colorForStatus(status, isActive);
+            var label = (status === 'completed' || status === 'arrived') ? '✓' : String(sequence);
+            var size = isActive ? 38 : 32;
+            var html = '<div class="stop-number-icon" style="background:' + bg + ';width:' + size + 'px;height:' + size + 'px;">' + label + '</div>';
+            return L.divIcon({
+                html: html,
+                className: '',
+                iconSize: [size, size],
+                iconAnchor: [size / 2, size / 2],
+                popupAnchor: [0, -(size / 2) - 4]
+            });
+        }
+
+        // Called from Android (Kotlin) via WebView.evaluateJavascript
+        function loadStops(stopsJson) {
+            var stops = JSON.parse(stopsJson);
+
+            // Remove previous markers and route
+            markers.forEach(function(m) { map.removeLayer(m); });
+            markers = [];
+            if (routeLine) { map.removeLayer(routeLine); routeLine = null; }
+
+            if (!stops || stops.length === 0) return;
+
+            var latLngs = [];
+            var activeIndex = -1;
+
+            stops.forEach(function(stop, index) {
+                if (stop.lat == null || stop.lng == null) return;
+                var ll = [stop.lat, stop.lng];
+                latLngs.push(ll);
+
+                var isActive = stop.isActive === true;
+                if (isActive) activeIndex = index;
+
+                var icon = makeIcon(stop.sequence, stop.status, isActive);
+                var marker = L.marker(ll, { icon: icon, zIndexOffset: isActive ? 1000 : 0 });
+
+                var popupContent =
+                    '<b>' + stop.name + '</b>' +
+                    (stop.address ? '<br><span style="color:#555;font-size:12px">' + stop.address + '</span>' : '') +
+                    '<br><span style="font-size:11px;color:#888">Stop ' + stop.sequence + ' · ' + stop.status.toUpperCase() + '</span>';
+                marker.bindPopup(popupContent, { maxWidth: 200 });
+
+                marker.addTo(map);
+                markers.push(marker);
+            });
+
+            // Draw route polyline
+            if (latLngs.length > 1) {
+                routeLine = L.polyline(latLngs, { color: '#1e3a5f', weight: 3, opacity: 0.6, dashArray: '6,6' });
+                routeLine.addTo(map);
+            }
+
+            // Fit bounds or center on active stop
+            if (latLngs.length > 0) {
+                if (activeIndex >= 0) {
+                    map.setView(latLngs[activeIndex], 14, { animate: true });
+                } else {
+                    map.fitBounds(L.latLngBounds(latLngs), { padding: [32, 32], animate: true });
+                }
+            }
+        }
+
+        function centerOn(lat, lng, zoom) {
+            map.setView([lat, lng], zoom || 14, { animate: true });
+        }
+    </script>
+</body>
+</html>

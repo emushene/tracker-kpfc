@@ -7,6 +7,19 @@ data class ApiResponse<T>(
     @SerializedName("message") val message: String? = null
 )
 
+data class LoginRequest(
+    @SerializedName("email") val email: String,
+    @SerializedName("password") val password: String
+)
+
+data class UserDto(
+    @SerializedName("id") val id: Long,
+    @SerializedName("name") val name: String,
+    @SerializedName("email") val email: String,
+    @SerializedName("role") val role: String?,
+    @SerializedName("driver_id") val driverId: String
+)
+
 data class VehicleDto(
     @SerializedName("id") val id: Long,
     @SerializedName("plate_number") val plateNumber: String?,

@@ -8,6 +8,7 @@ use App\Models\TripStop;
 use App\Models\VehicleMileage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class DriverTripController extends Controller
 {
@@ -312,6 +313,81 @@ class DriverTripController extends Controller
         return response()->json([
             'message' => 'Trip completed successfully.',
             'data' => $trip->fresh(['vehicle', 'stops']),
+        ]);
+    }
+
+    /**
+     * Authenticate driver with email and password.
+     */
+    public function login(Request $request): JsonResponse
+    {
+        $credentials = $request->validate([
+            'email' => ['required', 'string'],
+            'password' => ['required', 'string'],
+        ]);
+
+        if (! Auth::attempt($credentials)) {
+            return response()->json([
+                'message' => 'Invalid email or password.',
+            ], 401);
+        }
+
+        $user = Auth::user();
+
+        if (! $user->hasFleetAccess()) {
+            Auth::logout();
+
+            return response()->json([
+                'message' => 'Your account does not have fleet access enabled.',
+            ], 403);
+        }
+
+        $request->session()->regenerate();
+
+        return response()->json([
+            'message' => 'Authenticated successfully.',
+            'data' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'driver_id' => (string) ($user->kpfc_sub ?? $user->id),
+            ],
+        ]);
+    }
+
+    /**
+     * Log out driver and terminate session.
+     */
+    public function logout(Request $request): JsonResponse
+    {
+        Auth::logout();
+
+        if ($request->hasSession()) {
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
+
+        return response()->json([
+            'message' => 'Logged out successfully.',
+        ]);
+    }
+
+    /**
+     * Return authenticated driver profile.
+     */
+    public function me(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        return response()->json([
+            'data' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'driver_id' => (string) ($user->kpfc_sub ?? $user->id),
+            ],
         ]);
     }
 }

@@ -397,4 +397,78 @@ class DriverApiTest extends TestCase
             'odometer' => 80120,
         ]);
     }
+
+    public function test_driver_can_authenticate_via_mobile_login_endpoint(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'driver.test@kpfc.co.ke',
+            'password' => bcrypt('secret123'),
+            'role' => 'driver',
+            'fleet_access' => true,
+        ]);
+
+        $response = $this->postJson(route('api.driver.login'), [
+            'email' => 'driver.test@kpfc.co.ke',
+            'password' => 'secret123',
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('message', 'Authenticated successfully.')
+            ->assertJsonPath('data.email', 'driver.test@kpfc.co.ke');
+
+        $this->assertAuthenticatedAs($user);
+    }
+
+    public function test_driver_login_fails_with_invalid_credentials(): void
+    {
+        User::factory()->create([
+            'email' => 'driver.test@kpfc.co.ke',
+            'password' => bcrypt('secret123'),
+            'fleet_access' => true,
+        ]);
+
+        $response = $this->postJson(route('api.driver.login'), [
+            'email' => 'driver.test@kpfc.co.ke',
+            'password' => 'wrong-password',
+        ]);
+
+        $response->assertStatus(401)
+            ->assertJsonPath('message', 'Invalid email or password.');
+
+        $this->assertGuest();
+    }
+
+    public function test_driver_login_fails_without_fleet_access(): void
+    {
+        User::factory()->create([
+            'email' => 'driver.noaccess@kpfc.co.ke',
+            'password' => bcrypt('secret123'),
+            'fleet_access' => false,
+        ]);
+
+        $response = $this->postJson(route('api.driver.login'), [
+            'email' => 'driver.noaccess@kpfc.co.ke',
+            'password' => 'secret123',
+        ]);
+
+        $response->assertStatus(403)
+            ->assertJsonPath('message', 'Your account does not have fleet access enabled.');
+
+        $this->assertGuest();
+    }
+
+    public function test_authenticated_driver_can_access_me_profile_and_logout(): void
+    {
+        $response = $this->actingAs($this->driverUser)
+            ->getJson(route('api.driver.me'));
+
+        $response->assertOk()
+            ->assertJsonPath('data.driver_id', 'drv-9001');
+
+        $logoutResponse = $this->actingAs($this->driverUser)
+            ->postJson(route('api.driver.logout'));
+
+        $logoutResponse->assertOk()
+            ->assertJsonPath('message', 'Logged out successfully.');
+    }
 }

@@ -125,7 +125,13 @@ Route::middleware(['web', 'auth', 'fleet.access', 'fleet.write'])->group(functio
 | requesting return-to-base authorizations, and completing trips.
 |
 */
+Route::middleware(['web'])->prefix('driver')->group(function (): void {
+    Route::post('/login', [DriverTripController::class, 'login'])->name('api.driver.login');
+});
+
 Route::middleware(['web', 'auth', 'fleet.access'])->prefix('driver')->group(function (): void {
+    Route::post('/logout', [DriverTripController::class, 'logout'])->name('api.driver.logout');
+    Route::get('/me', [DriverTripController::class, 'me'])->name('api.driver.me');
     Route::get('/trips/active', [DriverTripController::class, 'activeTrip'])->name('api.driver.trips.active');
     Route::get('/trips/upcoming', [DriverTripController::class, 'upcomingTrips'])->name('api.driver.trips.upcoming');
     Route::get('/assigned-vehicle', [DriverTripController::class, 'assignedVehicle'])->name('api.driver.assigned-vehicle');

@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
@@ -66,10 +67,13 @@ import com.kpfc.fleet.driver.ui.theme.KpfcRedDanger
 @Composable
 fun TripExecutionScreen(
     trip: TripDto,
+    isLoading: Boolean = false,
     onBack: () -> Unit,
+    onViewMap: () -> Unit = {},
     onMarkStopArrived: (stopId: Long) -> Unit,
     onRequestReturnToBase: () -> Unit,
-    onCompleteTrip: () -> Unit
+    onCompleteTrip: () -> Unit,
+    onRefresh: () -> Unit = {}
 ) {
     val context = LocalContext.current
 
@@ -96,6 +100,22 @@ fun TripExecutionScreen(
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Back",
+                            tint = Color.White
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onViewMap) {
+                        Icon(
+                            imageVector = Icons.Default.Map,
+                            contentDescription = "View Map",
+                            tint = Color.White
+                        )
+                    }
+                    IconButton(onClick = onRefresh) {
+                        Icon(
+                            imageVector = Icons.Default.LocationOn,
+                            contentDescription = "Refresh",
                             tint = Color.White
                         )
                     }

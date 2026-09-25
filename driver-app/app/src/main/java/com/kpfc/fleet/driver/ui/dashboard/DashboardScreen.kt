@@ -20,14 +20,17 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -50,7 +53,10 @@ fun DashboardScreen(
     vehicle: VehicleDto?,
     activeTrip: TripDto?,
     upcomingTrips: List<TripDto>,
+    isLoading: Boolean,
+    onRefresh: () -> Unit,
     onOpenTrip: (TripDto) -> Unit,
+    onStartUpcomingTrip: (TripDto) -> Unit,
     onLogout: () -> Unit
 ) {
     Surface(
@@ -63,7 +69,7 @@ fun DashboardScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Header: Driver profile & status
+            // Header: Driver profile & actions
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -72,9 +78,10 @@ fun DashboardScreen(
                 ) {
                     Column {
                         Text(
-                            text = "Welcome back,",
-                            fontSize = 14.sp,
-                            color = Color.Gray
+                            text = "Driver Portal",
+                            fontSize = 12.sp,
+                            color = Color.Gray,
+                            fontWeight = FontWeight.Bold
                         )
                         Text(
                             text = driverName,
@@ -90,7 +97,7 @@ fun DashboardScreen(
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = "Online • Fleet Telematics Active",
+                                text = "Connected to Fleet Backend",
                                 fontSize = 12.sp,
                                 color = KpfcGreenSuccess,
                                 fontWeight = FontWeight.Medium
@@ -98,12 +105,26 @@ fun DashboardScreen(
                         }
                     }
 
-                    IconButton(onClick = onLogout) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Sign Out",
-                            tint = Color.Gray
-                        )
+                    Row {
+                        IconButton(onClick = onRefresh) {
+                            if (isLoading) {
+                                CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.Refresh,
+                                    contentDescription = "Refresh",
+                                    tint = KpfcNavyPrimary
+                                )
+                            }
+                        }
+
+                        IconButton(onClick = onLogout) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Sign Out",
+                                tint = Color.Gray
+                            )
+                        }
                     }
                 }
             }
@@ -134,7 +155,7 @@ fun DashboardScreen(
                                     .padding(horizontal = 8.dp, vertical = 2.dp)
                             ) {
                                 Text(
-                                    text = "Ready",
+                                    text = if (vehicle != null) "Assigned" else "Unassigned",
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.SemiBold,
                                     color = KpfcNavyPrimary
@@ -145,14 +166,14 @@ fun DashboardScreen(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         Text(
-                            text = vehicle?.plateNumber ?: "No vehicle assigned",
+                            text = vehicle?.plateNumber ?: "Awaiting Assignment",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             color = KpfcNavyDark
                         )
 
                         Text(
-                            text = vehicle?.deviceName ?: "—",
+                            text = vehicle?.deviceName ?: "No vehicle dispatched to driver yet",
                             fontSize = 13.sp,
                             color = Color.DarkGray
                         )
@@ -168,7 +189,7 @@ fun DashboardScreen(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = vehicle?.locationName ?: "Awaiting GPS Fix",
+                                text = vehicle?.locationName ?: "Location tracked via onboard GPS",
                                 fontSize = 13.sp,
                                 color = Color.Gray
                             )
@@ -177,10 +198,10 @@ fun DashboardScreen(
                 }
             }
 
-            // Active Trip Hero Card
+            // Active Trip Hero Card (or Empty State)
             item {
                 if (activeTrip != null) {
-                    val completedStops = activeTrip.stops.count { it.status == "completed" }
+                    val completedStops = activeTrip.stops.count { it.status == "completed" || it.status == "arrived" }
                     val totalStops = activeTrip.stops.size
                     val progress = if (totalStops > 0) completedStops.toFloat() / totalStops else 0f
 
@@ -212,14 +233,14 @@ fun DashboardScreen(
                             Spacer(modifier = Modifier.height(12.dp))
 
                             Text(
-                                text = "Current Status: ${activeTrip.status.replace('_', ' ').uppercase()}",
+                                text = "Status: ${activeTrip.status.replace('_', ' ').uppercase()}",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = Color.White
                             )
 
                             Text(
-                                text = "Started: ${activeTrip.actualStart ?: "—"} • Mileage: ${activeTrip.startingMileage ?: 0} km",
+                                text = "Started: ${activeTrip.actualStart ?: "In transit"} • Start Mileage: ${activeTrip.startingMileage ?: 0} km",
                                 fontSize = 12.sp,
                                 color = Color(0xFFCBD5E1)
                             )
@@ -238,7 +259,7 @@ fun DashboardScreen(
                             Spacer(modifier = Modifier.height(6.dp))
 
                             Text(
-                                text = "$completedStops of $totalStops stops completed",
+                                text = "$completedStops of $totalStops stops handled",
                                 fontSize = 12.sp,
                                 color = Color(0xFFCBD5E1)
                             )
@@ -265,58 +286,100 @@ fun DashboardScreen(
                             }
                         }
                     }
+                } else {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "No Active Trip Assigned",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = KpfcNavyDark
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = "You have no mission currently in progress. Start an upcoming scheduled trip below or refresh.",
+                                fontSize = 13.sp,
+                                color = Color.Gray,
+                                lineHeight = 18.sp
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            OutlinedButton(
+                                onClick = onRefresh,
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Check for New Missions")
+                            }
+                        }
+                    }
                 }
             }
 
             // Upcoming Scheduled Trips
             item {
                 Text(
-                    text = "Upcoming Scheduled Trips",
+                    text = "Upcoming Scheduled Trips (${upcomingTrips.size})",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = KpfcNavyDark
                 )
             }
 
-            items(upcomingTrips) { trip ->
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+            if (upcomingTrips.isEmpty()) {
+                item {
+                    Text(
+                        text = "No upcoming trips in the queue.",
+                        fontSize = 13.sp,
+                        color = Color.Gray
+                    )
+                }
+            } else {
+                items(upcomingTrips) { trip ->
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
                     ) {
-                        Column {
-                            Text(
-                                text = trip.tripNumber,
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = KpfcNavyDark
-                            )
-                            Text(
-                                text = "Planned: ${trip.plannedStart ?: "TBD"}",
-                                fontSize = 13.sp,
-                                color = Color.Gray
-                            )
-                        }
-
-                        Box(
+                        Row(
                             modifier = Modifier
-                                .background(Color(0xFFF1F5F9), RoundedCornerShape(6.dp))
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = "Scheduled",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = Color.DarkGray
-                            )
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = trip.tripNumber,
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = KpfcNavyDark
+                                )
+                                Text(
+                                    text = "Planned Start: ${trip.plannedStart ?: "Pending schedule"}",
+                                    fontSize = 13.sp,
+                                    color = Color.Gray
+                                )
+                            }
+
+                            Button(
+                                onClick = { onStartUpcomingTrip(trip) },
+                                colors = ButtonDefaults.buttonColors(containerColor = KpfcNavyPrimary),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Text("Start", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            }
                         }
                     }
                 }

@@ -11,17 +11,20 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -39,139 +42,177 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.kpfc.fleet.driver.ui.common.ServerConfigDialog
 import com.kpfc.fleet.driver.ui.theme.KpfcNavyDark
 import com.kpfc.fleet.driver.ui.theme.KpfcNavyPrimary
+import com.kpfc.fleet.driver.ui.theme.KpfcRedDanger
+import com.kpfc.fleet.driver.ui.theme.KpfcRedLight
 
 @Composable
 fun LoginScreen(
-    onLoginSuccess: (email: String) -> Unit
+    isLoading: Boolean,
+    errorMessage: String?,
+    serverBaseUrl: String,
+    onLogin: (email: String, password: String) -> Unit,
+    onUpdateServerUrl: (newUrl: String) -> Unit
 ) {
     var email by remember { mutableStateOf("driver.david@kpfc.co.ke") }
-    var password by remember { mutableStateOf("••••••••") }
-    var isSubmitting by remember { mutableStateOf(false) }
+    var password by remember { mutableStateOf("password") }
+    var showServerDialog by remember { mutableStateOf(false) }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // App Badge / Icon
-            Box(
+        Box(modifier = Modifier.fillMaxSize()) {
+            // Server Config Settings Button at top-right
+            IconButton(
+                onClick = { showServerDialog = true },
                 modifier = Modifier
-                    .size(72.dp)
-                    .background(color = KpfcNavyPrimary, shape = CircleShape),
-                contentAlignment = Alignment.Center
+                    .align(Alignment.TopEnd)
+                    .padding(16.dp)
             ) {
                 Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = "Driver",
-                    tint = Color.White,
-                    modifier = Modifier.size(40.dp)
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = "Server Settings",
+                    tint = Color.Gray
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = "KPFC Fleet Driver",
-                fontSize = 26.sp,
-                fontWeight = FontWeight.Bold,
-                color = KpfcNavyDark
-            )
-
-            Text(
-                text = "Mobile Operations & Delivery Execution",
-                fontSize = 14.sp,
-                color = Color.Gray
-            )
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // Email input
-            OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text("Driver Email or ID") },
-                leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                shape = RoundedCornerShape(12.dp)
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Password input
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = { Text("Password") },
-                leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
-                visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                shape = RoundedCornerShape(12.dp)
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Standard Login Button
-            Button(
-                onClick = {
-                    onLoginSuccess(email)
-                },
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = KpfcNavyPrimary)
+                    .fillMaxSize()
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(
-                    text = "Sign In",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // KPFC Single Sign-On (SSO) Button
-            OutlinedButton(
-                onClick = {
-                    // Triggers the OAuth PKCE browser flow
-                    onLoginSuccess("sso.driver@kpfc.co.ke")
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text(
-                    text = "Sign In with KPFC SSO",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = KpfcNavyPrimary
-                )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Demo Fast Action
-            TextButton(
-                onClick = {
-                    onLoginSuccess("driver.david@kpfc.co.ke")
+                // App Badge / Icon
+                Box(
+                    modifier = Modifier
+                        .size(72.dp)
+                        .background(color = KpfcNavyPrimary, shape = CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = "Driver",
+                        tint = Color.White,
+                        modifier = Modifier.size(40.dp)
+                    )
                 }
-            ) {
+
+                Spacer(modifier = Modifier.height(16.dp))
+
                 Text(
-                    text = "⚡ Quick Demo Mode (Skip Auth)",
-                    color = Color(0xFF1B8755),
-                    fontWeight = FontWeight.SemiBold
+                    text = "KPFC Fleet Driver",
+                    fontSize = 26.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = KpfcNavyDark
+                )
+
+                Text(
+                    text = "Live Operations & Delivery Execution",
+                    fontSize = 14.sp,
+                    color = Color.Gray
+                )
+
+                // Error message banner
+                if (!errorMessage.isNullOrBlank()) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(KpfcRedLight, RoundedCornerShape(8.dp))
+                            .padding(12.dp)
+                    ) {
+                        Text(
+                            text = errorMessage,
+                            color = KpfcRedDanger,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Email input
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text("Driver Email") },
+                    leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    enabled = !isLoading,
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Password input
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text("Password") },
+                    leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    enabled = !isLoading,
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Live Login Button
+                Button(
+                    onClick = {
+                        if (email.isNotBlank() && password.isNotBlank()) {
+                            onLogin(email, password)
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    enabled = !isLoading && email.isNotBlank() && password.isNotBlank(),
+                    colors = ButtonDefaults.buttonColors(containerColor = KpfcNavyPrimary)
+                ) {
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            color = Color.White,
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text(
+                            text = "Sign In",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Server URL Indicator
+                Text(
+                    text = "API: $serverBaseUrl",
+                    fontSize = 11.sp,
+                    color = Color.LightGray
+                )
+            }
+
+            if (showServerDialog) {
+                ServerConfigDialog(
+                    currentUrl = serverBaseUrl,
+                    onDismiss = { showServerDialog = false },
+                    onSave = { newUrl ->
+                        onUpdateServerUrl(newUrl)
+                        showServerDialog = false
+                    }
                 )
             }
         }
