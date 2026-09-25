@@ -21,7 +21,7 @@ return new class extends Migration
 
             $table->decimal('latitude', 10, 7);
             $table->decimal('longitude', 10, 7);
-# When a Vehicle is 500M near a shop. it will be considered at the shop.
+            // When a Vehicle is 500M near a shop. it will be considered at the shop.
             $table->unsignedInteger('radius_meters')->default(500);
 
             $table->boolean('active')->default(true);

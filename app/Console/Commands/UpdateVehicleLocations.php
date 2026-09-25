@@ -144,7 +144,7 @@ class UpdateVehicleLocations extends Command
 
                 $this->line(
                     "{$vehicle->imei} -> {$cachedLocation->location_name} ".
-                    "(location cache)"
+                    '(location cache)'
                 );
 
                 continue;
@@ -186,7 +186,7 @@ class UpdateVehicleLocations extends Command
                 $this->line(
                     "{$vehicle->imei} -> ".
                     ($locationName ?? 'Location not found').
-                    " (LocationIQ)"
+                    ' (LocationIQ)'
                 );
             } catch (Throwable $exception) {
                 /*

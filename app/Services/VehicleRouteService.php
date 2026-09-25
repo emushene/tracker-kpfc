@@ -11,8 +11,7 @@ class VehicleRouteService
     public function __construct(
         private OsrmService $osrm,
         private VehicleDeploymentService $deployments
-    ) {
-    }
+    ) {}
 
     public function updateRoute(Vehicle $vehicle): bool
     {

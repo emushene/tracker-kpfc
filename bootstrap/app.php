@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Middleware\EnsureCanWrite;
+use App\Http\Middleware\EnsureFleetAccess;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -14,8 +16,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'fleet.access' => \App\Http\Middleware\EnsureFleetAccess::class,
-            'fleet.write' => \App\Http\Middleware\EnsureCanWrite::class,
+            'fleet.access' => EnsureFleetAccess::class,
+            'fleet.write' => EnsureCanWrite::class,
         ]);
 
         $middleware->redirectTo(

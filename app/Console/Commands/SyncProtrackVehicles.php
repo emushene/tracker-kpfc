@@ -4,9 +4,6 @@ namespace App\Console\Commands;
 
 use App\Services\Protrack\ProtrackClient;
 use Illuminate\Console\Command;
-use Illuminate\Console\Attributes\Description;
-use Illuminate\Console\Attributes\Signature;
-
 
 class SyncProtrackVehicles extends Command
 {
@@ -28,7 +25,7 @@ class SyncProtrackVehicles extends Command
             return self::SUCCESS;
         } catch (\Throwable $e) {
             $this->error(
-                'Vehicle synchronization failed: ' .
+                'Vehicle synchronization failed: '.
                 $e->getMessage()
             );
 

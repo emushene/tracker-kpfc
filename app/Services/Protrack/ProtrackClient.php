@@ -62,12 +62,12 @@ class ProtrackClient
         $timestamp = time();
 
         $signature = md5(
-            md5($this->password) . $timestamp
+            md5($this->password).$timestamp
         );
 
         $response = $this->http()
             ->get(
-                $this->baseUrl . '/api/authorization',
+                $this->baseUrl.'/api/authorization',
                 [
                     'time' => $timestamp,
                     'account' => $this->account,
@@ -77,7 +77,7 @@ class ProtrackClient
 
         if ($response->failed()) {
             throw new RuntimeException(
-                'Protrack HTTP request failed: ' .
+                'Protrack HTTP request failed: '.
                 $response->status()
             );
         }
@@ -86,14 +86,14 @@ class ProtrackClient
 
         if (($data['code'] ?? null) !== 0) {
             throw new RuntimeException(
-                'Protrack authentication failed: ' .
+                'Protrack authentication failed: '.
                 $response->body()
             );
         }
 
         $token = $data['record']['access_token'] ?? null;
 
-        if (!$token) {
+        if (! $token) {
             throw new RuntimeException(
                 'Protrack did not return an access token.'
             );
@@ -120,7 +120,7 @@ class ProtrackClient
 
         $response = $this->http()
             ->get(
-                $this->baseUrl . '/api/device/list',
+                $this->baseUrl.'/api/device/list',
                 [
                     'access_token' => $token,
                     'account' => $this->vehicleAccount,
@@ -129,7 +129,7 @@ class ProtrackClient
 
         if ($response->failed()) {
             throw new RuntimeException(
-                'Protrack device request failed: ' .
+                'Protrack device request failed: '.
                 $response->status()
             );
         }
@@ -138,7 +138,7 @@ class ProtrackClient
 
         if (($data['code'] ?? null) !== 0) {
             throw new RuntimeException(
-                'Protrack device request failed: ' .
+                'Protrack device request failed: '.
                 $response->body()
             );
         }
@@ -166,19 +166,19 @@ class ProtrackClient
             'access_token' => $token,
         ];
 
-        if (!empty($imeis)) {
+        if (! empty($imeis)) {
             $params['imeis'] = implode(',', $imeis);
         }
 
         $response = $this->http()
             ->get(
-                $this->baseUrl . '/api/track',
+                $this->baseUrl.'/api/track',
                 $params
             );
 
         if ($response->failed()) {
             throw new RuntimeException(
-                'Protrack tracking request failed: ' .
+                'Protrack tracking request failed: '.
                 $response->status()
             );
         }
@@ -187,7 +187,7 @@ class ProtrackClient
 
         if (($data['code'] ?? null) !== 0) {
             throw new RuntimeException(
-                'Protrack tracking request failed: ' .
+                'Protrack tracking request failed: '.
                 $response->body()
             );
         }
@@ -211,7 +211,7 @@ class ProtrackClient
 
         $response = $this->http()
             ->get(
-                $this->baseUrl . '/api/playback',
+                $this->baseUrl.'/api/playback',
                 [
                     'access_token' => $token,
                     'imei' => $imei,
@@ -222,7 +222,7 @@ class ProtrackClient
 
         if ($response->failed()) {
             throw new RuntimeException(
-                'Protrack playback request failed: ' .
+                'Protrack playback request failed: '.
                 $response->status()
             );
         }
@@ -231,7 +231,7 @@ class ProtrackClient
 
         if (($data['code'] ?? null) !== 0) {
             throw new RuntimeException(
-                'Protrack playback request failed: ' .
+                'Protrack playback request failed: '.
                 $response->body()
             );
         }
@@ -248,7 +248,7 @@ class ProtrackClient
 
         $response = $this->http()
             ->get(
-                $this->baseUrl . '/api/device/detail',
+                $this->baseUrl.'/api/device/detail',
                 [
                     'access_token' => $token,
                     'imei' => $imei,
@@ -257,7 +257,7 @@ class ProtrackClient
 
         if ($response->failed()) {
             throw new RuntimeException(
-                'Protrack device detail request failed: ' .
+                'Protrack device detail request failed: '.
                 $response->status()
             );
         }
@@ -266,7 +266,7 @@ class ProtrackClient
 
         if (($data['code'] ?? null) !== 0) {
             throw new RuntimeException(
-                'Protrack device detail request failed: ' .
+                'Protrack device detail request failed: '.
                 $response->body()
             );
         }
@@ -290,7 +290,7 @@ class ProtrackClient
 
         $response = $this->http()
             ->get(
-                $this->baseUrl . '/api/device/mileage',
+                $this->baseUrl.'/api/device/mileage',
                 [
                     'access_token' => $token,
                     'imeis' => implode(',', $imeis),
@@ -301,7 +301,7 @@ class ProtrackClient
 
         if ($response->failed()) {
             throw new RuntimeException(
-                'Protrack mileage request failed: ' .
+                'Protrack mileage request failed: '.
                 $response->status()
             );
         }
@@ -310,7 +310,7 @@ class ProtrackClient
 
         if (($data['code'] ?? null) !== 0) {
             throw new RuntimeException(
-                'Protrack mileage request failed: ' .
+                'Protrack mileage request failed: '.
                 $response->body()
             );
         }
@@ -338,19 +338,19 @@ class ProtrackClient
             'endtime' => $endtime,
         ];
 
-        if (!empty($imeis)) {
+        if (! empty($imeis)) {
             $params['imeis'] = implode(',', $imeis);
         }
 
         $response = $this->http()
             ->get(
-                $this->baseUrl . '/api/alarm/list2',
+                $this->baseUrl.'/api/alarm/list2',
                 $params
             );
 
         if ($response->failed()) {
             throw new RuntimeException(
-                'Protrack alarm request failed: ' .
+                'Protrack alarm request failed: '.
                 $response->status()
             );
         }
@@ -359,7 +359,7 @@ class ProtrackClient
 
         if (($data['code'] ?? null) !== 0) {
             throw new RuntimeException(
-                'Protrack alarm request failed: ' .
+                'Protrack alarm request failed: '.
                 $response->body()
             );
         }
@@ -390,19 +390,19 @@ class ProtrackClient
                     'simcard' => $device['simcard'] ?? null,
                     'iccid' => $device['iccid'] ?? null,
 
-                    'activated_at' => !empty($device['activatedtime'])
+                    'activated_at' => ! empty($device['activatedtime'])
                         ? Carbon::createFromTimestamp(
                             $device['activatedtime']
                         )
                         : null,
 
-                    'online_at' => !empty($device['onlinetime'])
+                    'online_at' => ! empty($device['onlinetime'])
                         ? Carbon::createFromTimestamp(
                             $device['onlinetime']
                         )
                         : null,
 
-                    'platform_due_at' => !empty($device['platformduetime'])
+                    'platform_due_at' => ! empty($device['platformduetime'])
                         ? Carbon::createFromTimestamp(
                             $device['platformduetime']
                         )
@@ -442,13 +442,13 @@ class ProtrackClient
         foreach ($records as $record) {
             $imei = $record['imei'] ?? null;
 
-            if (!$imei) {
+            if (! $imei) {
                 continue;
             }
 
             $vehicle = $vehicles->firstWhere('imei', $imei);
 
-            if (!$vehicle) {
+            if (! $vehicle) {
                 continue;
             }
 
@@ -545,7 +545,7 @@ class ProtrackClient
                     $record['systemtime'] ?? null
                 ),
 
-                'temperature' => !empty($record['temperature'])
+                'temperature' => ! empty($record['temperature'])
                     ? $record['temperature']
                     : null,
             ]);
@@ -601,7 +601,7 @@ class ProtrackClient
             return null;
         }
 
-        if (!is_numeric($value)) {
+        if (! is_numeric($value)) {
             return null;
         }
 
@@ -614,7 +614,7 @@ class ProtrackClient
             return null;
         }
 
-        if (!is_numeric($value)) {
+        if (! is_numeric($value)) {
             return null;
         }
 
@@ -629,7 +629,7 @@ class ProtrackClient
             return null;
         }
 
-        if (!is_numeric($value)) {
+        if (! is_numeric($value)) {
             return null;
         }
 

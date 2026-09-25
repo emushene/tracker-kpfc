@@ -14,9 +14,9 @@ class TestShopLocation extends Command
     public function handle(ShopLocationService $shopLocationService): int
     {
         // Main Shop coordinates
-       # $latitude = -1.2406854;
-       # $longitude = 36.6652482;
-       $latitude = -1.2406854;
+        // $latitude = -1.2406854;
+        // $longitude = 36.6652482;
+        $latitude = -1.2406854;
         $longitude = 36.6652482;
 
         $shop = $shopLocationService->findNearbyShop(
@@ -24,14 +24,15 @@ class TestShopLocation extends Command
             $longitude
         );
 
-        if (!$shop) {
+        if (! $shop) {
             $this->error('No shop found.');
+
             return self::FAILURE;
         }
 
-        $this->info('Shop found: ' . $shop->name);
-        $this->info('Address: ' . $shop->address);
-        $this->info('Radius: ' . $shop->radius_meters . ' meters');
+        $this->info('Shop found: '.$shop->name);
+        $this->info('Address: '.$shop->address);
+        $this->info('Radius: '.$shop->radius_meters.' meters');
 
         return self::SUCCESS;
     }

@@ -18,8 +18,11 @@ class KpfcSsoTest extends TestCase
     use RefreshDatabase;
 
     protected string $issuer = 'https://admin-staging.kpfcbuilders.com';
+
     protected string $clientId;
+
     protected string $clientSecret;
+
     protected string $webhookSecret;
 
     protected function setUp(): void
@@ -42,7 +45,7 @@ class KpfcSsoTest extends TestCase
     }
 
     /* -------------------------------------------------------------------------- */
-    /* 1. LOGIN & PKCE AUTHORIZATION FLOW                                         */
+    /* 1. LOGIN & PKCE AUTHORIZATION FLOW */
     /* -------------------------------------------------------------------------- */
 
     /**
@@ -69,7 +72,7 @@ class KpfcSsoTest extends TestCase
         $this->assertTrue(session()->has('kpfc_code_verifier'));
 
         $targetUrl = $response->headers->get('Location');
-        $this->assertStringStartsWith($this->issuer . '/oauth/authorize', $targetUrl);
+        $this->assertStringStartsWith($this->issuer.'/oauth/authorize', $targetUrl);
 
         parse_str((string) parse_url($targetUrl, PHP_URL_QUERY), $queryParams);
 
@@ -95,7 +98,7 @@ class KpfcSsoTest extends TestCase
     }
 
     /* -------------------------------------------------------------------------- */
-    /* 2. AUTHENTICATION, CALLBACK & USER PROVISIONING                           */
+    /* 2. AUTHENTICATION, CALLBACK & USER PROVISIONING */
     /* -------------------------------------------------------------------------- */
 
     /**
@@ -108,13 +111,13 @@ class KpfcSsoTest extends TestCase
         $sub = 'bca7909f-cdf0-4f59-a69d-6cb61f7d34a6';
 
         Http::fake([
-            $this->issuer . '/oauth/token' => Http::response([
+            $this->issuer.'/oauth/token' => Http::response([
                 'access_token' => 'access_token_mock_123',
                 'refresh_token' => 'refresh_token_mock_456',
                 'token_type' => 'Bearer',
                 'expires_in' => 900,
             ], 200),
-            $this->issuer . '/api/sso/user' => Http::response([
+            $this->issuer.'/api/sso/user' => Http::response([
                 'sub' => $sub,
                 'name' => 'Leah Example',
                 'email' => 'leah@example.com',
@@ -181,13 +184,13 @@ class KpfcSsoTest extends TestCase
         $verifier = 'test_verifier_repeat';
 
         Http::fake([
-            $this->issuer . '/oauth/token' => Http::response([
+            $this->issuer.'/oauth/token' => Http::response([
                 'access_token' => 'new_access_token',
                 'refresh_token' => 'new_refresh_token',
                 'token_type' => 'Bearer',
                 'expires_in' => 900,
             ], 200),
-            $this->issuer . '/api/sso/user' => Http::response([
+            $this->issuer.'/api/sso/user' => Http::response([
                 'sub' => $sub,
                 'name' => 'Leah Updated',
                 'email' => 'leah.updated@example.com',
@@ -247,13 +250,13 @@ class KpfcSsoTest extends TestCase
         $verifier = 'verifier_denied';
 
         Http::fake([
-            $this->issuer . '/oauth/token' => Http::response([
+            $this->issuer.'/oauth/token' => Http::response([
                 'access_token' => 'access_token_denied',
                 'refresh_token' => 'refresh_token_denied',
                 'token_type' => 'Bearer',
                 'expires_in' => 900,
             ], 200),
-            $this->issuer . '/api/sso/user' => Http::response([
+            $this->issuer.'/api/sso/user' => Http::response([
                 'sub' => 'denied-user-sub',
                 'name' => 'Denied User',
                 'email' => 'denied@example.com',
@@ -272,7 +275,7 @@ class KpfcSsoTest extends TestCase
     }
 
     /* -------------------------------------------------------------------------- */
-    /* 3. TOKEN MANAGEMENT & INTROSPECTION                                       */
+    /* 3. TOKEN MANAGEMENT & INTROSPECTION */
     /* -------------------------------------------------------------------------- */
 
     /**
@@ -295,7 +298,7 @@ class KpfcSsoTest extends TestCase
         ]);
 
         Http::fake([
-            $this->issuer . '/oauth/token' => Http::response([
+            $this->issuer.'/oauth/token' => Http::response([
                 'access_token' => 'new_rotated_access_token',
                 'refresh_token' => 'new_rotated_refresh_token',
                 'token_type' => 'Bearer',
@@ -331,7 +334,7 @@ class KpfcSsoTest extends TestCase
         ]);
 
         Http::fake([
-            $this->issuer . '/oauth/token' => Http::response([
+            $this->issuer.'/oauth/token' => Http::response([
                 'error' => 'invalid_grant',
                 'error_description' => 'The refresh token is invalid.',
             ], 400),
@@ -350,7 +353,7 @@ class KpfcSsoTest extends TestCase
     public function test_token_introspection(): void
     {
         Http::fake([
-            $this->issuer . '/api/oauth/introspect' => Http::response([
+            $this->issuer.'/api/oauth/introspect' => Http::response([
                 'active' => true,
                 'client_id' => $this->clientId,
                 'sub' => 'sub-intro-test',
@@ -368,7 +371,7 @@ class KpfcSsoTest extends TestCase
     }
 
     /* -------------------------------------------------------------------------- */
-    /* 4. LOGOUT & SESSION TERMINATION                                            */
+    /* 4. LOGOUT & SESSION TERMINATION */
     /* -------------------------------------------------------------------------- */
 
     /**
@@ -390,7 +393,7 @@ class KpfcSsoTest extends TestCase
         ]);
 
         Http::fake([
-            $this->issuer . '/api/oauth/revoke' => Http::response(['revoked' => true], 200),
+            $this->issuer.'/api/oauth/revoke' => Http::response(['revoked' => true], 200),
         ]);
 
         $response = $this->actingAs($user)->post('/logout');
@@ -409,7 +412,7 @@ class KpfcSsoTest extends TestCase
     }
 
     /* -------------------------------------------------------------------------- */
-    /* 5. WEBHOOK PROCESSING, SECURITY & IDEMPOTENCY                              */
+    /* 5. WEBHOOK PROCESSING, SECURITY & IDEMPOTENCY */
     /* -------------------------------------------------------------------------- */
 
     /**
@@ -421,7 +424,7 @@ class KpfcSsoTest extends TestCase
         $payload = ['id' => 'evt_1', 'event' => 'user.updated'];
         $rawBody = json_encode($payload, JSON_UNESCAPED_SLASHES);
 
-        $sig = 'v1=' . hash_hmac('sha256', $oldTimestamp . '.' . $rawBody, $this->webhookSecret);
+        $sig = 'v1='.hash_hmac('sha256', $oldTimestamp.'.'.$rawBody, $this->webhookSecret);
 
         $response = $this->call(
             'POST',
@@ -491,7 +494,7 @@ class KpfcSsoTest extends TestCase
         ];
 
         $rawBody = json_encode($payload, JSON_UNESCAPED_SLASHES);
-        $sig = 'v1=' . hash_hmac('sha256', $timestamp . '.' . $rawBody, $this->webhookSecret);
+        $sig = 'v1='.hash_hmac('sha256', $timestamp.'.'.$rawBody, $this->webhookSecret);
 
         $response = $this->call(
             'POST',
@@ -559,7 +562,7 @@ class KpfcSsoTest extends TestCase
         ];
 
         $rawBody = json_encode($payload, JSON_UNESCAPED_SLASHES);
-        $sig = 'v1=' . hash_hmac('sha256', $timestamp . '.' . $rawBody, $this->webhookSecret);
+        $sig = 'v1='.hash_hmac('sha256', $timestamp.'.'.$rawBody, $this->webhookSecret);
 
         $response = $this->call(
             'POST',
@@ -626,7 +629,7 @@ class KpfcSsoTest extends TestCase
         ];
 
         $rawBody = json_encode($payload, JSON_UNESCAPED_SLASHES);
-        $sig = 'v1=' . hash_hmac('sha256', $timestamp . '.' . $rawBody, $this->webhookSecret);
+        $sig = 'v1='.hash_hmac('sha256', $timestamp.'.'.$rawBody, $this->webhookSecret);
 
         $response = $this->call(
             'POST',
@@ -682,7 +685,7 @@ class KpfcSsoTest extends TestCase
         ];
 
         $rawBody = json_encode($payload, JSON_UNESCAPED_SLASHES);
-        $sig = 'v1=' . hash_hmac('sha256', $timestamp . '.' . $rawBody, $this->webhookSecret);
+        $sig = 'v1='.hash_hmac('sha256', $timestamp.'.'.$rawBody, $this->webhookSecret);
 
         $response = $this->call(
             'POST',

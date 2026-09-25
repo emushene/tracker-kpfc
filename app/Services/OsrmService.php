@@ -16,14 +16,14 @@ class OsrmService
         float $endLongitude
     ): array {
         $coordinates =
-            $startLongitude . ',' . $startLatitude .
-            ';' .
-            $endLongitude . ',' . $endLatitude;
+            $startLongitude.','.$startLatitude.
+            ';'.
+            $endLongitude.','.$endLatitude;
 
         $response = Http::timeout(15)
             ->get(
-                $this->baseUrl .
-                '/route/v1/driving/' .
+                $this->baseUrl.
+                '/route/v1/driving/'.
                 $coordinates,
                 [
                     'overview' => 'false',
@@ -33,9 +33,9 @@ class OsrmService
 
         if ($response->failed()) {
             throw new RuntimeException(
-                'OSRM request failed. HTTP status: ' .
-                $response->status() .
-                '. Response: ' .
+                'OSRM request failed. HTTP status: '.
+                $response->status().
+                '. Response: '.
                 $response->body()
             );
         }

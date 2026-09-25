@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Vehicle extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'imei',
         'device_name',
@@ -113,6 +116,7 @@ class Vehicle extends Model
             }
         );
     }
+
     /**
      * Return the permanent home shop assigned to this vehicle.
      * Used for home-base routing, distance calculations, and operational assignment.
@@ -175,5 +179,35 @@ class Vehicle extends Model
         return $this->hasMany(
             VehicleDeployment::class
         );
+    }
+
+    public function maintenanceSchedules(): HasMany
+    {
+        return $this->hasMany(MaintenanceSchedule::class);
+    }
+
+    public function maintenanceAlerts(): HasMany
+    {
+        return $this->hasMany(MaintenanceAlert::class);
+    }
+
+    public function maintenanceTickets(): HasMany
+    {
+        return $this->hasMany(MaintenanceTicket::class);
+    }
+
+    public function maintenanceJobCards(): HasMany
+    {
+        return $this->hasMany(MaintenanceJobCard::class);
+    }
+
+    public function repairs(): HasMany
+    {
+        return $this->hasMany(VehicleRepair::class);
+    }
+
+    public function replacements(): HasMany
+    {
+        return $this->hasMany(VehicleReplacement::class);
     }
 }

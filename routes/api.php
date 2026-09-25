@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Api\DeploymentController;
+use App\Http\Controllers\Api\InventoryController;
+use App\Http\Controllers\Api\MaintenanceController;
 use App\Http\Controllers\Api\ShopController;
 use App\Http\Controllers\Api\VehicleController;
 use App\Http\Controllers\Auth\KpfcSsoController;
@@ -54,6 +56,36 @@ Route::middleware(['web', 'auth', 'fleet.access', 'fleet.write'])->group(functio
 
         // PATCH /api/vehicles/{vehicle}/deployments/{deployment}/cancel - Cancel a planned or dispatched deployment (write role required)
         Route::patch('/{vehicle}/deployments/{deployment}/cancel', [DeploymentController::class, 'cancel'])->name('api.vehicles.deployments.cancel');
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Fleet Maintenance API Routes
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('maintenance')->group(function (): void {
+        Route::get('/overview', [MaintenanceController::class, 'overview'])->name('api.maintenance.overview');
+        Route::get('/tickets', [MaintenanceController::class, 'tickets'])->name('api.maintenance.tickets');
+        Route::post('/tickets', [MaintenanceController::class, 'storeTicket'])->name('api.maintenance.tickets.store');
+        Route::get('/job-cards', [MaintenanceController::class, 'jobCards'])->name('api.maintenance.job-cards');
+        Route::post('/job-cards', [MaintenanceController::class, 'storeJobCard'])->name('api.maintenance.job-cards.store');
+        Route::get('/alerts', [MaintenanceController::class, 'alerts'])->name('api.maintenance.alerts');
+        Route::get('/vehicles/{vehicle}', [MaintenanceController::class, 'vehicleDetails'])->name('api.maintenance.vehicle-details');
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Parts & Tools Inventory API Routes
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('inventory')->group(function (): void {
+        Route::get('/overview', [InventoryController::class, 'overview'])->name('api.inventory.overview');
+        Route::get('/parts', [InventoryController::class, 'parts'])->name('api.inventory.parts');
+        Route::post('/parts', [InventoryController::class, 'storePart'])->name('api.inventory.parts.store');
+        Route::post('/parts/{part}/adjust', [InventoryController::class, 'adjustStock'])->name('api.inventory.parts.adjust');
+        Route::get('/tools', [InventoryController::class, 'tools'])->name('api.inventory.tools');
+        Route::post('/tools/{tool}/assign', [InventoryController::class, 'assignTool'])->name('api.inventory.tools.assign');
+        Route::post('/tools/{tool}/return', [InventoryController::class, 'returnTool'])->name('api.inventory.tools.return');
     });
 
     /*

@@ -11,24 +11,24 @@ return new class extends Migration
      */
     public function up(): void
     {
-       Schema::create('vehicles', function (Blueprint $table) {
-    $table->id();
+        Schema::create('vehicles', function (Blueprint $table) {
+            $table->id();
 
-    $table->string('imei', 20)->unique();
-    $table->string('device_name')->nullable();
-    $table->string('plate_number')->nullable()->index();
-    $table->string('device_type')->nullable();
-    $table->string('simcard')->nullable();
-    $table->string('iccid')->nullable();
+            $table->string('imei', 20)->unique();
+            $table->string('device_name')->nullable();
+            $table->string('plate_number')->nullable()->index();
+            $table->string('device_type')->nullable();
+            $table->string('simcard')->nullable();
+            $table->string('iccid')->nullable();
 
-    $table->timestamp('activated_at')->nullable();
-    $table->timestamp('online_at')->nullable();
-    $table->timestamp('platform_due_at')->nullable();
+            $table->timestamp('activated_at')->nullable();
+            $table->timestamp('online_at')->nullable();
+            $table->timestamp('platform_due_at')->nullable();
 
-    $table->boolean('active')->default(true);
+            $table->boolean('active')->default(true);
 
-    $table->timestamps();
-});
+            $table->timestamps();
+        });
     }
 
     /**

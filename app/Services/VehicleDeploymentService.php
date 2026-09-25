@@ -23,8 +23,7 @@ class VehicleDeploymentService
 
     public function __construct(
         private OsrmService $osrm
-    ) {
-    }
+    ) {}
 
     /**
      * Create a new deployment for a vehicle.
@@ -270,7 +269,7 @@ class VehicleDeploymentService
         }
 
         throw new RuntimeException(
-            'Unsupported deployment destination type: ' .
+            'Unsupported deployment destination type: '.
             $deployment->destination_type
         );
     }

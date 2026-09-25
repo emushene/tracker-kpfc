@@ -8,6 +8,7 @@ use RuntimeException;
 class GoogleSheetsService
 {
     private string $spreadsheetId;
+
     private string $credentialsPath;
 
     public function __construct()
@@ -15,11 +16,11 @@ class GoogleSheetsService
         $this->spreadsheetId = config('services.google.sheets.spreadsheet_id');
         $this->credentialsPath = config('services.google.sheets.credentials');
 
-        if (!$this->spreadsheetId) {
+        if (! $this->spreadsheetId) {
             throw new RuntimeException('Google Spreadsheet ID is not configured.');
         }
 
-        if (!file_exists($this->credentialsPath)) {
+        if (! file_exists($this->credentialsPath)) {
             throw new RuntimeException(
                 "Google credentials file not found: {$this->credentialsPath}"
             );
@@ -33,7 +34,7 @@ class GoogleSheetsService
             true
         );
 
-        if (!$credentials || empty($credentials['client_email']) || empty($credentials['private_key'])) {
+        if (! $credentials || empty($credentials['client_email']) || empty($credentials['private_key'])) {
             throw new RuntimeException('Invalid Google service account JSON.');
         }
 
@@ -56,7 +57,7 @@ class GoogleSheetsService
             ])
         );
 
-        $unsignedJwt = $header . '.' . $claim;
+        $unsignedJwt = $header.'.'.$claim;
 
         $signature = '';
         openssl_sign(
@@ -66,7 +67,7 @@ class GoogleSheetsService
             OPENSSL_ALGO_SHA256
         );
 
-        $jwt = $unsignedJwt . '.' . $this->base64UrlEncode($signature);
+        $jwt = $unsignedJwt.'.'.$this->base64UrlEncode($signature);
 
         $response = Http::asForm()->post(
             'https://oauth2.googleapis.com/token',
@@ -78,7 +79,7 @@ class GoogleSheetsService
 
         if ($response->failed()) {
             throw new RuntimeException(
-                'Google authentication failed: ' . $response->body()
+                'Google authentication failed: '.$response->body()
             );
         }
 
@@ -103,7 +104,7 @@ class GoogleSheetsService
 
         if ($response->failed()) {
             throw new RuntimeException(
-                'Google Sheets read failed: ' . $response->body()
+                'Google Sheets read failed: '.$response->body()
             );
         }
 
@@ -111,28 +112,28 @@ class GoogleSheetsService
     }
 
     public function updateLocation(int $row, string $location): void
-{
-    $token = $this->getAccessToken();
+    {
+        $token = $this->getAccessToken();
 
-    $response = Http::withToken($token)
-        ->withHeaders([
-            'Content-Type' => 'application/json',
-        ])
-        ->put(
-            "https://sheets.googleapis.com/v4/spreadsheets/{$this->spreadsheetId}/values/Protrack365!F{$row}?valueInputOption=USER_ENTERED",
-            [
-                'range' => "Protrack365!F{$row}",
-                'majorDimension' => 'ROWS',
-                'values' => [
-                    [$location],
-                ],
-            ]
-        );
+        $response = Http::withToken($token)
+            ->withHeaders([
+                'Content-Type' => 'application/json',
+            ])
+            ->put(
+                "https://sheets.googleapis.com/v4/spreadsheets/{$this->spreadsheetId}/values/Protrack365!F{$row}?valueInputOption=USER_ENTERED",
+                [
+                    'range' => "Protrack365!F{$row}",
+                    'majorDimension' => 'ROWS',
+                    'values' => [
+                        [$location],
+                    ],
+                ]
+            );
 
-    if ($response->failed()) {
-        throw new RuntimeException(
-            'Google Sheets update failed: ' . $response->body()
-        );
+        if ($response->failed()) {
+            throw new RuntimeException(
+                'Google Sheets update failed: '.$response->body()
+            );
+        }
     }
-}
 }

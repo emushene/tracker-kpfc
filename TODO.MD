@@ -134,35 +134,35 @@
 
 ## Phase 9 — Maintenance
 
-- [ ] Create `maintenance_schedules` and `maintenance_alerts` migrations/models
-- [ ] Mileage-based service interval alerting (alert when approaching next service mileage)
-- [ ] Create `maintenance_tickets` migration and model
-  - [ ] Ticket types: `repair`, `inspection`, `service`, `diagnostic`
-  - [ ] Statuses: `open`, `prioritized`, `in_progress`, `awaiting_parts`, `completed`, `closed`
-- [ ] Create `maintenance_job_cards` migration and model
-  - [ ] Fields: vehicle, mileage, reported problem, diagnosis, work performed, parts used, tools used, mechanic (external user), start/end time, notes, completion status
-- [ ] Create `checklist_templates` and `checklist_items` migrations/models
-- [ ] Create `job_card_checklists` and `job_card_checklist_items` (snapshot of template at job card creation time)
-- [ ] Create `vehicle_repairs` migration and model
-- [ ] Create `vehicle_replacements` migration and model
-- [ ] Mechanic Dashboard API endpoints
-- [ ] Write feature tests for maintenance domain
+- [x] Create `maintenance_schedules` and `maintenance_alerts` migrations/models
+- [x] Mileage-based service interval alerting (alert when approaching next service mileage)
+- [x] Create `maintenance_tickets` migration and model
+  - [x] Ticket types: `repair`, `inspection`, `service`, `diagnostic`
+  - [x] Statuses: `open`, `prioritized`, `in_progress`, `awaiting_parts`, `completed`, `closed`
+- [x] Create `maintenance_job_cards` migration and model
+  - [x] Fields: vehicle, mileage, reported problem, diagnosis, work performed, parts used, tools used, mechanic (external user), start/end time, notes, completion status
+- [x] Create `checklist_templates` and `checklist_items` migrations/models
+- [x] Create `job_card_checklists` and `job_card_checklist_items` (snapshot of template at job card creation time)
+- [x] Create `vehicle_repairs` migration and model
+- [x] Create `vehicle_replacements` migration and model
+- [x] Mechanic Dashboard API endpoints
+- [x] Write feature tests for maintenance domain
 
 ---
 
 ## Phase 10 — Inventory
 
-- [ ] Create `inventory_categories` migration and model
-- [ ] Create `inventory_parts` migration and model (mechanical & cosmetic/body categories)
-  - [ ] Fields: part, category, quantity, minimum_quantity, location
-- [ ] Create `inventory_movements` migration and model (stock movements and usage)
-- [ ] Create `job_card_parts` migration and model (parts consumed per job card)
-- [ ] Create `tools` migration and model
-  - [ ] Fields: tool, category, availability, condition
-- [ ] Create `tool_assignments` migration and model
-  - [ ] Fields: tool_id, mechanic (external user), assigned_at, returned_at
-- [ ] Low-stock alerts when `quantity < minimum_quantity`
-- [ ] Write feature tests for inventory domain
+- [x] Create `inventory_categories` migration and model
+- [x] Create `inventory_parts` migration and model (mechanical & cosmetic/body categories)
+  - [x] Fields: part, category, quantity, minimum_quantity, location
+- [x] Create `inventory_movements` migration and model (stock movements and usage)
+- [x] Create `job_card_parts` migration and model (parts consumed per job card)
+- [x] Create `tools` migration and model
+  - [x] Fields: tool, category, availability, condition
+- [x] Create `tool_assignments` migration and model
+  - [x] Fields: tool_id, mechanic (external user), assigned_at, returned_at
+- [x] Low-stock alerts when `quantity < minimum_quantity`
+- [x] Write feature tests for inventory domain
 
 ---
 

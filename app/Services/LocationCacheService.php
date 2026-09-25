@@ -81,11 +81,9 @@ class LocationCacheService
             'latitude' => $latitude,
             'longitude' => $longitude,
 
-            'latitude_bucket' =>
-                $bucket['latitude_bucket'],
+            'latitude_bucket' => $bucket['latitude_bucket'],
 
-            'longitude_bucket' =>
-                $bucket['longitude_bucket'],
+            'longitude_bucket' => $bucket['longitude_bucket'],
 
             'location_name' => $locationName,
             'address' => $address,

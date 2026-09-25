@@ -22,6 +22,7 @@ class SyncProtrackToGoogleSheets extends Command
 
             if (empty($rows)) {
                 $this->error('The Protrack365 sheet is empty.');
+
                 return self::FAILURE;
             }
 
@@ -57,12 +58,13 @@ class SyncProtrackToGoogleSheets extends Command
             foreach ($vehicles as $vehicle) {
                 $imei = trim($vehicle->imei);
 
-                if (!isset($imeiRows[$imei])) {
+                if (! isset($imeiRows[$imei])) {
                     $this->warn(
                         "IMEI {$imei} not found in Google Sheet."
                     );
 
                     $notFound++;
+
                     continue;
                 }
 
@@ -70,6 +72,7 @@ class SyncProtrackToGoogleSheets extends Command
 
                 if ($location === '') {
                     $skipped++;
+
                     continue;
                 }
 

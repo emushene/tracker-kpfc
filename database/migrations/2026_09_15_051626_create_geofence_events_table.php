@@ -12,27 +12,27 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('geofence_events', function (Blueprint $table) {
-    $table->id();
+            $table->id();
 
-    $table->foreignId('vehicle_id')
-        ->constrained()
-        ->cascadeOnDelete();
+            $table->foreignId('vehicle_id')
+                ->constrained()
+                ->cascadeOnDelete();
 
-    $table->foreignId('geofence_id')
-        ->constrained()
-        ->cascadeOnDelete();
+            $table->foreignId('geofence_id')
+                ->constrained()
+                ->cascadeOnDelete();
 
-    $table->string('event_type');
+            $table->string('event_type');
 
-    $table->decimal('latitude', 10, 7)->nullable();
-    $table->decimal('longitude', 10, 7)->nullable();
+            $table->decimal('latitude', 10, 7)->nullable();
+            $table->decimal('longitude', 10, 7)->nullable();
 
-    $table->unsignedBigInteger('event_time')->nullable();
+            $table->unsignedBigInteger('event_time')->nullable();
 
-    $table->timestamps();
+            $table->timestamps();
 
-    $table->index(['vehicle_id', 'geofence_id']);
-});
+            $table->index(['vehicle_id', 'geofence_id']);
+        });
     }
 
     /**

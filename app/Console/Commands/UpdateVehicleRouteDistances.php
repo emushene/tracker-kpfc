@@ -85,11 +85,9 @@ class UpdateVehicleRouteDistances extends Command
                 );
 
                 $vehicle->update([
-                    'road_distance_meters' =>
-                        $route['distance_meters'],
+                    'road_distance_meters' => $route['distance_meters'],
 
-                    'road_duration_seconds' =>
-                        $route['duration_seconds'],
+                    'road_duration_seconds' => $route['duration_seconds'],
 
                     'route_calculated_at' => now(),
                 ]);
@@ -103,8 +101,8 @@ class UpdateVehicleRouteDistances extends Command
                 $this->line(
                     "{$vehicle->imei} -> ".
                     "{$shop->name} | ".
-                    round($distanceKm, 2)." km | ".
-                    round($durationMinutes)." min"
+                    round($distanceKm, 2).' km | '.
+                    round($durationMinutes).' min'
                 );
             } catch (Throwable $exception) {
                 $this->error(

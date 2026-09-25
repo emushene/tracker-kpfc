@@ -4,9 +4,6 @@ namespace App\Console\Commands;
 
 use App\Services\Protrack\ProtrackClient;
 use Illuminate\Console\Command;
-use Illuminate\Console\Attributes\Description;
-use Illuminate\Console\Attributes\Signature;
-
 
 class SyncProtrackPositions extends Command
 {
@@ -28,7 +25,7 @@ class SyncProtrackPositions extends Command
             return self::SUCCESS;
         } catch (\Throwable $e) {
             $this->error(
-                'Position synchronization failed: ' .
+                'Position synchronization failed: '.
                 $e->getMessage()
             );
 

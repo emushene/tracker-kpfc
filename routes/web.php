@@ -29,106 +29,106 @@ Route::middleware(['auth', 'fleet.access'])->group(function (): void {
         return response()->file(public_path('test-dashboard.html'));
     });
 
-Route::get('/protrack/test', function (
-    ProtrackClient $protrack
-) {
-    return [
-        'status' => 'connected',
-        'token_received' => ! empty(
-            $protrack->getAccessToken()
-        ),
-    ];
-});
-
-Route::get('/protrack/devices', function (
-    ProtrackClient $protrack
-) {
-    return response()->json(
-        $protrack->devices()
-    );
-});
-
-Route::get('/protrack/device-count', function (
-    ProtrackClient $protrack
-) {
-    $devices = $protrack->devices();
-
-    return response()->json([
-        'count' => count($devices),
-        'devices' => $devices,
-    ]);
-});
-
-Route::get('/protrack/accounts', function (
-    ProtrackClient $protrack
-) {
-    $accounts = config('protrack.accounts', []);
-
-    $result = [];
-
-    foreach ($accounts as $account) {
-        $devices = $protrack->devicesForAccount($account);
-
-        $result[] = [
-            'account' => $account,
-            'device_count' => count($devices),
-            'devices' => $devices,
+    Route::get('/protrack/test', function (
+        ProtrackClient $protrack
+    ) {
+        return [
+            'status' => 'connected',
+            'token_received' => ! empty(
+                $protrack->getAccessToken()
+            ),
         ];
-    }
+    });
 
-    return response()->json($result);
-});
+    Route::get('/protrack/devices', function (
+        ProtrackClient $protrack
+    ) {
+        return response()->json(
+            $protrack->devices()
+        );
+    });
 
-Route::get('/protrack/track/{imei}', function (
-    string $imei
-) {
-    $vehicle = Vehicle::query()
-        ->where('imei', $imei)
-        ->where('active', true)
-        ->first();
+    Route::get('/protrack/device-count', function (
+        ProtrackClient $protrack
+    ) {
+        $devices = $protrack->devices();
 
-    if (! $vehicle) {
         return response()->json([
-            'error' => 'Vehicle not found',
-            'imei' => $imei,
-        ], 404);
-    }
+            'count' => count($devices),
+            'devices' => $devices,
+        ]);
+    });
 
-    $position = $vehicle->positions()
-        ->whereNotNull('latitude')
-        ->whereNotNull('longitude')
-        ->latest('gps_time')
-        ->first();
+    Route::get('/protrack/accounts', function (
+        ProtrackClient $protrack
+    ) {
+        $accounts = config('protrack.accounts', []);
 
-    if (! $position) {
+        $result = [];
+
+        foreach ($accounts as $account) {
+            $devices = $protrack->devicesForAccount($account);
+
+            $result[] = [
+                'account' => $account,
+                'device_count' => count($devices),
+                'devices' => $devices,
+            ];
+        }
+
+        return response()->json($result);
+    });
+
+    Route::get('/protrack/track/{imei}', function (
+        string $imei
+    ) {
+        $vehicle = Vehicle::query()
+            ->where('imei', $imei)
+            ->where('active', true)
+            ->first();
+
+        if (! $vehicle) {
+            return response()->json([
+                'error' => 'Vehicle not found',
+                'imei' => $imei,
+            ], 404);
+        }
+
+        $position = $vehicle->positions()
+            ->whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->latest('gps_time')
+            ->first();
+
+        if (! $position) {
+            return response()->json([
+                'error' => 'No GPS position found',
+                'imei' => $imei,
+            ], 404);
+        }
+
         return response()->json([
-            'error' => 'No GPS position found',
-            'imei' => $imei,
-        ], 404);
-    }
+            'imei' => $vehicle->imei,
 
-    return response()->json([
-        'imei' => $vehicle->imei,
+            'device_name' => $vehicle->device_name,
 
-        'device_name' => $vehicle->device_name,
+            'plate_number' => $vehicle->plate_number,
 
-        'plate_number' => $vehicle->plate_number,
+            'latitude' => $position->latitude,
 
-        'latitude' => $position->latitude,
+            'longitude' => $position->longitude,
 
-        'longitude' => $position->longitude,
+            'speed' => $position->speed,
 
-        'speed' => $position->speed,
+            'course' => $position->course,
 
-        'course' => $position->course,
+            'gps_time' => $position->gps_time,
 
-        'gps_time' => $position->gps_time,
+            'server_time' => $position->server_time,
 
-        'server_time' => $position->server_time,
+            'location' => $vehicle->location_name,
 
-        'location' => $vehicle->location_name,
-
-        'location_updated_at' => $vehicle->location_updated_at,
-    ]);
-});
+            'location_updated_at' => $vehicle->location_updated_at,
+        ]);
+    });
 });

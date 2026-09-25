@@ -12,20 +12,20 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('geofences', function (Blueprint $table) {
-    $table->id();
+            $table->id();
 
-    $table->string('name');
-    $table->text('description')->nullable();
+            $table->string('name');
+            $table->text('description')->nullable();
 
-    $table->decimal('latitude', 10, 7);
-    $table->decimal('longitude', 10, 7);
+            $table->decimal('latitude', 10, 7);
+            $table->decimal('longitude', 10, 7);
 
-    $table->unsignedInteger('radius');
+            $table->unsignedInteger('radius');
 
-    $table->boolean('active')->default(true);
+            $table->boolean('active')->default(true);
 
-    $table->timestamps();
-});
+            $table->timestamps();
+        });
     }
 
     /**

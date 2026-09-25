@@ -59,4 +59,3 @@ class RefreshProtrackLocations extends Command
         return Command::SUCCESS;
     }
 }
-

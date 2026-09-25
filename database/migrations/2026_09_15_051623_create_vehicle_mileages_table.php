@@ -12,21 +12,21 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('vehicle_mileage', function (Blueprint $table) {
-    $table->id();
+            $table->id();
 
-    $table->foreignId('vehicle_id')
-        ->constrained()
-        ->cascadeOnDelete();
+            $table->foreignId('vehicle_id')
+                ->constrained()
+                ->cascadeOnDelete();
 
-    $table->date('date');
+            $table->date('date');
 
-    $table->unsignedBigInteger('mileage')->nullable();
-    $table->unsignedBigInteger('odometer')->nullable();
+            $table->unsignedBigInteger('mileage')->nullable();
+            $table->unsignedBigInteger('odometer')->nullable();
 
-    $table->timestamps();
+            $table->timestamps();
 
-    $table->unique(['vehicle_id', 'date']);
-});
+            $table->unique(['vehicle_id', 'date']);
+        });
     }
 
     /**

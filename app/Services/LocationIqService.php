@@ -33,7 +33,7 @@ class LocationIqService
         $response = Http::timeout(
             config('locationiq.timeout', 15)
         )->get(
-            $baseUrl . '/v1/reverse',
+            $baseUrl.'/v1/reverse',
             [
                 'key' => $apiKey,
                 'lat' => $latitude,
@@ -46,9 +46,9 @@ class LocationIqService
 
         if ($response->failed()) {
             throw new RuntimeException(
-                'LocationIQ request failed. HTTP status: ' .
-                $response->status() .
-                '. Response: ' .
+                'LocationIQ request failed. HTTP status: '.
+                $response->status().
+                '. Response: '.
                 $response->body()
             );
         }

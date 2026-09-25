@@ -70,6 +70,8 @@
         <a href="#live-map" class="whitespace-nowrap transition hover:text-[#2563eb]">Live map</a>
         <a href="#fleet-vehicles" class="whitespace-nowrap transition hover:text-[#2563eb]">Vehicles</a>
         <a href="#operations" class="whitespace-nowrap transition hover:text-[#2563eb]">Operations</a>
+        <a href="#maintenance-hub" class="whitespace-nowrap transition hover:text-[#2563eb] flex items-center gap-1"><i data-lucide="wrench" class="w-3.5 h-3.5 text-blue-500"></i> Maintenance</a>
+        <a href="#inventory-hub" class="whitespace-nowrap transition hover:text-[#2563eb] flex items-center gap-1"><i data-lucide="package" class="w-3.5 h-3.5 text-emerald-500"></i> Inventory</a>
       </nav>
 
       <div class="order-2 flex items-center gap-2 lg:order-3">
@@ -88,23 +90,37 @@
   <!-- Main Container -->
   <main class="max-w-7xl mx-auto px-6 py-6 space-y-6">
 
-    <!-- Fleet Stats Overview -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
-        <p class="text-xs font-medium text-slate-500">Total Monitored Fleet</p>
-        <p id="stat-total" class="text-2xl font-bold mt-1 text-[#172033]">--</p>
+    <!-- Fleet, Maintenance & Inventory Stats Overview -->
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div class="bg-white border border-slate-200 p-3.5 rounded-xl shadow-sm">
+        <p class="text-[11px] font-medium text-slate-500">Total Fleet</p>
+        <p id="stat-total" class="text-xl font-bold mt-1 text-[#172033]">--</p>
       </div>
-      <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
-        <p class="text-xs font-medium text-slate-500">Active / Moving</p>
-        <p id="stat-moving" class="text-2xl font-bold mt-1 text-emerald-600">--</p>
+      <div class="bg-white border border-slate-200 p-3.5 rounded-xl shadow-sm">
+        <p class="text-[11px] font-medium text-slate-500">Active / Moving</p>
+        <p id="stat-moving" class="text-xl font-bold mt-1 text-emerald-600">--</p>
       </div>
-      <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
-        <p class="text-xs font-medium text-slate-500">Assigned Home Bases</p>
-        <p id="stat-assigned" class="text-2xl font-bold mt-1 text-[#2563eb]">--</p>
+      <div class="bg-white border border-slate-200 p-3.5 rounded-xl shadow-sm">
+        <p class="text-[11px] font-medium text-slate-500">Home Bases</p>
+        <p id="stat-assigned" class="text-xl font-bold mt-1 text-[#2563eb]">--</p>
       </div>
-      <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
-        <p class="text-xs font-medium text-slate-500">Active Deployments (On Duty)</p>
-        <p id="stat-deployed" class="text-2xl font-bold mt-1 text-amber-400">--</p>
+      <div class="bg-white border border-slate-200 p-3.5 rounded-xl shadow-sm">
+        <p class="text-[11px] font-medium text-slate-500">Deployments</p>
+        <p id="stat-deployed" class="text-xl font-bold mt-1 text-amber-500">--</p>
+      </div>
+      <div class="bg-white border border-slate-200 p-3.5 rounded-xl shadow-sm">
+        <div class="flex items-center justify-between">
+          <p class="text-[11px] font-medium text-slate-500">Open Tickets</p>
+          <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+        </div>
+        <p id="stat-tickets" class="text-xl font-bold mt-1 text-blue-600">--</p>
+      </div>
+      <div class="bg-white border border-slate-200 p-3.5 rounded-xl shadow-sm">
+        <div class="flex items-center justify-between">
+          <p class="text-[11px] font-medium text-slate-500">Low Stock Parts</p>
+          <span id="low-stock-dot" class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+        </div>
+        <p id="stat-low-stock" class="text-xl font-bold mt-1 text-rose-600">--</p>
       </div>
     </div>
 
@@ -224,6 +240,110 @@
 
     </div>
 
+    <!-- Maintenance Hub -->
+    <section id="maintenance-hub" class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-5">
+      <div class="flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <i data-lucide="wrench" class="w-5 h-5 text-blue-500"></i>
+          <h2 class="text-base font-semibold text-[#172033]">Maintenance Hub</h2>
+        </div>
+        <span class="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-blue-600">Ops</span>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
+          <p class="text-[10px] uppercase tracking-wider text-slate-500">Open tickets</p>
+          <p id="maintenance-open" class="mt-2 text-xl font-bold text-blue-600">--</p>
+        </div>
+        <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
+          <p class="text-[10px] uppercase tracking-wider text-slate-500">In progress</p>
+          <p id="maintenance-inprogress" class="mt-2 text-xl font-bold text-amber-500">--</p>
+        </div>
+        <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
+          <p class="text-[10px] uppercase tracking-wider text-slate-500">Active job cards</p>
+          <p id="maintenance-jobcards" class="mt-2 text-xl font-bold text-indigo-600">--</p>
+        </div>
+        <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
+          <p class="text-[10px] uppercase tracking-wider text-slate-500">Active alerts</p>
+          <p id="maintenance-alerts" class="mt-2 text-xl font-bold text-rose-500">--</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <div class="mb-3 flex items-center justify-between">
+            <h3 class="text-sm font-semibold text-slate-800">Recent tickets</h3>
+            <span class="text-[10px] uppercase tracking-wider text-slate-500">Latest</span>
+          </div>
+          <div id="maintenance-tickets-list" class="space-y-2 text-xs text-slate-700">
+            <p class="text-slate-500">Loading maintenance tickets...</p>
+          </div>
+        </div>
+
+        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <div class="mb-3 flex items-center justify-between">
+            <h3 class="text-sm font-semibold text-slate-800">Alerts</h3>
+            <span class="text-[10px] uppercase tracking-wider text-slate-500">Watchlist</span>
+          </div>
+          <div id="maintenance-alerts-list" class="space-y-2 text-xs text-slate-700">
+            <p class="text-slate-500">Loading alerts...</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Inventory Hub -->
+    <section id="inventory-hub" class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-5">
+      <div class="flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <i data-lucide="package" class="w-5 h-5 text-emerald-500"></i>
+          <h2 class="text-base font-semibold text-[#172033]">Inventory Hub</h2>
+        </div>
+        <span class="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-600">Parts</span>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
+          <p class="text-[10px] uppercase tracking-wider text-slate-500">Total parts</p>
+          <p id="inventory-total-parts" class="mt-2 text-xl font-bold text-emerald-600">--</p>
+        </div>
+        <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
+          <p class="text-[10px] uppercase tracking-wider text-slate-500">Low stock</p>
+          <p id="inventory-low-stock" class="mt-2 text-xl font-bold text-rose-500">--</p>
+        </div>
+        <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
+          <p class="text-[10px] uppercase tracking-wider text-slate-500">Tools total</p>
+          <p id="inventory-tools-total" class="mt-2 text-xl font-bold text-cyan-600">--</p>
+        </div>
+        <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
+          <p class="text-[10px] uppercase tracking-wider text-slate-500">Available tools</p>
+          <p id="inventory-tools-available" class="mt-2 text-xl font-bold text-sky-600">--</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <div class="mb-3 flex items-center justify-between">
+            <h3 class="text-sm font-semibold text-slate-800">Low stock parts</h3>
+            <span class="text-[10px] uppercase tracking-wider text-slate-500">Reorder</span>
+          </div>
+          <div id="inventory-parts-list" class="space-y-2 text-xs text-slate-700">
+            <p class="text-slate-500">Loading inventory...</p>
+          </div>
+        </div>
+
+        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <div class="mb-3 flex items-center justify-between">
+            <h3 class="text-sm font-semibold text-slate-800">Tool status</h3>
+            <span class="text-[10px] uppercase tracking-wider text-slate-500">Available</span>
+          </div>
+          <div id="inventory-tools-list" class="space-y-2 text-xs text-slate-700">
+            <p class="text-slate-500">Loading tools...</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
   </main>
 
   <!-- Notification Toast -->
@@ -256,7 +376,11 @@
         await loadShops();
         initMap();
         populateShopDropdowns();
-        await loadFleetData();
+        await Promise.all([
+          loadFleetData(),
+          loadMaintenanceData(),
+          loadInventoryData()
+        ]);
       } catch (err) {
         console.error(err);
         showToast("Error", err.message || "Could not load dashboard data.", true);
@@ -326,6 +450,114 @@
       } catch (err) {
         console.error(err);
         showToast("Error", "Could not load /api/vehicles. Make sure php artisan serve is running.", true);
+      }
+    }
+
+    async function loadMaintenanceData() {
+      try {
+        const [overviewRes, ticketsRes, alertsRes] = await Promise.all([
+          fetch("/api/maintenance/overview"),
+          fetch("/api/maintenance/tickets"),
+          fetch("/api/maintenance/alerts")
+        ]);
+
+        const overview = await overviewRes.json();
+        const tickets = await ticketsRes.json();
+        const alerts = await alertsRes.json();
+
+        document.getElementById("maintenance-open").innerText = overview.open_tickets ?? 0;
+        document.getElementById("maintenance-inprogress").innerText = overview.in_progress_tickets ?? 0;
+        document.getElementById("maintenance-jobcards").innerText = overview.active_job_cards ?? 0;
+        document.getElementById("maintenance-alerts").innerText = overview.active_alerts ?? 0;
+
+        const ticketRows = (tickets.data || []).slice(0, 4);
+        const ticketList = document.getElementById("maintenance-tickets-list");
+        ticketList.innerHTML = ticketRows.length
+          ? ticketRows.map(ticket => `
+              <div class="rounded-lg border border-slate-200 bg-white p-2.5">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="font-semibold text-slate-800">${ticket.title || 'Maintenance ticket'}</span>
+                  <span class="rounded-full bg-${ticket.priority === 'urgent' ? 'red' : ticket.priority === 'high' ? 'amber' : 'slate'}-100 px-1.5 py-0.5 text-[9px] font-medium text-${ticket.priority === 'urgent' ? 'red' : ticket.priority === 'high' ? 'amber' : 'slate'}-700 uppercase">${ticket.priority || 'normal'}</span>
+                </div>
+                <div class="mt-1 flex items-center justify-between text-[10px] text-slate-500">
+                  <span>${ticket.vehicle?.plate_number || 'Unknown vehicle'}</span>
+                  <span>${ticket.status || 'open'}</span>
+                </div>
+              </div>
+            `).join("")
+          : '<p class="text-slate-500">No recent maintenance tickets.</p>';
+
+        const alertRows = (alerts.data || []).slice(0, 4);
+        const alertList = document.getElementById("maintenance-alerts-list");
+        alertList.innerHTML = alertRows.length
+          ? alertRows.map(alert => `
+              <div class="rounded-lg border border-slate-200 bg-white p-2.5">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="font-semibold text-slate-800">${alert.alert_type || 'Maintenance alert'}</span>
+                  <span class="rounded-full bg-rose-100 px-1.5 py-0.5 text-[9px] font-medium text-rose-700 uppercase">${alert.severity || 'normal'}</span>
+                </div>
+                <div class="mt-1 flex items-center justify-between text-[10px] text-slate-500">
+                  <span>${alert.vehicle?.plate_number || 'Unknown vehicle'}</span>
+                  <span>${alert.status || 'active'}</span>
+                </div>
+              </div>
+            `).join("")
+          : '<p class="text-slate-500">No active maintenance alerts.</p>';
+      } catch (err) {
+        console.error(err);
+        document.getElementById("maintenance-tickets-list").innerHTML = '<p class="text-rose-500">Could not load maintenance data.</p>';
+        document.getElementById("maintenance-alerts-list").innerHTML = '<p class="text-rose-500">Could not load alerts.</p>';
+      }
+    }
+
+    async function loadInventoryData() {
+      try {
+        const [overviewRes, partsRes, toolsRes] = await Promise.all([
+          fetch("/api/inventory/overview"),
+          fetch("/api/inventory/parts?low_stock=1"),
+          fetch("/api/inventory/tools")
+        ]);
+
+        const overview = await overviewRes.json();
+        const parts = await partsRes.json();
+        const tools = await toolsRes.json();
+
+        document.getElementById("inventory-total-parts").innerText = overview.total_parts ?? 0;
+        document.getElementById("inventory-low-stock").innerText = overview.low_stock_parts ?? 0;
+        document.getElementById("inventory-tools-total").innerText = overview.total_tools ?? 0;
+        document.getElementById("inventory-tools-available").innerText = overview.available_tools ?? 0;
+
+        const lowStockRows = (parts.data || []).slice(0, 4);
+        const partList = document.getElementById("inventory-parts-list");
+        partList.innerHTML = lowStockRows.length
+          ? lowStockRows.map(part => `
+              <div class="rounded-lg border border-slate-200 bg-white p-2.5">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="font-semibold text-slate-800">${part.name}</span>
+                  <span class="text-[10px] text-rose-600">${part.quantity} / ${part.minimum_quantity}</span>
+                </div>
+                <div class="mt-1 text-[10px] text-slate-500">${part.part_number || 'No PN'} • ${part.location || 'Warehouse'}</div>
+              </div>
+            `).join("")
+          : '<p class="text-slate-500">No low stock parts right now.</p>';
+
+        const toolRows = (tools.data || []).slice(0, 4);
+        const toolList = document.getElementById("inventory-tools-list");
+        toolList.innerHTML = toolRows.length
+          ? toolRows.map(tool => `
+              <div class="rounded-lg border border-slate-200 bg-white p-2.5">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="font-semibold text-slate-800">${tool.name}</span>
+                  <span class="rounded-full bg-${tool.availability_status === 'available' ? 'emerald' : tool.availability_status === 'assigned' ? 'amber' : 'slate'}-100 px-1.5 py-0.5 text-[9px] font-medium text-${tool.availability_status === 'available' ? 'emerald' : tool.availability_status === 'assigned' ? 'amber' : 'slate'}-700 uppercase">${tool.availability_status || 'unknown'}</span>
+                </div>
+                <div class="mt-1 text-[10px] text-slate-500">${tool.tool_code || 'No code'} • ${tool.condition || 'unknown'}</div>
+              </div>
+            `).join("")
+          : '<p class="text-slate-500">No tools available.</p>';
+      } catch (err) {
+        console.error(err);
+        document.getElementById("inventory-parts-list").innerHTML = '<p class="text-rose-500">Could not load inventory parts.</p>';
+        document.getElementById("inventory-tools-list").innerHTML = '<p class="text-rose-500">Could not load tools.</p>';
       }
     }
 

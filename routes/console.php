@@ -8,7 +8,6 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-
 /*
 |--------------------------------------------------------------------------
 | Protrack Position Synchronization
@@ -22,7 +21,6 @@ Artisan::command('inspire', function () {
 Schedule::command('protrack:sync-positions')
     ->everyThirtySeconds()
     ->withoutOverlapping();
-
 
 /*
 |--------------------------------------------------------------------------
@@ -40,4 +38,3 @@ Schedule::command('protrack:refresh-locations')
     ->everyTenMinutes()
     ->between('06:00', '18:00')
     ->withoutOverlapping();
-

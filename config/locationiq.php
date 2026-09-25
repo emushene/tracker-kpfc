@@ -12,4 +12,3 @@ return [
     'timeout' => 15,
 
 ];
-
