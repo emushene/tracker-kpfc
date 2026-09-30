@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventory | KPFC Fleet Management</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="maintenance-menu.js" defer></script>
+</head>
+<body class="min-h-screen bg-slate-100 text-slate-900">
+  <header class="sticky top-0 z-40 border-b border-slate-200 bg-white/95 px-4 py-4 backdrop-blur sm:px-6">
+    <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4">
+      <a href="/test-dashboard" class="flex items-center gap-3" aria-label="KPFC Fleet Management dashboard">
+        <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-700 text-white"><i data-lucide="truck" class="h-5 w-5"></i></span>
+        <span><span class="block text-xs font-semibold uppercase text-blue-700">KPFC</span><span class="block text-base font-semibold">Fleet Management</span></span>
+      </a>
+      <nav class="order-3 flex w-full items-center gap-5 overflow-x-auto border-t border-slate-200 pt-3 text-xs font-medium text-slate-500 sm:order-2 sm:w-auto sm:border-0 sm:pt-0" aria-label="Fleet management navigation">
+        <a href="/" class="whitespace-nowrap hover:text-blue-700">Home</a>
+        <a href="/test-dashboard" class="whitespace-nowrap hover:text-blue-700">Fleet dashboard</a>
+        <button id="maintenance-menu-trigger" type="button" onclick="toggleMaintenanceMenu(this)" aria-haspopup="dialog" aria-controls="maintenance-menu" aria-expanded="false" class="flex items-center gap-1 whitespace-nowrap font-semibold text-blue-700">
+            <i data-lucide="wrench" class="h-3.5 w-3.5"></i> Maintenance
+            <i data-lucide="chevron-down" class="h-3.5 w-3.5"></i>
+        </button>
+      </nav>
+      <button type="button" onclick="loadInventoryData()" title="Refresh inventory" aria-label="Refresh inventory" class="order-2 flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 text-slate-600 hover:bg-slate-50 sm:order-3">
+        <i data-lucide="refresh-cw" class="h-4 w-4"></i>
+      </button>
+    </div>
+  </header>
+
+  <div id="maintenance-menu" role="dialog" aria-modal="false" aria-labelledby="maintenance-menu-title" class="fixed left-0 top-0 z-[2000] hidden w-80 max-w-[calc(100vw-1rem)] translate-y-1 rounded-lg border border-slate-200 bg-white p-0 text-slate-900 opacity-0 shadow-xl ring-1 ring-black/5 transition-[opacity,transform] duration-150 ease-out">
+    <div class="p-4">
+      <div class="mb-3 flex items-center justify-between border-b border-slate-200 pb-3">
+        <h2 id="maintenance-menu-title" class="text-sm font-semibold">Maintenance sections</h2>
+        <button type="button" onclick="closeMaintenanceMenu(true)" aria-label="Close navigation" class="flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100"><i data-lucide="x" class="h-4 w-4"></i></button>
+      </div>
+      <nav class="grid gap-1" aria-label="Maintenance sections">
+        <a href="/maintenance" class="flex items-center gap-3 rounded-md px-3 py-3 text-sm hover:bg-slate-100"><i data-lucide="wrench" class="h-4 w-4 text-blue-700"></i>Maintenance</a>
+        <a href="/inventory" aria-current="page" class="flex items-center gap-3 rounded-md bg-emerald-50 px-3 py-3 text-sm font-semibold text-emerald-800"><i data-lucide="package" class="h-4 w-4"></i>Inventory</a>
+        <a href="/admin-console" class="flex items-center gap-3 rounded-md px-3 py-3 text-sm hover:bg-slate-100"><i data-lucide="shield-check" class="h-4 w-4 text-slate-700"></i>Admin Console</a>
+      </nav>
+    </div>
+  </div>
+
+  <main class="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6">
+    <section class="flex flex-wrap items-end justify-between gap-3">
+      <div><p class="text-xs font-semibold uppercase text-emerald-700">Fleet operations</p><h1 class="mt-1 text-2xl font-bold">Inventory</h1></div>
+      <a href="/admin-console" class="inline-flex items-center gap-2 rounded-lg bg-emerald-700 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-800"><i data-lucide="settings-2" class="h-4 w-4"></i>Admin Console</a>
+    </section>
+
+    <section class="grid grid-cols-2 gap-3 md:grid-cols-4" aria-label="Inventory overview">
+      <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="text-xs font-medium text-slate-500">Active parts</p><p id="inventory-total-parts" class="mt-2 text-2xl font-bold text-emerald-700">--</p></div>
+      <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="text-xs font-medium text-slate-500">Low stock</p><p id="inventory-low-stock" class="mt-2 text-2xl font-bold text-rose-600">--</p></div>
+      <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="text-xs font-medium text-slate-500">Tools</p><p id="inventory-tools-total" class="mt-2 text-2xl font-bold text-cyan-700">--</p></div>
+      <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="text-xs font-medium text-slate-500">Available tools</p><p id="inventory-tools-available" class="mt-2 text-2xl font-bold text-sky-700">--</p></div>
+    </section>
+
+    <section class="space-y-3">
+      <div class="flex flex-wrap items-end justify-between gap-3 border-b border-slate-300 pb-3">
+        <h2 class="text-base font-semibold">Parts</h2>
+        <label class="flex items-center gap-2 text-xs font-medium text-slate-600">Search
+          <input id="part-search" type="search" oninput="renderParts()" placeholder="Name, part number, location" class="w-56 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs focus:border-emerald-600 focus:outline-none">
+        </label>
+      </div>
+      <div class="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+        <table class="w-full min-w-[640px] text-left text-xs">
+          <thead class="border-b border-slate-200 bg-slate-50 text-[10px] uppercase text-slate-500"><tr><th class="px-4 py-3">Part</th><th class="px-4 py-3">Category</th><th class="px-4 py-3">Quantity</th><th class="px-4 py-3">Location</th><th class="px-4 py-3">Stock status</th></tr></thead>
+          <tbody id="parts-body" class="divide-y divide-slate-100"><tr><td colspan="5" class="px-4 py-6 text-center text-slate-500">Loading parts...</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="space-y-3">
+      <div class="border-b border-slate-300 pb-3"><h2 class="text-base font-semibold">Tools</h2></div>
+      <div class="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+        <table class="w-full min-w-[560px] text-left text-xs">
+          <thead class="border-b border-slate-200 bg-slate-50 text-[10px] uppercase text-slate-500"><tr><th class="px-4 py-3">Tool</th><th class="px-4 py-3">Code</th><th class="px-4 py-3">Condition</th><th class="px-4 py-3">Availability</th></tr></thead>
+          <tbody id="tools-body" class="divide-y divide-slate-100"><tr><td colspan="4" class="px-4 py-6 text-center text-slate-500">Loading tools...</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <div id="page-message" class="pointer-events-none fixed bottom-5 right-5 z-50 hidden max-w-sm rounded-lg bg-slate-900 px-4 py-3 text-xs text-white shadow-xl" role="status"></div>
+
+  <script>
+    let inventoryParts = [];
+    let inventoryTools = [];
+
+    document.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      loadInventoryData();
+    });
+
+    async function fetchJson(url) {
+      const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message || 'Could not load inventory data.');
+      return result;
+    }
+
+    async function loadInventoryData() {
+      try {
+        const [overview, parts, tools] = await Promise.all([
+          fetchJson('/api/inventory/overview'),
+          fetchJson('/api/inventory/parts'),
+          fetchJson('/api/inventory/tools')
+        ]);
+        inventoryParts = parts.data || [];
+        inventoryTools = tools.data || [];
+        document.getElementById('inventory-total-parts').textContent = overview.total_parts ?? 0;
+        document.getElementById('inventory-low-stock').textContent = overview.low_stock_parts ?? 0;
+        document.getElementById('inventory-tools-total').textContent = overview.total_tools ?? 0;
+        document.getElementById('inventory-tools-available').textContent = overview.available_tools ?? 0;
+        renderParts();
+        renderTools();
+      } catch (error) {
+        document.getElementById('parts-body').innerHTML = '<tr><td colspan="5" class="px-4 py-6 text-center text-rose-600">Could not load parts.</td></tr>';
+        document.getElementById('tools-body').innerHTML = '<tr><td colspan="4" class="px-4 py-6 text-center text-rose-600">Could not load tools.</td></tr>';
+        showMessage(error.message);
+      }
+    }
+
+    function renderParts() {
+      const query = document.getElementById('part-search').value.trim().toLowerCase();
+      const visibleParts = inventoryParts.filter(part => `${part.name || ''} ${part.part_number || ''} ${part.location || ''}`.toLowerCase().includes(query));
+      const body = document.getElementById('parts-body');
+      body.innerHTML = '';
+      if (!visibleParts.length) {
+        body.innerHTML = '<tr><td colspan="5" class="px-4 py-6 text-center text-slate-500">No matching parts.</td></tr>';
+        return;
+      }
+
+      visibleParts.forEach(part => {
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-slate-50';
+        const partCell = document.createElement('td');
+        partCell.className = 'px-4 py-3';
+        const partName = document.createElement('div');
+        partName.className = 'font-semibold text-slate-800';
+        partName.textContent = part.name;
+        const partNumber = document.createElement('div');
+        partNumber.className = 'mt-1 text-[10px] text-slate-500';
+        partNumber.textContent = part.part_number || 'No part number';
+        partCell.append(partName, partNumber);
+        row.append(partCell, createCell(part.category || 'Uncategorized'), createCell(`${part.quantity} / ${part.minimum_quantity} min`), createCell(part.location || 'Warehouse'));
+        const statusCell = document.createElement('td');
+        statusCell.className = 'px-4 py-3';
+        const lowStock = Number(part.quantity) <= Number(part.minimum_quantity);
+        const badge = document.createElement('span');
+        badge.className = `rounded-full px-2 py-1 text-[10px] font-semibold ${lowStock ? 'bg-rose-50 text-rose-700' : 'bg-emerald-50 text-emerald-700'}`;
+        badge.textContent = lowStock ? 'Low stock' : 'In stock';
+        statusCell.append(badge);
+        row.append(statusCell);
+        body.append(row);
+      });
+    }
+
+    function renderTools() {
+      const body = document.getElementById('tools-body');
+      body.innerHTML = '';
+      if (!inventoryTools.length) {
+        body.innerHTML = '<tr><td colspan="4" class="px-4 py-6 text-center text-slate-500">No tools found.</td></tr>';
+        return;
+      }
+      inventoryTools.forEach(tool => {
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-slate-50';
+        row.append(createCell(tool.name || 'Unnamed tool'), createCell(tool.tool_code || 'No code'), createCell(tool.condition || 'Unknown'));
+        const status = document.createElement('td');
+        status.className = 'px-4 py-3';
+        status.textContent = (tool.availability_status || 'unknown').replaceAll('_', ' ');
+        row.append(status);
+        body.append(row);
+      });
+    }
+
+    function createCell(text) {
+      const cell = document.createElement('td');
+      cell.className = 'px-4 py-3 text-slate-600';
+      cell.textContent = text;
+      return cell;
+    }
+
+    function showMessage(message) {
+      const box = document.getElementById('page-message');
+      box.textContent = message;
+      box.classList.remove('hidden');
+      clearTimeout(showMessage.timeout);
+      showMessage.timeout = setTimeout(() => box.classList.add('hidden'), 3500);
+    }
+  </script>
+</body>
+</html>

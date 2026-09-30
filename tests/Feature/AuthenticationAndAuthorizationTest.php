@@ -37,6 +37,9 @@ class AuthenticationAndAuthorizationTest extends TestCase
     {
         $this->get('/')->assertRedirect('/login');
         $this->get('/test-dashboard')->assertRedirect('/login');
+        $this->get('/maintenance')->assertRedirect('/login');
+        $this->get('/inventory')->assertRedirect('/login');
+        $this->get('/admin-console')->assertRedirect('/login');
         $this->get('/protrack/test')->assertRedirect('/login');
     }
 
@@ -106,6 +109,9 @@ class AuthenticationAndAuthorizationTest extends TestCase
         ]);
 
         $this->actingAs($viewer)->get('/')->assertStatus(200);
+        $this->actingAs($viewer)->get('/maintenance')->assertStatus(200);
+        $this->actingAs($viewer)->get('/inventory')->assertStatus(200);
+        $this->actingAs($viewer)->get('/admin-console')->assertStatus(200);
 
         $this->actingAs($viewer)->getJson('/api/shops')
             ->assertStatus(200);

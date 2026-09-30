@@ -21,6 +21,7 @@
 
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="maintenance-menu.js" defer></script>
 
   <style>
     #map { height: 480px; border-radius: 0.75rem; }
@@ -70,8 +71,10 @@
         <a href="#live-map" class="whitespace-nowrap transition hover:text-[#2563eb]">Live map</a>
         <a href="#fleet-vehicles" class="whitespace-nowrap transition hover:text-[#2563eb]">Vehicles</a>
         <a href="#operations" class="whitespace-nowrap transition hover:text-[#2563eb]">Operations</a>
-        <a href="#maintenance-hub" class="whitespace-nowrap transition hover:text-[#2563eb] flex items-center gap-1"><i data-lucide="wrench" class="w-3.5 h-3.5 text-blue-500"></i> Maintenance</a>
-        <a href="#inventory-hub" class="whitespace-nowrap transition hover:text-[#2563eb] flex items-center gap-1"><i data-lucide="package" class="w-3.5 h-3.5 text-emerald-500"></i> Inventory</a>
+        <button id="maintenance-menu-trigger" type="button" onclick="toggleMaintenanceMenu(this)" aria-haspopup="dialog" aria-controls="maintenance-menu" aria-expanded="false" class="flex items-center gap-1 whitespace-nowrap transition hover:text-[#2563eb]">
+            <i data-lucide="wrench" class="h-3.5 w-3.5 text-blue-500"></i> Maintenance
+            <i data-lucide="chevron-down" class="h-3.5 w-3.5"></i>
+        </button>
       </nav>
 
       <div class="order-2 flex items-center gap-2 lg:order-3">
@@ -87,11 +90,27 @@
     </div>
   </header>
 
+  <div id="maintenance-menu" role="dialog" aria-modal="false" aria-labelledby="maintenance-menu-title" class="fixed left-0 top-0 z-[2000] hidden w-80 max-w-[calc(100vw-1rem)] translate-y-1 rounded-lg border border-slate-200 bg-white p-0 text-slate-900 opacity-0 shadow-xl ring-1 ring-black/5 transition-[opacity,transform] duration-150 ease-out">
+    <div class="p-4">
+      <div class="mb-3 flex items-center justify-between border-b border-slate-200 pb-3">
+        <h2 id="maintenance-menu-title" class="text-sm font-semibold">Maintenance sections</h2>
+        <button type="button" onclick="closeMaintenanceMenu(true)" aria-label="Close navigation" class="flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100">
+          <i data-lucide="x" class="h-4 w-4"></i>
+        </button>
+      </div>
+      <nav class="grid gap-1" aria-label="Maintenance sections">
+        <a href="/maintenance" class="flex items-center gap-3 rounded-md px-3 py-3 text-sm hover:bg-slate-100"><i data-lucide="wrench" class="h-4 w-4 text-blue-700"></i>Maintenance</a>
+        <a href="/inventory" class="flex items-center gap-3 rounded-md px-3 py-3 text-sm hover:bg-slate-100"><i data-lucide="package" class="h-4 w-4 text-emerald-700"></i>Inventory</a>
+        <a href="/admin-console" class="flex items-center gap-3 rounded-md px-3 py-3 text-sm hover:bg-slate-100"><i data-lucide="shield-check" class="h-4 w-4 text-slate-700"></i>Admin Console</a>
+      </nav>
+    </div>
+  </div>
+
   <!-- Main Container -->
   <main class="max-w-7xl mx-auto px-6 py-6 space-y-6">
 
-    <!-- Fleet, Maintenance & Inventory Stats Overview -->
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+    <!-- Fleet Stats Overview -->
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
       <div class="bg-white border border-slate-200 p-3.5 rounded-xl shadow-sm">
         <p class="text-[11px] font-medium text-slate-500">Total Fleet</p>
         <p id="stat-total" class="text-xl font-bold mt-1 text-[#172033]">--</p>
@@ -107,20 +126,6 @@
       <div class="bg-white border border-slate-200 p-3.5 rounded-xl shadow-sm">
         <p class="text-[11px] font-medium text-slate-500">Deployments</p>
         <p id="stat-deployed" class="text-xl font-bold mt-1 text-amber-500">--</p>
-      </div>
-      <div class="bg-white border border-slate-200 p-3.5 rounded-xl shadow-sm">
-        <div class="flex items-center justify-between">
-          <p class="text-[11px] font-medium text-slate-500">Open Tickets</p>
-          <span class="w-2 h-2 rounded-full bg-blue-500"></span>
-        </div>
-        <p id="stat-tickets" class="text-xl font-bold mt-1 text-blue-600">--</p>
-      </div>
-      <div class="bg-white border border-slate-200 p-3.5 rounded-xl shadow-sm">
-        <div class="flex items-center justify-between">
-          <p class="text-[11px] font-medium text-slate-500">Low Stock Parts</p>
-          <span id="low-stock-dot" class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
-        </div>
-        <p id="stat-low-stock" class="text-xl font-bold mt-1 text-rose-600">--</p>
       </div>
     </div>
 
@@ -240,154 +245,7 @@
 
     </div>
 
-    <!-- Maintenance Hub -->
-    <section id="maintenance-hub" class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-5">
-      <div class="flex items-center justify-between gap-3">
-        <div class="flex items-center gap-2">
-          <i data-lucide="wrench" class="w-5 h-5 text-blue-500"></i>
-          <h2 class="text-base font-semibold text-[#172033]">Maintenance Hub</h2>
-        </div>
-        <span class="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-blue-600">Ops</span>
-      </div>
-
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
-          <p class="text-[10px] uppercase tracking-wider text-slate-500">Open tickets</p>
-          <p id="maintenance-open" class="mt-2 text-xl font-bold text-blue-600">--</p>
-        </div>
-        <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
-          <p class="text-[10px] uppercase tracking-wider text-slate-500">In progress</p>
-          <p id="maintenance-inprogress" class="mt-2 text-xl font-bold text-amber-500">--</p>
-        </div>
-        <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
-          <p class="text-[10px] uppercase tracking-wider text-slate-500">Active job cards</p>
-          <p id="maintenance-jobcards" class="mt-2 text-xl font-bold text-indigo-600">--</p>
-        </div>
-        <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
-          <p class="text-[10px] uppercase tracking-wider text-slate-500">Active alerts</p>
-          <p id="maintenance-alerts" class="mt-2 text-xl font-bold text-rose-500">--</p>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
-          <div class="mb-3 flex items-center justify-between">
-            <h3 class="text-sm font-semibold text-slate-800">Recent tickets</h3>
-            <div class="flex gap-2 items-center">
-              <span class="text-[10px] uppercase tracking-wider text-slate-500">Latest</span>
-              <button onclick="openTicketModal()" class="text-[10px] bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded font-semibold">+ New</button>
-            </div>
-          </div>
-          <div id="maintenance-tickets-list" class="space-y-2 text-xs text-slate-700">
-            <p class="text-slate-500">Loading maintenance tickets...</p>
-          </div>
-        </div>
-
-        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
-          <div class="mb-3 flex items-center justify-between">
-            <h3 class="text-sm font-semibold text-slate-800">Alerts</h3>
-            <span class="text-[10px] uppercase tracking-wider text-slate-500">Watchlist</span>
-          </div>
-          <div id="maintenance-alerts-list" class="space-y-2 text-xs text-slate-700">
-            <p class="text-slate-500">Loading alerts...</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Inventory Hub -->
-    <section id="inventory-hub" class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-5">
-      <div class="flex items-center justify-between gap-3">
-        <div class="flex items-center gap-2">
-          <i data-lucide="package" class="w-5 h-5 text-emerald-500"></i>
-          <h2 class="text-base font-semibold text-[#172033]">Inventory Hub</h2>
-        </div>
-        <span class="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-600">Parts</span>
-      </div>
-
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
-          <p class="text-[10px] uppercase tracking-wider text-slate-500">Total parts</p>
-          <p id="inventory-total-parts" class="mt-2 text-xl font-bold text-emerald-600">--</p>
-        </div>
-        <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
-          <p class="text-[10px] uppercase tracking-wider text-slate-500">Low stock</p>
-          <p id="inventory-low-stock" class="mt-2 text-xl font-bold text-rose-500">--</p>
-        </div>
-        <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
-          <p class="text-[10px] uppercase tracking-wider text-slate-500">Tools total</p>
-          <p id="inventory-tools-total" class="mt-2 text-xl font-bold text-cyan-600">--</p>
-        </div>
-        <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
-          <p class="text-[10px] uppercase tracking-wider text-slate-500">Available tools</p>
-          <p id="inventory-tools-available" class="mt-2 text-xl font-bold text-sky-600">--</p>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
-          <div class="mb-3 flex items-center justify-between">
-            <h3 class="text-sm font-semibold text-slate-800">Low stock parts</h3>
-            <span class="text-[10px] uppercase tracking-wider text-slate-500">Reorder</span>
-          </div>
-          <div id="inventory-parts-list" class="space-y-2 text-xs text-slate-700">
-            <p class="text-slate-500">Loading inventory...</p>
-          </div>
-        </div>
-
-        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
-          <div class="mb-3 flex items-center justify-between">
-            <h3 class="text-sm font-semibold text-slate-800">Tool status</h3>
-            <span class="text-[10px] uppercase tracking-wider text-slate-500">Available</span>
-          </div>
-          <div id="inventory-tools-list" class="space-y-2 text-xs text-slate-700">
-            <p class="text-slate-500">Loading tools...</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
   </main>
-
-  <!-- CRUD Modal -->
-  <div id="crud-modal" class="hidden fixed inset-0 z-[2000] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6 relative">
-      <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
-        <i data-lucide="x" class="w-5 h-5"></i>
-      </button>
-      <h3 id="modal-title" class="text-lg font-bold text-slate-800 mb-4">Create Ticket</h3>
-      
-      <form id="ticket-form" class="space-y-4" onsubmit="submitTicket(event)">
-        <input type="hidden" id="ticket-id">
-        <div>
-          <label class="text-xs font-semibold text-slate-600">Vehicle ID</label>
-          <input type="number" id="ticket-vehicle-id" required class="w-full mt-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:border-blue-500 focus:outline-none">
-        </div>
-        <div>
-          <label class="text-xs font-semibold text-slate-600">Type</label>
-          <select id="ticket-type" required class="w-full mt-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:border-blue-500 focus:outline-none">
-            <option value="repair">Repair</option>
-            <option value="inspection">Inspection</option>
-            <option value="service">Service</option>
-            <option value="diagnostic">Diagnostic</option>
-          </select>
-        </div>
-        <div>
-          <label class="text-xs font-semibold text-slate-600">Title</label>
-          <input type="text" id="ticket-title" required class="w-full mt-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:border-blue-500 focus:outline-none">
-        </div>
-        <div id="ticket-status-container" class="hidden">
-          <label class="text-xs font-semibold text-slate-600">Status</label>
-          <select id="ticket-status" class="w-full mt-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:border-blue-500 focus:outline-none">
-            <option value="open">Open</option>
-            <option value="in_progress">In Progress</option>
-            <option value="closed">Closed</option>
-          </select>
-        </div>
-        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg">Save Ticket</button>
-      </form>
-    </div>
-  </div>
 
   <!-- Notification Toast -->
   <div id="toast" class="fixed bottom-6 right-6 max-w-sm bg-slate-800 border border-slate-700 text-white p-4 rounded-xl shadow-2xl flex items-start gap-3 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none z-50">
@@ -420,9 +278,7 @@
         initMap();
         populateShopDropdowns();
         await Promise.all([
-          loadFleetData(),
-          loadMaintenanceData(),
-          loadInventoryData()
+          loadFleetData()
         ]);
       } catch (err) {
         console.error(err);
@@ -493,121 +349,6 @@
       } catch (err) {
         console.error(err);
         showToast("Error", "Could not load /api/vehicles. Make sure php artisan serve is running.", true);
-      }
-    }
-
-    async function loadMaintenanceData() {
-      try {
-        const [overviewRes, ticketsRes, alertsRes] = await Promise.all([
-          fetch("/api/maintenance/overview"),
-          fetch("/api/maintenance/tickets"),
-          fetch("/api/maintenance/alerts")
-        ]);
-
-        const overview = await overviewRes.json();
-        const tickets = await ticketsRes.json();
-        const alerts = await alertsRes.json();
-
-        document.getElementById("maintenance-open").innerText = overview.open_tickets ?? 0;
-        document.getElementById("maintenance-inprogress").innerText = overview.in_progress_tickets ?? 0;
-        document.getElementById("maintenance-jobcards").innerText = overview.active_job_cards ?? 0;
-        document.getElementById("maintenance-alerts").innerText = overview.active_alerts ?? 0;
-
-        const ticketRows = (tickets.data || []).slice(0, 4);
-        const ticketList = document.getElementById("maintenance-tickets-list");
-        ticketList.innerHTML = ticketRows.length
-          ? ticketRows.map(ticket => {
-              const ticketJson = JSON.stringify(ticket).replace(/"/g, "&quot;");
-              return `
-              <div class="rounded-lg border border-slate-200 bg-white p-2.5">
-                <div class="flex items-center justify-between gap-2">
-                  <span class="font-semibold text-slate-800">${ticket.title || 'Maintenance ticket'}</span>
-                  <span class="rounded-full bg-${ticket.priority === 'urgent' ? 'red' : ticket.priority === 'high' ? 'amber' : 'slate'}-100 px-1.5 py-0.5 text-[9px] font-medium text-${ticket.priority === 'urgent' ? 'red' : ticket.priority === 'high' ? 'amber' : 'slate'}-700 uppercase">${ticket.priority || 'normal'}</span>
-                </div>
-                <div class="mt-1 flex items-center justify-between text-[10px] text-slate-500">
-                  <span>${ticket.vehicle?.plate_number || 'Unknown vehicle'}</span>
-                  <div class="flex items-center gap-2">
-                    <span>${ticket.status || 'open'}</span>
-                    <button onclick="openTicketModal(${ticketJson})" class="text-blue-500 hover:text-blue-700">Edit</button>
-                    <button onclick="deleteTicket(${ticket.id})" class="text-red-500 hover:text-red-700">Del</button>
-                  </div>
-                </div>
-              </div>
-            `;
-          }).join("")
-          : '<p class="text-slate-500">No recent maintenance tickets.</p>';
-
-        const alertRows = (alerts.data || []).slice(0, 4);
-        const alertList = document.getElementById("maintenance-alerts-list");
-        alertList.innerHTML = alertRows.length
-          ? alertRows.map(alert => `
-              <div class="rounded-lg border border-slate-200 bg-white p-2.5">
-                <div class="flex items-center justify-between gap-2">
-                  <span class="font-semibold text-slate-800">${alert.alert_type || 'Maintenance alert'}</span>
-                  <span class="rounded-full bg-rose-100 px-1.5 py-0.5 text-[9px] font-medium text-rose-700 uppercase">${alert.severity || 'normal'}</span>
-                </div>
-                <div class="mt-1 flex items-center justify-between text-[10px] text-slate-500">
-                  <span>${alert.vehicle?.plate_number || 'Unknown vehicle'}</span>
-                  <span>${alert.status || 'active'}</span>
-                </div>
-              </div>
-            `).join("")
-          : '<p class="text-slate-500">No active maintenance alerts.</p>';
-      } catch (err) {
-        console.error(err);
-        document.getElementById("maintenance-tickets-list").innerHTML = '<p class="text-rose-500">Could not load maintenance data.</p>';
-        document.getElementById("maintenance-alerts-list").innerHTML = '<p class="text-rose-500">Could not load alerts.</p>';
-      }
-    }
-
-    async function loadInventoryData() {
-      try {
-        const [overviewRes, partsRes, toolsRes] = await Promise.all([
-          fetch("/api/inventory/overview"),
-          fetch("/api/inventory/parts?low_stock=1"),
-          fetch("/api/inventory/tools")
-        ]);
-
-        const overview = await overviewRes.json();
-        const parts = await partsRes.json();
-        const tools = await toolsRes.json();
-
-        document.getElementById("inventory-total-parts").innerText = overview.total_parts ?? 0;
-        document.getElementById("inventory-low-stock").innerText = overview.low_stock_parts ?? 0;
-        document.getElementById("inventory-tools-total").innerText = overview.total_tools ?? 0;
-        document.getElementById("inventory-tools-available").innerText = overview.available_tools ?? 0;
-
-        const lowStockRows = (parts.data || []).slice(0, 4);
-        const partList = document.getElementById("inventory-parts-list");
-        partList.innerHTML = lowStockRows.length
-          ? lowStockRows.map(part => `
-              <div class="rounded-lg border border-slate-200 bg-white p-2.5">
-                <div class="flex items-center justify-between gap-2">
-                  <span class="font-semibold text-slate-800">${part.name}</span>
-                  <span class="text-[10px] text-rose-600">${part.quantity} / ${part.minimum_quantity}</span>
-                </div>
-                <div class="mt-1 text-[10px] text-slate-500">${part.part_number || 'No PN'} • ${part.location || 'Warehouse'}</div>
-              </div>
-            `).join("")
-          : '<p class="text-slate-500">No low stock parts right now.</p>';
-
-        const toolRows = (tools.data || []).slice(0, 4);
-        const toolList = document.getElementById("inventory-tools-list");
-        toolList.innerHTML = toolRows.length
-          ? toolRows.map(tool => `
-              <div class="rounded-lg border border-slate-200 bg-white p-2.5">
-                <div class="flex items-center justify-between gap-2">
-                  <span class="font-semibold text-slate-800">${tool.name}</span>
-                  <span class="rounded-full bg-${tool.availability_status === 'available' ? 'emerald' : tool.availability_status === 'assigned' ? 'amber' : 'slate'}-100 px-1.5 py-0.5 text-[9px] font-medium text-${tool.availability_status === 'available' ? 'emerald' : tool.availability_status === 'assigned' ? 'amber' : 'slate'}-700 uppercase">${tool.availability_status || 'unknown'}</span>
-                </div>
-                <div class="mt-1 text-[10px] text-slate-500">${tool.tool_code || 'No code'} • ${tool.condition || 'unknown'}</div>
-              </div>
-            `).join("")
-          : '<p class="text-slate-500">No tools available.</p>';
-      } catch (err) {
-        console.error(err);
-        document.getElementById("inventory-parts-list").innerHTML = '<p class="text-rose-500">Could not load inventory parts.</p>';
-        document.getElementById("inventory-tools-list").innerHTML = '<p class="text-rose-500">Could not load tools.</p>';
       }
     }
 
@@ -958,72 +699,6 @@
       setTimeout(() => {
         toast.classList.add("translate-y-20", "opacity-0", "pointer-events-none");
       }, 4000);
-    }
-
-    function openTicketModal(ticket = null) {
-      document.getElementById('crud-modal').classList.remove('hidden');
-      document.getElementById('ticket-form').reset();
-      
-      if (ticket) {
-        document.getElementById('modal-title').innerText = 'Edit Ticket';
-        document.getElementById('ticket-id').value = ticket.id;
-        document.getElementById('ticket-vehicle-id').value = ticket.vehicle_id;
-        document.getElementById('ticket-type').value = ticket.ticket_type;
-        document.getElementById('ticket-title').value = ticket.title;
-        document.getElementById('ticket-status').value = ticket.status;
-        document.getElementById('ticket-status-container').classList.remove('hidden');
-      } else {
-        document.getElementById('modal-title').innerText = 'Create Ticket';
-        document.getElementById('ticket-id').value = '';
-        document.getElementById('ticket-status-container').classList.add('hidden');
-      }
-    }
-
-    function closeModal() {
-      document.getElementById('crud-modal').classList.add('hidden');
-    }
-
-    async function submitTicket(e) {
-      e.preventDefault();
-      const id = document.getElementById('ticket-id').value;
-      const payload = {
-        vehicle_id: parseInt(document.getElementById('ticket-vehicle-id').value),
-        ticket_type: document.getElementById('ticket-type').value,
-        title: document.getElementById('ticket-title').value,
-      };
-      
-      if (id) payload.status = document.getElementById('ticket-status').value;
-
-      try {
-        const res = await fetch(id ? `/api/maintenance/tickets/${id}` : '/api/maintenance/tickets', {
-          method: id ? 'PUT' : 'POST',
-          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.message || 'Validation failed');
-        }
-        
-        showToast("Success", id ? "Ticket updated." : "Ticket created.");
-        closeModal();
-        loadMaintenanceData();
-      } catch (e) {
-        showToast("Error", e.message, true);
-      }
-    }
-
-    async function deleteTicket(id) {
-      if (!confirm("Delete this ticket?")) return;
-      try {
-        const res = await fetch(`/api/maintenance/tickets/${id}`, { method: 'DELETE', headers: { 'Accept': 'application/json' } });
-        if (!res.ok) throw new Error("Delete failed");
-        showToast("Success", "Ticket deleted.");
-        loadMaintenanceData();
-      } catch (e) {
-        showToast("Error", e.message, true);
-      }
     }
 
     function filterVehicles() {
