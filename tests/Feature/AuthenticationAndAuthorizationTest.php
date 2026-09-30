@@ -59,6 +59,21 @@ class AuthenticationAndAuthorizationTest extends TestCase
     }
 
     /**
+     * Authenticated user visiting the login page is redirected away from it instead of looping back.
+     */
+    public function test_authenticated_user_visiting_login_is_redirected_to_dashboard(): void
+    {
+        $user = User::factory()->create([
+            'fleet_access' => true,
+        ]);
+
+        $this->actingAs($user)
+            ->withSession(['url.intended' => '/login'])
+            ->get('/login')
+            ->assertRedirect('/');
+    }
+
+    /**
      * Authenticated user without fleet_access is denied access (403 on API, redirected on Web).
      */
     public function test_user_without_fleet_access_is_forbidden(): void
