@@ -23,7 +23,7 @@ class KpfcSsoController extends Controller
     public function showLogin(): View|RedirectResponse
     {
         if (Auth::check()) {
-            return redirect()->intended('/');
+            return redirect()->to($this->getPostLoginRedirectUrl());
         }
 
         return view('auth.login');
@@ -47,10 +47,23 @@ class KpfcSsoController extends Controller
         try {
             $this->sso->handleCallback($request);
 
-            return redirect()->intended('/')->with('status', 'Signed in successfully via KPFC Admin.');
+            return redirect()->to($this->getPostLoginRedirectUrl())
+                ->with('status', 'Signed in successfully via KPFC Admin.');
         } catch (HttpException $e) {
             return redirect()->route('login')->withErrors(['sso' => $e->getMessage()]);
         }
+    }
+
+    protected function getPostLoginRedirectUrl(): string
+    {
+        $intended = session('url.intended');
+        $loginPath = route('login', [], false);
+
+        if ($intended && $intended !== $loginPath) {
+            return $intended;
+        }
+
+        return route('dashboard', [], false);
     }
 
     /**
