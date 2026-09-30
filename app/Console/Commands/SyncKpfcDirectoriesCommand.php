@@ -2,11 +2,11 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use App\Services\KpfcAdminDirectoryService;
 use App\Models\Shop;
 use App\Models\Supplier;
+use App\Services\KpfcAdminDirectoryService;
 use Carbon\Carbon;
+use Illuminate\Console\Command;
 
 class SyncKpfcDirectoriesCommand extends Command
 {
@@ -34,11 +34,13 @@ class SyncKpfcDirectoriesCommand extends Command
         try {
             $this->syncBranches($service);
             $this->syncSuppliers($service);
-            
+
             $this->info('Synchronization completed successfully!');
+
             return Command::SUCCESS;
         } catch (\Exception $e) {
-            $this->error('Synchronization failed: ' . $e->getMessage());
+            $this->error('Synchronization failed: '.$e->getMessage());
+
             return Command::FAILURE;
         }
     }
@@ -46,12 +48,12 @@ class SyncKpfcDirectoriesCommand extends Command
     private function syncBranches(KpfcAdminDirectoryService $service)
     {
         $this->info('Fetching Branches (Shops)...');
-        
+
         // Always include inactive for full reconciliation per the integration guide
         $response = $service->getBranches(true);
         $branches = $response['data'] ?? [];
 
-        $this->info('Upserting ' . count($branches) . ' branches...');
+        $this->info('Upserting '.count($branches).' branches...');
 
         $upsertData = [];
         $now = Carbon::now();
@@ -62,8 +64,8 @@ class SyncKpfcDirectoriesCommand extends Command
                 'code' => $branch['name'],          // Machine-oriented name maps to code
                 'name' => $branch['display_name'],  // Human-readable maps to name
                 'active' => $branch['is_active'],
-                'latitude' => $branch['latitude'],
-                'longitude' => $branch['longitude'],
+                'latitude' => $branch['latitude'] ?? null,
+                'longitude' => $branch['longitude'] ?? null,
                 'updated_at' => $now,
             ];
         }
@@ -81,11 +83,11 @@ class SyncKpfcDirectoriesCommand extends Command
     private function syncSuppliers(KpfcAdminDirectoryService $service)
     {
         $this->info('Fetching Suppliers...');
-        
+
         $response = $service->getSuppliers(true);
         $suppliers = $response['data'] ?? [];
 
-        $this->info('Upserting ' . count($suppliers) . ' suppliers...');
+        $this->info('Upserting '.count($suppliers).' suppliers...');
 
         $upsertData = [];
         $now = Carbon::now();

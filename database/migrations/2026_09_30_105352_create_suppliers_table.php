@@ -15,13 +15,13 @@ return new class extends Migration
             // We use an unsignedBigInteger without auto-increment if we just insert the IDs from Admin
             // But usually Laravel works fine with id() inserting explicit values.
             $table->id();
-            
+
             $table->string('name');
             $table->boolean('active')->default(true);
-            
+
             $table->decimal('latitude', 10, 7)->nullable();
             $table->decimal('longitude', 10, 7)->nullable();
-            
+
             $table->timestamps();
 
             $table->index(['latitude', 'longitude']);

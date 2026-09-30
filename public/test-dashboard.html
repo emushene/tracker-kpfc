@@ -273,7 +273,10 @@
         <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
           <div class="mb-3 flex items-center justify-between">
             <h3 class="text-sm font-semibold text-slate-800">Recent tickets</h3>
-            <span class="text-[10px] uppercase tracking-wider text-slate-500">Latest</span>
+            <div class="flex gap-2 items-center">
+              <span class="text-[10px] uppercase tracking-wider text-slate-500">Latest</span>
+              <button onclick="openTicketModal()" class="text-[10px] bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded font-semibold">+ New</button>
+            </div>
           </div>
           <div id="maintenance-tickets-list" class="space-y-2 text-xs text-slate-700">
             <p class="text-slate-500">Loading maintenance tickets...</p>
@@ -345,6 +348,46 @@
     </section>
 
   </main>
+
+  <!-- CRUD Modal -->
+  <div id="crud-modal" class="hidden fixed inset-0 z-[2000] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6 relative">
+      <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+      <h3 id="modal-title" class="text-lg font-bold text-slate-800 mb-4">Create Ticket</h3>
+      
+      <form id="ticket-form" class="space-y-4" onsubmit="submitTicket(event)">
+        <input type="hidden" id="ticket-id">
+        <div>
+          <label class="text-xs font-semibold text-slate-600">Vehicle ID</label>
+          <input type="number" id="ticket-vehicle-id" required class="w-full mt-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:border-blue-500 focus:outline-none">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-600">Type</label>
+          <select id="ticket-type" required class="w-full mt-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:border-blue-500 focus:outline-none">
+            <option value="repair">Repair</option>
+            <option value="inspection">Inspection</option>
+            <option value="service">Service</option>
+            <option value="diagnostic">Diagnostic</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-600">Title</label>
+          <input type="text" id="ticket-title" required class="w-full mt-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:border-blue-500 focus:outline-none">
+        </div>
+        <div id="ticket-status-container" class="hidden">
+          <label class="text-xs font-semibold text-slate-600">Status</label>
+          <select id="ticket-status" class="w-full mt-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:border-blue-500 focus:outline-none">
+            <option value="open">Open</option>
+            <option value="in_progress">In Progress</option>
+            <option value="closed">Closed</option>
+          </select>
+        </div>
+        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg">Save Ticket</button>
+      </form>
+    </div>
+  </div>
 
   <!-- Notification Toast -->
   <div id="toast" class="fixed bottom-6 right-6 max-w-sm bg-slate-800 border border-slate-700 text-white p-4 rounded-xl shadow-2xl flex items-start gap-3 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none z-50">
@@ -473,7 +516,9 @@
         const ticketRows = (tickets.data || []).slice(0, 4);
         const ticketList = document.getElementById("maintenance-tickets-list");
         ticketList.innerHTML = ticketRows.length
-          ? ticketRows.map(ticket => `
+          ? ticketRows.map(ticket => {
+              const ticketJson = JSON.stringify(ticket).replace(/"/g, "&quot;");
+              return `
               <div class="rounded-lg border border-slate-200 bg-white p-2.5">
                 <div class="flex items-center justify-between gap-2">
                   <span class="font-semibold text-slate-800">${ticket.title || 'Maintenance ticket'}</span>
@@ -481,10 +526,15 @@
                 </div>
                 <div class="mt-1 flex items-center justify-between text-[10px] text-slate-500">
                   <span>${ticket.vehicle?.plate_number || 'Unknown vehicle'}</span>
-                  <span>${ticket.status || 'open'}</span>
+                  <div class="flex items-center gap-2">
+                    <span>${ticket.status || 'open'}</span>
+                    <button onclick="openTicketModal(${ticketJson})" class="text-blue-500 hover:text-blue-700">Edit</button>
+                    <button onclick="deleteTicket(${ticket.id})" class="text-red-500 hover:text-red-700">Del</button>
+                  </div>
                 </div>
               </div>
-            `).join("")
+            `;
+          }).join("")
           : '<p class="text-slate-500">No recent maintenance tickets.</p>';
 
         const alertRows = (alerts.data || []).slice(0, 4);
@@ -908,6 +958,72 @@
       setTimeout(() => {
         toast.classList.add("translate-y-20", "opacity-0", "pointer-events-none");
       }, 4000);
+    }
+
+    function openTicketModal(ticket = null) {
+      document.getElementById('crud-modal').classList.remove('hidden');
+      document.getElementById('ticket-form').reset();
+      
+      if (ticket) {
+        document.getElementById('modal-title').innerText = 'Edit Ticket';
+        document.getElementById('ticket-id').value = ticket.id;
+        document.getElementById('ticket-vehicle-id').value = ticket.vehicle_id;
+        document.getElementById('ticket-type').value = ticket.ticket_type;
+        document.getElementById('ticket-title').value = ticket.title;
+        document.getElementById('ticket-status').value = ticket.status;
+        document.getElementById('ticket-status-container').classList.remove('hidden');
+      } else {
+        document.getElementById('modal-title').innerText = 'Create Ticket';
+        document.getElementById('ticket-id').value = '';
+        document.getElementById('ticket-status-container').classList.add('hidden');
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('crud-modal').classList.add('hidden');
+    }
+
+    async function submitTicket(e) {
+      e.preventDefault();
+      const id = document.getElementById('ticket-id').value;
+      const payload = {
+        vehicle_id: parseInt(document.getElementById('ticket-vehicle-id').value),
+        ticket_type: document.getElementById('ticket-type').value,
+        title: document.getElementById('ticket-title').value,
+      };
+      
+      if (id) payload.status = document.getElementById('ticket-status').value;
+
+      try {
+        const res = await fetch(id ? `/api/maintenance/tickets/${id}` : '/api/maintenance/tickets', {
+          method: id ? 'PUT' : 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.message || 'Validation failed');
+        }
+        
+        showToast("Success", id ? "Ticket updated." : "Ticket created.");
+        closeModal();
+        loadMaintenanceData();
+      } catch (e) {
+        showToast("Error", e.message, true);
+      }
+    }
+
+    async function deleteTicket(id) {
+      if (!confirm("Delete this ticket?")) return;
+      try {
+        const res = await fetch(`/api/maintenance/tickets/${id}`, { method: 'DELETE', headers: { 'Accept': 'application/json' } });
+        if (!res.ok) throw new Error("Delete failed");
+        showToast("Success", "Ticket deleted.");
+        loadMaintenanceData();
+      } catch (e) {
+        showToast("Error", e.message, true);
+      }
     }
 
     function filterVehicles() {

@@ -8,6 +8,7 @@ class Supplier extends Model
 {
     // Important: false means id is not auto-incrementing, because we just use the Admin DB IDs
     public $incrementing = false;
+
     protected $keyType = 'integer';
 
     protected $fillable = [

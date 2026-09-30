@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Services\KpfcAdminDirectoryService;
+use Illuminate\Console\Command;
 
 class TestKpfcApiCommand extends Command
 {
@@ -38,24 +38,26 @@ class TestKpfcApiCommand extends Command
                 $data = $service->getSuppliers($includeInactive);
             } else {
                 $this->error("Invalid directory specified. Use 'branches' or 'suppliers'.");
+
                 return Command::FAILURE;
             }
 
-            $this->info("Successfully fetched data! Payload:");
-            
+            $this->info('Successfully fetched data! Payload:');
+
             // Limit output if it's very large, just show meta and first few items
             $preview = [
                 'meta' => $data['meta'] ?? null,
                 'data_count' => count($data['data'] ?? []),
-                'sample_data' => array_slice($data['data'] ?? [], 0, 3)
+                'sample_data' => array_slice($data['data'] ?? [], 0, 3),
             ];
 
             $this->line(json_encode($preview, JSON_PRETTY_PRINT));
-            
+
             return Command::SUCCESS;
 
         } catch (\Exception $e) {
-            $this->error("API Call Failed: " . $e->getMessage());
+            $this->error('API Call Failed: '.$e->getMessage());
+
             return Command::FAILURE;
         }
     }

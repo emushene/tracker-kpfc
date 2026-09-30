@@ -67,11 +67,25 @@ Route::middleware(['web', 'auth', 'fleet.access', 'fleet.write'])->group(functio
     */
     Route::prefix('maintenance')->group(function (): void {
         Route::get('/overview', [MaintenanceController::class, 'overview'])->name('api.maintenance.overview');
+
         Route::get('/tickets', [MaintenanceController::class, 'tickets'])->name('api.maintenance.tickets');
         Route::post('/tickets', [MaintenanceController::class, 'storeTicket'])->name('api.maintenance.tickets.store');
+        Route::get('/tickets/{ticket}', [MaintenanceController::class, 'showTicket'])->name('api.maintenance.tickets.show');
+        Route::put('/tickets/{ticket}', [MaintenanceController::class, 'updateTicket'])->name('api.maintenance.tickets.update');
+        Route::delete('/tickets/{ticket}', [MaintenanceController::class, 'destroyTicket'])->name('api.maintenance.tickets.destroy');
+
         Route::get('/job-cards', [MaintenanceController::class, 'jobCards'])->name('api.maintenance.job-cards');
         Route::post('/job-cards', [MaintenanceController::class, 'storeJobCard'])->name('api.maintenance.job-cards.store');
+        Route::get('/job-cards/{jobCard}', [MaintenanceController::class, 'showJobCard'])->name('api.maintenance.job-cards.show');
+        Route::put('/job-cards/{jobCard}', [MaintenanceController::class, 'updateJobCard'])->name('api.maintenance.job-cards.update');
+        Route::delete('/job-cards/{jobCard}', [MaintenanceController::class, 'destroyJobCard'])->name('api.maintenance.job-cards.destroy');
+
         Route::get('/alerts', [MaintenanceController::class, 'alerts'])->name('api.maintenance.alerts');
+        Route::post('/alerts', [MaintenanceController::class, 'storeAlert'])->name('api.maintenance.alerts.store');
+        Route::get('/alerts/{alert}', [MaintenanceController::class, 'showAlert'])->name('api.maintenance.alerts.show');
+        Route::put('/alerts/{alert}', [MaintenanceController::class, 'updateAlert'])->name('api.maintenance.alerts.update');
+        Route::delete('/alerts/{alert}', [MaintenanceController::class, 'destroyAlert'])->name('api.maintenance.alerts.destroy');
+
         Route::get('/vehicles/{vehicle}', [MaintenanceController::class, 'vehicleDetails'])->name('api.maintenance.vehicle-details');
     });
 

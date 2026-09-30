@@ -65,3 +65,17 @@ Schedule::command('kpfc:sync-directories')
     ->dailyAt('01:00')
     ->withoutOverlapping();
 
+/*
+|--------------------------------------------------------------------------
+| Maintenance Window Checks
+|--------------------------------------------------------------------------
+|
+| Check vehicle mileage and time thresholds daily to automate
+| maintenance tickets and alert notifications.
+|
+*/
+
+Schedule::command('maintenance:check')
+    ->dailyAt('02:00')
+    ->withoutOverlapping();
+
