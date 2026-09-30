@@ -38,3 +38,16 @@ Schedule::command('protrack:refresh-locations')
     ->everyTenMinutes()
     ->between('06:00', '18:00')
     ->withoutOverlapping();
+
+/*
+|--------------------------------------------------------------------------
+| Protrack Vehicle Synchronization
+|--------------------------------------------------------------------------
+|
+| Synchronize the vehicle/device inventory from Protrack once per day.
+|
+*/
+
+Schedule::command('protrack:sync-vehicles')
+    ->dailyAt('00:05')
+    ->withoutOverlapping();
