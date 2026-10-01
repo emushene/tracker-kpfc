@@ -10,6 +10,7 @@ import * as statsComp from "./stats.js";
 import * as tableComp from "./fleet-table.js";
 import * as opsComp from "./operations.js";
 import * as modalComp from "./vehicle-modal.js";
+import { openMissionMapModal, closeMissionMapModal } from "./mission-map-modal.js";
 
 async function loadFleetData() {
   try {
@@ -97,7 +98,31 @@ Object.assign(window, {
   submitDispatch: () => opsComp.submitDispatch(async (id) => {
     await loadFleetData();
     selectVehicle(id);
+    // Auto-open the route map after a successful dispatch
+    const vehicle = getVehicleById(id);
+    if (vehicle?.active_deployment) {
+      const destId = vehicle.active_deployment.destination_id;
+      const destShop = state.shops.find(s => s.id === destId) || {
+        name: vehicle.active_deployment.destination?.name,
+        lat: vehicle.active_deployment.destination?.latitude,
+        lng: vehicle.active_deployment.destination?.longitude,
+      };
+      openMissionMapModal(vehicle, vehicle.active_deployment, destShop);
+    }
   }),
+  openMissionRouteMap: () => {
+    const vehicle = getVehicleById(state.selectedVehicleId);
+    if (!vehicle) { showToast("No Vehicle", "Select a vehicle first.", true); return; }
+    const deployment = vehicle.active_deployment;
+    if (!deployment) { showToast("No Active Mission", "This vehicle has no active deployment.", true); return; }
+    const destId = deployment.destination_id;
+    const destShop = state.shops.find(s => s.id === destId) || {
+      name: deployment.destination?.name,
+      lat: deployment.destination?.latitude,
+      lng: deployment.destination?.longitude,
+    };
+    openMissionMapModal(vehicle, deployment, destShop);
+  },
   releaseDeployment: () => opsComp.releaseDeployment(async (id) => {
     await loadFleetData();
     selectVehicle(id);
@@ -108,6 +133,10 @@ Object.assign(window, {
   }),
   openCreateVehicleModal: modalComp.openCreateVehicleModal,
   openEditVehicleModal: modalComp.openEditVehicleModal,
+  locateSelectedVehicle: opsComp.locateSelectedVehicle,
+  setStatusFilter: (filter) => tableComp.setStatusFilter(filter, () => {
+    tableComp.renderFleetTable();
+  }),
   deleteVehicle: (id) => modalComp.deleteVehicle(id, async () => {
     if (state.selectedVehicleId === id) {
       state.selectedVehicleId = null;

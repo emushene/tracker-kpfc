@@ -120,7 +120,8 @@ export function openCreateVehicleModal() {
 }
 
 export function openEditVehicleModal(vehicleId) {
-  const vehicle = getVehicleById(vehicleId);
+  const targetId = vehicleId || state.selectedVehicleId;
+  const vehicle = getVehicleById(targetId);
   if (!vehicle) return;
 
   const modal = document.getElementById("vehicle-modal");
@@ -155,18 +156,21 @@ export function openEditVehicleModal(vehicleId) {
 }
 
 export async function deleteVehicle(vehicleId, onSuccess) {
-  const vehicle = getVehicleById(vehicleId);
-  const identifier = vehicle ? (vehicle.plate_number || vehicle.imei) : `Vehicle #${vehicleId}`;
+  const targetId = vehicleId || state.selectedVehicleId;
+  const vehicle = getVehicleById(targetId);
+  if (!targetId) return;
+
+  const identifier = vehicle ? (vehicle.plate_number || vehicle.imei) : `Vehicle #${targetId}`;
 
   if (!confirm(`Are you sure you want to delete ${identifier}? This action cannot be undone.`)) {
     return;
   }
 
   try {
-    const res = await apiDeleteVehicle(vehicleId);
+    const res = await apiDeleteVehicle(targetId);
     showToast("Vehicle Deleted", res.message || `${identifier} deleted.`);
     if (typeof onSuccess === "function") {
-      await onSuccess();
+      await onSuccess(targetId);
     }
   } catch (err) {
     showToast("Delete Failed", err.message, true);

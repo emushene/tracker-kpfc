@@ -39,13 +39,45 @@ function compareVehicles(firstVehicle, secondVehicle) {
 
 export function getFilteredAndSortedVehicles() {
   const query = (state.searchQuery || "").trim().toLowerCase();
+  const filter = state.statusFilter || "all";
 
   const filtered = state.vehicles.filter(v => {
+    // 1. Text Search Filter
     const text = `${v.plate_number || ""} ${v.imei || ""} ${v.device_name || ""}`.toLowerCase();
-    return text.includes(query);
+    if (!text.includes(query)) {
+      return false;
+    }
+
+    // 2. Status Pill Filter
+    if (filter === "moving") return v.status === "moving";
+    if (filter === "deployed") return Boolean(v.active_deployment);
+    if (filter === "parked") return v.status === "parked";
+    if (filter === "no-tracker") return Boolean(v.imei && v.imei.startsWith("FLEET-"));
+
+    return true;
   });
 
   return filtered.sort(compareVehicles);
+}
+
+export function setStatusFilter(filter, onRender) {
+  state.statusFilter = filter;
+  state.currentPage = 1;
+
+  // Update visual pill active states
+  const pills = document.querySelectorAll(".filter-pill");
+  pills.forEach(pill => {
+    const pillFilter = pill.getAttribute("data-filter");
+    if (pillFilter === filter) {
+      pill.className = "filter-pill px-2.5 py-1 rounded-md text-xs font-semibold bg-[#2563eb] text-white shadow-sm transition";
+    } else {
+      pill.className = "filter-pill px-2.5 py-1 rounded-md text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-200/70 bg-slate-100 transition";
+    }
+  });
+
+  if (typeof onRender === "function") {
+    onRender();
+  }
 }
 
 export function updateSortIndicators() {
@@ -78,7 +110,7 @@ export function updateVehiclePagination(totalVehicles, totalPages, firstVehicleI
   nextPage.disabled = state.currentPage >= totalPages;
 }
 
-export function renderFleetTable({ onSelect, onEdit, onDelete } = {}) {
+export function renderFleetTable() {
   const tbody = document.getElementById("vehicle-table-body");
   if (!tbody) return;
 
@@ -92,8 +124,11 @@ export function renderFleetTable({ onSelect, onEdit, onDelete } = {}) {
   if (pagedVehicles.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="6" class="text-center py-8 text-slate-500">
-          No vehicles match the search criteria.
+        <td colspan="5" class="text-center py-10 text-slate-500">
+          <div class="flex flex-col items-center justify-center space-y-1">
+            <span class="text-sm font-medium">No matching vehicles found</span>
+            <span class="text-xs text-slate-400">Try adjusting your search query or filter selection.</span>
+          </div>
         </td>
       </tr>
     `;
@@ -106,48 +141,48 @@ export function renderFleetTable({ onSelect, onEdit, onDelete } = {}) {
     const deploymentDestination = v.active_deployment?.destination?.name || null;
 
     const statusBadge = v.status === "moving"
-      ? '<span class="bg-emerald-500/10 text-emerald-600 px-2 py-0.5 rounded text-[10px] font-semibold">Moving</span>'
+      ? '<span class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200/70 px-2 py-0.5 rounded-full text-[10px] font-semibold"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>Moving</span>'
       : (v.status === "deployed"
-        ? `<span class="bg-amber-500/10 text-amber-600 px-2 py-0.5 rounded text-[10px] font-semibold">Deployed</span><br><span class="text-[10px] text-amber-600">To: ${deploymentDestination || "--"}</span>`
-        : '<span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px] font-semibold">Parked</span>');
+        ? `<span class="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 border border-amber-200/70 px-2 py-0.5 rounded-full text-[10px] font-semibold"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Deployed</span><div class="text-[10px] text-amber-600 mt-0.5 font-medium truncate max-w-[120px]">To: ${deploymentDestination || "--"}</div>`
+        : '<span class="inline-flex items-center gap-1.5 bg-slate-100 text-slate-600 border border-slate-200 px-2 py-0.5 rounded-full text-[10px] font-semibold"><span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>Parked</span>');
 
     const routingInfo = v.routing?.distance_km
-      ? `<span class="text-indigo-600 font-mono font-medium">${v.routing.distance_km} km</span> <span class="text-slate-400">(~${v.routing.duration_minutes}m)</span>`
+      ? `<span class="text-indigo-600 font-mono font-medium">${v.routing.distance_km} km</span> <span class="text-slate-400 text-[11px]">(~${v.routing.duration_minutes}m)</span>`
       : '<span class="text-slate-400">--</span>';
 
     const homebaseInfo = v.assigned_shop
       ? `<span class="font-medium text-slate-800">${v.assigned_shop.name}</span><br><span class="text-[10px] text-slate-500">${v.homebase_distance?.distance_km ?? "--"} km away</span>`
-      : '<span class="text-slate-400">Unassigned</span>';
+      : '<span class="text-slate-400 italic">Unassigned</span>';
 
     const isAutoPlaceholderImei = v.imei && v.imei.startsWith("FLEET-");
 
+    const trackerIndicator = isAutoPlaceholderImei
+      ? `<span class="inline-flex items-center gap-1 text-[10px] font-medium text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded mt-0.5" title="No hardware tracker yet. Placeholder auto-generated.">
+           <svg class="w-3 h-3 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+           Pending Tracker
+         </span>`
+      : `<span class="text-[10px] font-normal font-mono text-slate-500">${v.imei}</span>`;
+
     return `
-      <tr class="hover:bg-slate-50 transition cursor-pointer ${isSelected ? "bg-blue-50/70 border-l-4 border-[#2563eb]" : ""}" data-vehicle-id="${v.id}">
-        <td class="py-3 px-3 font-semibold text-[#172033]" onclick="window.selectVehicle(${v.id})">
-          ${v.plate_number || '<span class="text-slate-400 italic">No Plate</span>'}<br>
-          <span class="text-[10px] font-normal font-mono ${isAutoPlaceholderImei ? "text-amber-600 bg-amber-50 px-1 rounded" : "text-slate-500"}" title="${isAutoPlaceholderImei ? "Auto-generated placeholder IMEI. Can be edited once tracker is assigned." : "Tracker IMEI"}">
-            ${v.imei}
-          </span>
-        </td>
-        <td class="py-3 px-3" onclick="window.selectVehicle(${v.id})">${statusBadge}</td>
-        <td class="py-3 px-3 max-w-[150px] truncate text-slate-700" title="${v.location_name || ""}" onclick="window.selectVehicle(${v.id})">
-          ${v.location_name || '<span class="text-slate-400">In Transit</span>'}
-        </td>
-        <td class="py-3 px-3 text-slate-700" onclick="window.selectVehicle(${v.id})">${homebaseInfo}</td>
-        <td class="py-3 px-3 text-xs" onclick="window.selectVehicle(${v.id})">${routingInfo}</td>
-        <td class="py-3 px-3 text-right">
-          <div class="flex items-center justify-end gap-2">
-            <button type="button" onclick="event.stopPropagation(); window.selectVehicle(${v.id})" class="text-xs text-[#2563eb] hover:text-[#1d4ed8] font-medium" title="Manage vehicle operations">
-              Manage
-            </button>
-            <button type="button" onclick="event.stopPropagation(); window.openEditVehicleModal(${v.id})" class="text-xs text-slate-600 hover:text-slate-900 font-medium" title="Edit vehicle details">
-              Edit
-            </button>
-            <button type="button" onclick="event.stopPropagation(); window.deleteVehicle(${v.id})" class="text-xs text-rose-600 hover:text-rose-800 font-medium" title="Delete vehicle">
-              Delete
-            </button>
+      <tr class="hover:bg-blue-50/40 transition cursor-pointer ${
+        isSelected
+          ? "bg-blue-50 border-l-4 border-[#2563eb] shadow-sm ring-1 ring-blue-500/10"
+          : "border-l-4 border-transparent"
+      }" onclick="window.selectVehicle(${v.id})" data-vehicle-id="${v.id}" title="Click to view full operations and telemetry">
+        <td class="py-3 px-3">
+          <div class="font-bold text-[#172033] text-sm tracking-tight flex items-center gap-1.5">
+            ${v.plate_number || '<span class="text-slate-400 italic font-normal text-xs">No Plate</span>'}
+            ${isSelected ? '<span class="bg-[#2563eb] text-white text-[9px] uppercase px-1.5 py-0.2 rounded font-bold">Selected</span>' : ''}
           </div>
+          <div>${trackerIndicator}</div>
         </td>
+        <td class="py-3 px-3">${statusBadge}</td>
+        <td class="py-3 px-3 max-w-[170px] truncate text-slate-700" title="${v.location_name || ""}">
+          <span class="font-medium text-slate-800">${v.location_name || '<span class="text-slate-400">In Transit</span>'}</span>
+          ${v.latest_telemetry?.speed ? `<br><span class="text-[10px] text-emerald-600 font-medium">${v.latest_telemetry.speed} km/h</span>` : ''}
+        </td>
+        <td class="py-3 px-3 text-slate-700">${homebaseInfo}</td>
+        <td class="py-3 px-3 text-xs">${routingInfo}</td>
       </tr>
     `;
   }).join("");
