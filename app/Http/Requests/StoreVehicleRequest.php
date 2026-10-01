@@ -26,7 +26,7 @@ class StoreVehicleRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'imei' => ['required', 'string', 'max:20', Rule::unique('vehicles', 'imei')],
+            'imei' => ['nullable', 'string', 'max:20', Rule::unique('vehicles', 'imei')],
             'plate_number' => ['nullable', 'string', 'max:50'],
             'device_name' => ['nullable', 'string', 'max:255'],
             'device_type' => ['nullable', 'string', 'max:100'],

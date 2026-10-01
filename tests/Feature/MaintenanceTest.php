@@ -9,6 +9,7 @@ use App\Models\MaintenanceAlert;
 use App\Models\MaintenanceJobCard;
 use App\Models\MaintenanceSchedule;
 use App\Models\MaintenanceTicket;
+use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleRepair;
 use App\Models\VehicleReplacement;
@@ -69,6 +70,29 @@ class MaintenanceTest extends TestCase
 
         $this->assertInstanceOf(Vehicle::class, $ticket->vehicle);
         $this->assertEquals($ticket->vehicle_id, $ticket->vehicle->id);
+    }
+
+    public function test_ticket_api_persists_ticket_for_selected_database_vehicle(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $vehicle = Vehicle::factory()->create(['plate_number' => 'DB 123A']);
+
+        $response = $this->actingAs($admin)->postJson('/api/maintenance/tickets', [
+            'vehicle_id' => $vehicle->id,
+            'ticket_type' => 'repair',
+            'title' => 'Brake inspection',
+        ]);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('data.vehicle_id', $vehicle->id)
+            ->assertJsonPath('data.vehicle.plate_number', 'DB 123A');
+
+        $this->assertDatabaseHas('maintenance_tickets', [
+            'vehicle_id' => $vehicle->id,
+            'ticket_type' => 'repair',
+            'status' => 'open',
+            'title' => 'Brake inspection',
+        ]);
     }
 
     public function test_maintenance_ticket_has_correct_types(): void

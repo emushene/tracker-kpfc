@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\AssignShopRequest;
 use App\Http\Requests\StoreVehicleRequest;
 use App\Http\Requests\UpdateVehicleLocationRequest;
+use App\Http\Requests\UpdateVehicleRequest;
 use App\Http\Resources\VehicleLocationResource;
 use App\Http\Resources\VehicleResource;
 use App\Models\Vehicle;
@@ -128,12 +129,22 @@ class VehicleController extends Controller
 
     /**
      * Create a new vehicle record for fleet tracking and integration.
+     *
+     * When no IMEI is supplied (tracker not yet assigned), a unique placeholder
+     * is generated in the format FLEET-XXXXXXXXXX so the record can be created
+     * immediately and updated with a real IMEI once the tracker is available.
      */
     public function store(
         StoreVehicleRequest $request,
         VehicleRouteService $routeService
     ): JsonResponse {
         $validated = $request->validated();
+
+        if (empty($validated['imei'])) {
+            do {
+                $validated['imei'] = 'FLEET-'.str_pad((string) random_int(0, 9999999999), 10, '0', STR_PAD_LEFT);
+            } while (Vehicle::where('imei', $validated['imei'])->exists());
+        }
 
         $vehicle = Vehicle::create($validated);
 
@@ -158,6 +169,74 @@ class VehicleController extends Controller
             'message' => 'Vehicle successfully created.',
             'vehicle' => new VehicleResource($vehicle),
         ], 201);
+    }
+
+    /**
+     * Update an existing vehicle's details.
+     *
+     * Accepts any subset of vehicle fields (PATCH semantics).
+     * Re-runs OSRM route calculation when location coordinates or the
+     * assigned shop changes, so homebase distance stays accurate.
+     */
+    public function update(
+        UpdateVehicleRequest $request,
+        Vehicle $vehicle,
+        VehicleRouteService $routeService
+    ): JsonResponse {
+        $validated = $request->validated();
+
+        $locationOrShopChanged = array_key_exists('location_latitude', $validated)
+            || array_key_exists('location_longitude', $validated)
+            || array_key_exists('assigned_shop_id', $validated);
+
+        $vehicle->update($validated);
+
+        if ($locationOrShopChanged) {
+            try {
+                $routeService->updateRoute($vehicle->fresh());
+            } catch (\Throwable $e) {
+                Log::warning('OSRM route calculation failed after vehicle update.', [
+                    'vehicle_id' => $vehicle->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        $vehicle->load([
+            'assignedShop',
+            'deployments' => fn ($q) => $q->whereIn('status', ['planned', 'dispatched', 'in_progress'])->with('destination'),
+            'positions' => fn ($q) => $q->latest('gps_time')->limit(1),
+        ]);
+
+        return response()->json([
+            'message' => 'Vehicle successfully updated.',
+            'vehicle' => new VehicleResource($vehicle),
+        ]);
+    }
+
+    /**
+     * Delete a vehicle record from the fleet.
+     *
+     * Vehicles with active deployments (planned, dispatched, or in_progress) cannot
+     * be deleted — cancel or release the deployment first.
+     */
+    public function destroy(Vehicle $vehicle): JsonResponse
+    {
+        $hasActiveDeployment = $vehicle->deployments()
+            ->whereIn('status', ['planned', 'dispatched', 'in_progress'])
+            ->exists();
+
+        if ($hasActiveDeployment) {
+            return response()->json([
+                'message' => 'Cannot delete a vehicle with an active deployment. Cancel or release the deployment first.',
+            ], 409);
+        }
+
+        $vehicle->delete();
+
+        return response()->json([
+            'message' => 'Vehicle successfully deleted.',
+        ]);
     }
 
     /**

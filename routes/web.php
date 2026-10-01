@@ -29,6 +29,18 @@ Route::middleware(['auth', 'fleet.access'])->group(function (): void {
         return response()->file(public_path('test-dashboard.html'));
     });
 
+    Route::get('/maintenance', function () {
+        return response()->file(public_path('maintenance.html'));
+    })->name('maintenance.index');
+
+    Route::get('/inventory', function () {
+        return response()->file(public_path('inventory.html'));
+    })->name('inventory.index');
+
+    Route::get('/admin-console', function () {
+        return response()->file(public_path('admin-console.html'));
+    })->name('admin-console.index');
+
     Route::get('/protrack/test', function (
         ProtrackClient $protrack
     ) {

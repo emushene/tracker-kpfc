@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Maintenance | KPFC Fleet Management</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="maintenance-menu.js" defer></script>
+</head>
+<body class="min-h-screen bg-slate-100 text-slate-900">
+  <header class="sticky top-0 z-40 border-b border-slate-200 bg-white/95 px-4 py-4 backdrop-blur sm:px-6">
+    <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4">
+      <a href="/test-dashboard" class="flex items-center gap-3" aria-label="KPFC Fleet Management dashboard">
+        <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-700 text-white">
+          <i data-lucide="truck" class="h-5 w-5"></i>
+        </span>
+        <span>
+          <span class="block text-xs font-semibold uppercase text-blue-700">KPFC</span>
+          <span class="block text-base font-semibold">Fleet Management</span>
+        </span>
+      </a>
+
+      <nav class="order-3 flex w-full gap-5 overflow-x-auto border-t border-slate-200 pt-3 text-xs font-medium text-slate-500 sm:order-2 sm:w-auto sm:border-0 sm:pt-0" aria-label="Fleet management navigation">
+        <a href="/" class="whitespace-nowrap hover:text-blue-700">Home</a>
+        <a href="/test-dashboard" class="whitespace-nowrap hover:text-blue-700">Fleet dashboard</a>
+        <button id="maintenance-menu-trigger" type="button" onclick="toggleMaintenanceMenu(this)" aria-haspopup="dialog" aria-controls="maintenance-menu" aria-expanded="false" class="flex items-center gap-1 whitespace-nowrap font-semibold text-blue-700">
+            <i data-lucide="wrench" class="h-3.5 w-3.5"></i> Maintenance
+            <i data-lucide="chevron-down" class="h-3.5 w-3.5"></i>
+        </button>
+      </nav>
+
+      <div class="order-2 flex items-center gap-2 sm:order-3">
+        <button type="button" onclick="loadMaintenanceData()" title="Refresh maintenance data" aria-label="Refresh maintenance data" class="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-600 hover:bg-slate-50">
+          <i data-lucide="refresh-cw" class="h-4 w-4"></i>
+        </button>
+        <button type="button" onclick="openTicketModal()" class="flex items-center gap-2 rounded-lg bg-blue-700 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-800">
+          <i data-lucide="plus" class="h-4 w-4"></i><span>New ticket</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div id="maintenance-menu" role="dialog" aria-modal="false" aria-labelledby="maintenance-menu-title" class="fixed left-0 top-0 z-[2000] hidden w-80 max-w-[calc(100vw-1rem)] translate-y-1 rounded-lg border border-slate-200 bg-white p-0 text-slate-900 opacity-0 shadow-xl ring-1 ring-black/5 transition-[opacity,transform] duration-150 ease-out">
+    <div class="p-4">
+      <div class="mb-3 flex items-center justify-between border-b border-slate-200 pb-3">
+        <h2 id="maintenance-menu-title" class="text-sm font-semibold">Maintenance sections</h2>
+        <button type="button" onclick="closeMaintenanceMenu(true)" aria-label="Close navigation" class="flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100"><i data-lucide="x" class="h-4 w-4"></i></button>
+      </div>
+      <nav class="grid gap-1" aria-label="Maintenance sections">
+        <a href="/maintenance" aria-current="page" class="flex items-center gap-3 rounded-md bg-blue-50 px-3 py-3 text-sm font-semibold text-blue-700"><i data-lucide="wrench" class="h-4 w-4"></i>Maintenance</a>
+        <a href="/inventory" class="flex items-center gap-3 rounded-md px-3 py-3 text-sm hover:bg-slate-100"><i data-lucide="package" class="h-4 w-4 text-emerald-700"></i>Inventory</a>
+        <a href="/admin-console" class="flex items-center gap-3 rounded-md px-3 py-3 text-sm hover:bg-slate-100"><i data-lucide="shield-check" class="h-4 w-4 text-slate-700"></i>Admin Console</a>
+      </nav>
+    </div>
+  </div>
+
+  <main class="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6">
+    <section class="flex flex-wrap items-end justify-between gap-3">
+      <div>
+        <p class="text-xs font-semibold uppercase text-blue-700">Fleet operations</p>
+        <h1 class="mt-1 text-2xl font-bold text-slate-900">Maintenance</h1>
+      </div>
+      <label class="flex items-center gap-2 text-xs font-medium text-slate-600">
+        Ticket status
+        <select id="ticket-status-filter" onchange="renderTicketList()" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 focus:border-blue-600 focus:outline-none">
+          <option value="all">All tickets</option>
+          <option value="open">Open</option>
+          <option value="in_progress">In progress</option>
+          <option value="closed">Closed</option>
+        </select>
+      </label>
+    </section>
+
+    <section class="grid grid-cols-2 gap-3 md:grid-cols-4" aria-label="Maintenance overview">
+      <div class="rounded-lg border border-slate-200 bg-white p-4">
+        <p class="text-xs font-medium text-slate-500">Open tickets</p>
+        <p id="maintenance-open" class="mt-2 text-2xl font-bold text-blue-700">--</p>
+      </div>
+      <div class="rounded-lg border border-slate-200 bg-white p-4">
+        <p class="text-xs font-medium text-slate-500">In progress</p>
+        <p id="maintenance-inprogress" class="mt-2 text-2xl font-bold text-amber-600">--</p>
+      </div>
+      <div class="rounded-lg border border-slate-200 bg-white p-4">
+        <p class="text-xs font-medium text-slate-500">Active job cards</p>
+        <p id="maintenance-jobcards" class="mt-2 text-2xl font-bold text-teal-700">--</p>
+      </div>
+      <div class="rounded-lg border border-slate-200 bg-white p-4">
+        <p class="text-xs font-medium text-slate-500">Active alerts</p>
+        <p id="maintenance-alerts" class="mt-2 text-2xl font-bold text-rose-600">--</p>
+      </div>
+    </section>
+
+    <section class="space-y-3">
+      <div class="flex items-center justify-between gap-3 border-b border-slate-300 pb-3">
+        <div>
+          <h2 class="text-base font-semibold text-slate-900">Maintenance tickets</h2>
+        </div>
+        <span id="ticket-result-count" class="text-xs text-slate-500"></span>
+      </div>
+      <div id="ticket-list" class="grid grid-cols-1 gap-3 xl:grid-cols-2">
+        <p class="text-sm text-slate-500">Loading tickets...</p>
+      </div>
+    </section>
+
+    <section class="grid grid-cols-1 gap-6 xl:grid-cols-2">
+      <div class="space-y-3">
+        <div class="border-b border-slate-300 pb-3">
+          <h2 class="text-base font-semibold text-slate-900">Active alerts</h2>
+        </div>
+        <div id="alert-list" class="space-y-2">
+          <p class="text-sm text-slate-500">Loading alerts...</p>
+        </div>
+      </div>
+
+      <div class="space-y-3">
+        <div class="border-b border-slate-300 pb-3">
+          <h2 class="text-base font-semibold text-slate-900">Job cards</h2>
+        </div>
+        <div id="job-card-list" class="space-y-2">
+          <p class="text-sm text-slate-500">Loading job cards...</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="ticket-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/50 p-4" role="dialog" aria-modal="true" aria-labelledby="ticket-modal-title">
+    <div class="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-lg bg-white p-5 shadow-xl sm:p-6">
+      <button type="button" onclick="closeTicketModal()" aria-label="Close ticket form" class="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100">
+        <i data-lucide="x" class="h-4 w-4"></i>
+      </button>
+      <h2 id="ticket-modal-title" class="mb-5 pr-10 text-lg font-bold text-slate-900">Create ticket</h2>
+      <form id="ticket-form" class="space-y-4" onsubmit="submitTicket(event)">
+        <input type="hidden" id="ticket-id">
+        <div>
+          <label for="ticket-vehicle-search" class="text-xs font-semibold text-slate-700">Vehicle</label>
+          <div class="relative">
+            <input id="ticket-vehicle-search" type="text" autocomplete="off" placeholder="Search by plate number" required class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-600 focus:outline-none">
+            <div id="ticket-vehicle-results" class="absolute left-0 right-0 top-full z-10 mt-1 hidden max-h-52 overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-lg"></div>
+          </div>
+          <input type="hidden" id="ticket-vehicle-id">
+        </div>
+        <div>
+          <label for="ticket-type" class="text-xs font-semibold text-slate-700">Type</label>
+          <select id="ticket-type" required class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-600 focus:outline-none">
+            <option value="repair">Repair</option>
+            <option value="inspection">Inspection</option>
+            <option value="service">Service</option>
+            <option value="diagnostic">Diagnostic</option>
+          </select>
+        </div>
+        <div>
+          <label for="ticket-title" class="text-xs font-semibold text-slate-700">Title</label>
+          <input id="ticket-title" type="text" required maxlength="255" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-600 focus:outline-none">
+        </div>
+        <div id="ticket-status-container" class="hidden">
+          <label for="ticket-status" class="text-xs font-semibold text-slate-700">Status</label>
+          <select id="ticket-status" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-600 focus:outline-none">
+            <option value="open">Open</option>
+            <option value="in_progress">In progress</option>
+            <option value="closed">Closed</option>
+          </select>
+        </div>
+        <div class="flex justify-end gap-2 border-t border-slate-200 pt-4">
+          <button type="button" onclick="closeTicketModal()" class="rounded-lg border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">Cancel</button>
+          <button type="submit" class="rounded-lg bg-blue-700 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-800">Save ticket</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast" class="pointer-events-none fixed bottom-5 right-5 z-[60] flex max-w-sm translate-y-6 items-start gap-3 rounded-lg bg-slate-900 p-4 text-white opacity-0 shadow-xl transition-all">
+    <i id="toast-icon" data-lucide="check-circle" class="mt-0.5 h-4 w-4 shrink-0 text-emerald-400"></i>
+    <div>
+      <p id="toast-title" class="text-xs font-bold">Success</p>
+      <p id="toast-message" class="mt-1 text-xs text-slate-300">Operation completed.</p>
+    </div>
+  </div>
+
+  <script>
+    let maintenanceTickets = [];
+    let fleetVehicles = [];
+    let fleetVehiclesLoaded = false;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      lucide.createIcons();
+      await Promise.all([loadFleetVehicles(), loadMaintenanceData()]);
+    });
+
+    async function fetchJson(url, options = {}) {
+      const response = await fetch(url, {
+        ...options,
+        headers: { 'Accept': 'application/json', ...(options.headers || {}) }
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message || 'The request failed.');
+      return result;
+    }
+
+    async function loadFleetVehicles() {
+      try {
+        const result = await fetchJson('/api/vehicles?all=1');
+        fleetVehicles = result.data || [];
+        fleetVehiclesLoaded = true;
+      } catch (error) {
+        showToast('Vehicle load failed', error.message, true);
+      }
+    }
+
+    async function loadMaintenanceData() {
+      try {
+        const [overview, tickets, alerts, jobCards] = await Promise.all([
+          fetchJson('/api/maintenance/overview'),
+          fetchJson('/api/maintenance/tickets'),
+          fetchJson('/api/maintenance/alerts'),
+          fetchJson('/api/maintenance/job-cards')
+        ]);
+
+        document.getElementById('maintenance-open').textContent = overview.open_tickets ?? 0;
+        document.getElementById('maintenance-inprogress').textContent = overview.in_progress_tickets ?? 0;
+        document.getElementById('maintenance-jobcards').textContent = overview.active_job_cards ?? 0;
+        document.getElementById('maintenance-alerts').textContent = overview.active_alerts ?? 0;
+        maintenanceTickets = tickets.data || [];
+
+        renderTicketList();
+        renderAlertList(alerts.data || []);
+        renderJobCardList(jobCards.data || []);
+      } catch (error) {
+        document.getElementById('ticket-list').textContent = 'Could not load maintenance tickets.';
+        document.getElementById('alert-list').textContent = 'Could not load maintenance alerts.';
+        document.getElementById('job-card-list').textContent = 'Could not load job cards.';
+        showToast('Maintenance load failed', error.message, true);
+      }
+    }
+
+    function createElement(tagName, className, text = '') {
+      const element = document.createElement(tagName);
+      element.className = className;
+      element.textContent = text;
+      return element;
+    }
+
+    function createActionButton(label, className, action) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = className;
+      button.textContent = label;
+      button.addEventListener('click', action);
+      return button;
+    }
+
+    function renderTicketList() {
+      const list = document.getElementById('ticket-list');
+      const filter = document.getElementById('ticket-status-filter').value;
+      const filteredTickets = maintenanceTickets.filter(ticket => filter === 'all' || ticket.status === filter);
+      list.innerHTML = '';
+      document.getElementById('ticket-result-count').textContent = `${filteredTickets.length} tickets`;
+
+      if (!filteredTickets.length) {
+        list.append(createElement('p', 'text-sm text-slate-500', 'No tickets match this filter.'));
+        return;
+      }
+
+      filteredTickets.forEach(ticket => {
+        const item = createElement('article', 'rounded-lg border border-slate-200 bg-white p-4');
+        const header = createElement('div', 'flex flex-wrap items-start justify-between gap-3');
+        const titleGroup = createElement('div', 'min-w-0');
+        titleGroup.append(
+          createElement('h3', 'truncate text-sm font-semibold text-slate-900', ticket.title || 'Maintenance ticket'),
+          createElement('p', 'mt-1 text-xs text-slate-500', `${ticket.vehicle?.plate_number || 'Unknown vehicle'} · ${ticket.ticket_type || 'repair'} · ${ticket.ticket_number || ''}`)
+        );
+        const status = createElement('span', 'rounded-full bg-slate-100 px-2 py-1 text-[10px] font-semibold uppercase text-slate-600', ticket.status || 'open');
+        header.append(titleGroup, status);
+
+        const actions = createElement('div', 'mt-4 flex flex-wrap gap-2');
+        actions.append(
+          createActionButton('Open', 'rounded-md bg-blue-50 px-2.5 py-1.5 text-[10px] font-semibold text-blue-700 hover:bg-blue-100', () => updateTicketStatus(ticket.id, 'open')),
+          createActionButton('In progress', 'rounded-md bg-amber-50 px-2.5 py-1.5 text-[10px] font-semibold text-amber-700 hover:bg-amber-100', () => updateTicketStatus(ticket.id, 'in_progress')),
+          createActionButton('Close', 'rounded-md bg-slate-100 px-2.5 py-1.5 text-[10px] font-semibold text-slate-700 hover:bg-slate-200', () => updateTicketStatus(ticket.id, 'closed')),
+          createActionButton('Edit', 'rounded-md border border-slate-300 px-2.5 py-1.5 text-[10px] font-semibold text-slate-700 hover:bg-slate-50', () => openTicketModal(ticket)),
+          createActionButton('Delete', 'rounded-md border border-rose-200 px-2.5 py-1.5 text-[10px] font-semibold text-rose-700 hover:bg-rose-50', () => deleteTicket(ticket.id))
+        );
+
+        item.append(header, actions);
+        list.append(item);
+      });
+    }
+
+    function renderAlertList(alerts) {
+      const list = document.getElementById('alert-list');
+      list.innerHTML = '';
+      if (!alerts.length) {
+        list.append(createElement('p', 'text-sm text-slate-500', 'No active alerts.'));
+        return;
+      }
+
+      alerts.forEach(alert => {
+        const item = createElement('article', 'rounded-lg border border-slate-200 bg-white p-4');
+        const header = createElement('div', 'flex items-start justify-between gap-3');
+        header.append(
+          createElement('h3', 'text-sm font-semibold text-slate-900', alert.title || alert.alert_type || 'Maintenance alert'),
+          createElement('span', 'rounded-full bg-rose-50 px-2 py-1 text-[10px] font-semibold uppercase text-rose-700', alert.severity || 'normal')
+        );
+        item.append(
+          header,
+          createElement('p', 'mt-2 text-xs text-slate-600', alert.message || alert.alert_type || 'No alert details.'),
+          createElement('p', 'mt-2 text-[11px] font-medium text-slate-500', `${alert.vehicle?.plate_number || 'Unknown vehicle'} · ${alert.status || 'active'}`)
+        );
+        list.append(item);
+      });
+    }
+
+    function renderJobCardList(jobCards) {
+      const list = document.getElementById('job-card-list');
+      list.innerHTML = '';
+      if (!jobCards.length) {
+        list.append(createElement('p', 'text-sm text-slate-500', 'No job cards found.'));
+        return;
+      }
+
+      jobCards.forEach(jobCard => {
+        const item = createElement('article', 'rounded-lg border border-slate-200 bg-white p-4');
+        const header = createElement('div', 'flex items-start justify-between gap-3');
+        header.append(
+          createElement('h3', 'text-sm font-semibold text-slate-900', jobCard.job_card_number || `Job card #${jobCard.id}`),
+          createElement('span', 'rounded-full bg-teal-50 px-2 py-1 text-[10px] font-semibold uppercase text-teal-700', jobCard.status || 'open')
+        );
+        item.append(
+          header,
+          createElement('p', 'mt-2 text-xs text-slate-600', jobCard.reported_problem || jobCard.diagnosis || jobCard.work_performed || 'No job details entered.'),
+          createElement('p', 'mt-2 text-[11px] font-medium text-slate-500', `${jobCard.vehicle?.plate_number || 'Unknown vehicle'} · ${jobCard.maintenance_ticket?.ticket_number || 'No linked ticket'}`)
+        );
+        list.append(item);
+      });
+    }
+
+    function getVehicleLabel(vehicle) {
+      return vehicle.plate_number || `Vehicle #${vehicle.id}`;
+    }
+
+    function renderVehicleResults(query = '') {
+      const container = document.getElementById('ticket-vehicle-results');
+      const searchTerm = query.trim().toLowerCase();
+      const matchingVehicles = fleetVehicles.filter(vehicle => (vehicle.plate_number || '').toLowerCase().includes(searchTerm));
+      container.innerHTML = '';
+
+      if (!matchingVehicles.length) {
+        container.textContent = fleetVehicles.length ? 'No vehicles match that plate number.' : 'No vehicles available.';
+        container.classList.remove('hidden');
+        return;
+      }
+
+      matchingVehicles.forEach(vehicle => {
+        const option = createElement('button', 'flex w-full items-center justify-between gap-3 border-b border-slate-100 px-3 py-2 text-left text-xs hover:bg-slate-50 last:border-0');
+        option.type = 'button';
+        option.append(
+          createElement('span', 'font-semibold text-slate-800', getVehicleLabel(vehicle)),
+          createElement('span', 'text-[10px] text-slate-500', vehicle.device_name || vehicle.imei || '')
+        );
+        option.addEventListener('click', () => {
+          document.getElementById('ticket-vehicle-id').value = vehicle.id;
+          document.getElementById('ticket-vehicle-search').value = getVehicleLabel(vehicle);
+          container.classList.add('hidden');
+        });
+        container.append(option);
+      });
+
+      container.classList.remove('hidden');
+    }
+
+    async function openTicketModal(ticket = null) {
+      const modal = document.getElementById('ticket-modal');
+      const form = document.getElementById('ticket-form');
+      const vehicleSearch = document.getElementById('ticket-vehicle-search');
+      const vehicleId = document.getElementById('ticket-vehicle-id');
+      const ticketType = document.getElementById('ticket-type');
+      form.reset();
+      vehicleId.value = '';
+      vehicleSearch.value = '';
+      vehicleSearch.disabled = false;
+      ticketType.disabled = false;
+      document.getElementById('ticket-vehicle-results').classList.add('hidden');
+
+      if (!fleetVehiclesLoaded) {
+        await loadFleetVehicles();
+      }
+
+      if (ticket) {
+        document.getElementById('ticket-modal-title').textContent = 'Edit ticket';
+        document.getElementById('ticket-id').value = ticket.id;
+        vehicleId.value = ticket.vehicle_id;
+        const vehicle = fleetVehicles.find(item => Number(item.id) === Number(ticket.vehicle_id)) || ticket.vehicle;
+        vehicleSearch.value = vehicle ? getVehicleLabel(vehicle) : `Vehicle #${ticket.vehicle_id}`;
+        vehicleSearch.disabled = true;
+        ticketType.value = ticket.ticket_type || 'repair';
+        ticketType.disabled = true;
+        document.getElementById('ticket-title').value = ticket.title || '';
+        document.getElementById('ticket-status').value = ticket.status || 'open';
+        document.getElementById('ticket-status-container').classList.remove('hidden');
+      } else {
+        document.getElementById('ticket-modal-title').textContent = 'Create ticket';
+        document.getElementById('ticket-id').value = '';
+        document.getElementById('ticket-status-container').classList.add('hidden');
+      }
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      renderVehicleResults(vehicleSearch.value);
+    }
+
+    function closeTicketModal() {
+      const modal = document.getElementById('ticket-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    document.getElementById('ticket-vehicle-search').addEventListener('input', event => {
+      document.getElementById('ticket-vehicle-id').value = '';
+      renderVehicleResults(event.target.value);
+    });
+
+    document.getElementById('ticket-vehicle-search').addEventListener('focus', () => {
+      renderVehicleResults(document.getElementById('ticket-vehicle-search').value);
+    });
+
+    document.addEventListener('click', event => {
+      const results = document.getElementById('ticket-vehicle-results');
+      const search = document.getElementById('ticket-vehicle-search');
+      if (!results.contains(event.target) && event.target !== search) results.classList.add('hidden');
+    });
+
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape') closeTicketModal();
+    });
+
+    async function submitTicket(event) {
+      event.preventDefault();
+      const id = document.getElementById('ticket-id').value;
+      const vehicleId = document.getElementById('ticket-vehicle-id').value;
+      if (!id && !vehicleId) {
+        showToast('Select a vehicle', 'Choose a vehicle before creating the ticket.', true);
+        return;
+      }
+
+      const payload = { title: document.getElementById('ticket-title').value.trim() };
+      if (id) {
+        payload.status = document.getElementById('ticket-status').value;
+      } else {
+        payload.vehicle_id = Number(vehicleId);
+        payload.ticket_type = document.getElementById('ticket-type').value;
+      }
+
+      try {
+        await fetchJson(id ? `/api/maintenance/tickets/${id}` : '/api/maintenance/tickets', {
+          method: id ? 'PUT' : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        closeTicketModal();
+        showToast('Ticket saved', id ? 'Ticket updated successfully.' : 'Ticket created successfully.');
+        await loadMaintenanceData();
+      } catch (error) {
+        showToast('Ticket save failed', error.message, true);
+      }
+    }
+
+    async function updateTicketStatus(ticketId, status) {
+      try {
+        await fetchJson(`/api/maintenance/tickets/${ticketId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status })
+        });
+        showToast('Ticket updated', `Status changed to ${status.replace('_', ' ')}.`);
+        await loadMaintenanceData();
+      } catch (error) {
+        showToast('Ticket update failed', error.message, true);
+      }
+    }
+
+    async function deleteTicket(ticketId) {
+      if (!window.confirm('Delete this ticket?')) return;
+      try {
+        await fetchJson(`/api/maintenance/tickets/${ticketId}`, { method: 'DELETE' });
+        showToast('Ticket deleted', 'The maintenance ticket was removed.');
+        await loadMaintenanceData();
+      } catch (error) {
+        showToast('Ticket delete failed', error.message, true);
+      }
+    }
+
+    function showToast(title, message, isError = false) {
+      const toast = document.getElementById('toast');
+      const icon = document.getElementById('toast-icon');
+      document.getElementById('toast-title').textContent = title;
+      document.getElementById('toast-message').textContent = message;
+      icon.setAttribute('data-lucide', isError ? 'circle-alert' : 'check-circle');
+      icon.className = `mt-0.5 h-4 w-4 shrink-0 ${isError ? 'text-rose-400' : 'text-emerald-400'}`;
+      lucide.createIcons();
+      toast.classList.remove('translate-y-6', 'opacity-0');
+      clearTimeout(showToast.timeout);
+      showToast.timeout = setTimeout(() => toast.classList.add('translate-y-6', 'opacity-0'), 3500);
+    }
+  </script>
+</body>
+</html>

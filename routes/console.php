@@ -38,3 +38,44 @@ Schedule::command('protrack:refresh-locations')
     ->everyTenMinutes()
     ->between('06:00', '18:00')
     ->withoutOverlapping();
+
+/*
+|--------------------------------------------------------------------------
+| Protrack Vehicle Synchronization
+|--------------------------------------------------------------------------
+|
+| Synchronize the vehicle/device inventory from Protrack once per day.
+|
+*/
+
+Schedule::command('protrack:sync-vehicles')
+    ->dailyAt('00:05')
+    ->withoutOverlapping();
+
+/*
+|--------------------------------------------------------------------------
+| KPFC Admin Directory Synchronization
+|--------------------------------------------------------------------------
+|
+| Synchronize authoritative Branches and Suppliers from the KPFC Admin API once per day.
+|
+*/
+
+Schedule::command('kpfc:sync-directories')
+    ->dailyAt('01:00')
+    ->withoutOverlapping();
+
+/*
+|--------------------------------------------------------------------------
+| Maintenance Window Checks
+|--------------------------------------------------------------------------
+|
+| Check vehicle mileage and time thresholds daily to automate
+| maintenance tickets and alert notifications.
+|
+*/
+
+Schedule::command('maintenance:check')
+    ->dailyAt('02:00')
+    ->withoutOverlapping();
+

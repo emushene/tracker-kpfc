@@ -41,6 +41,12 @@ Route::middleware(['web', 'auth', 'fleet.access', 'fleet.write'])->group(functio
         // GET /api/vehicles/{vehicle} - Retrieve detailed information for a single vehicle
         Route::get('/{vehicle}', [VehicleController::class, 'show'])->name('api.vehicles.show');
 
+        // PATCH /api/vehicles/{vehicle} - Update vehicle details (write role required)
+        Route::patch('/{vehicle}', [VehicleController::class, 'update'])->name('api.vehicles.update');
+
+        // DELETE /api/vehicles/{vehicle} - Remove a vehicle from the fleet (write role required)
+        Route::delete('/{vehicle}', [VehicleController::class, 'destroy'])->name('api.vehicles.destroy');
+
         // GET /api/vehicles/{vehicle}/location - Retrieve vehicle live location and telemetry details
         Route::get('/{vehicle}/location', [VehicleController::class, 'location'])->name('api.vehicles.location');
 
@@ -67,11 +73,25 @@ Route::middleware(['web', 'auth', 'fleet.access', 'fleet.write'])->group(functio
     */
     Route::prefix('maintenance')->group(function (): void {
         Route::get('/overview', [MaintenanceController::class, 'overview'])->name('api.maintenance.overview');
+
         Route::get('/tickets', [MaintenanceController::class, 'tickets'])->name('api.maintenance.tickets');
         Route::post('/tickets', [MaintenanceController::class, 'storeTicket'])->name('api.maintenance.tickets.store');
+        Route::get('/tickets/{ticket}', [MaintenanceController::class, 'showTicket'])->name('api.maintenance.tickets.show');
+        Route::put('/tickets/{ticket}', [MaintenanceController::class, 'updateTicket'])->name('api.maintenance.tickets.update');
+        Route::delete('/tickets/{ticket}', [MaintenanceController::class, 'destroyTicket'])->name('api.maintenance.tickets.destroy');
+
         Route::get('/job-cards', [MaintenanceController::class, 'jobCards'])->name('api.maintenance.job-cards');
         Route::post('/job-cards', [MaintenanceController::class, 'storeJobCard'])->name('api.maintenance.job-cards.store');
+        Route::get('/job-cards/{jobCard}', [MaintenanceController::class, 'showJobCard'])->name('api.maintenance.job-cards.show');
+        Route::put('/job-cards/{jobCard}', [MaintenanceController::class, 'updateJobCard'])->name('api.maintenance.job-cards.update');
+        Route::delete('/job-cards/{jobCard}', [MaintenanceController::class, 'destroyJobCard'])->name('api.maintenance.job-cards.destroy');
+
         Route::get('/alerts', [MaintenanceController::class, 'alerts'])->name('api.maintenance.alerts');
+        Route::post('/alerts', [MaintenanceController::class, 'storeAlert'])->name('api.maintenance.alerts.store');
+        Route::get('/alerts/{alert}', [MaintenanceController::class, 'showAlert'])->name('api.maintenance.alerts.show');
+        Route::put('/alerts/{alert}', [MaintenanceController::class, 'updateAlert'])->name('api.maintenance.alerts.update');
+        Route::delete('/alerts/{alert}', [MaintenanceController::class, 'destroyAlert'])->name('api.maintenance.alerts.destroy');
+
         Route::get('/vehicles/{vehicle}', [MaintenanceController::class, 'vehicleDetails'])->name('api.maintenance.vehicle-details');
     });
 
@@ -100,6 +120,8 @@ Route::middleware(['web', 'auth', 'fleet.access', 'fleet.write'])->group(functio
         Route::post('/', [VehicleController::class, 'store'])->name('api.integration.vehicles.store');
         Route::get('/location', [VehicleController::class, 'queryLocation'])->name('api.integration.vehicles.query-location');
         Route::get('/{vehicle}', [VehicleController::class, 'show'])->name('api.integration.vehicles.show');
+        Route::patch('/{vehicle}', [VehicleController::class, 'update'])->name('api.integration.vehicles.update');
+        Route::delete('/{vehicle}', [VehicleController::class, 'destroy'])->name('api.integration.vehicles.destroy');
         Route::get('/{vehicle}/location', [VehicleController::class, 'location'])->name('api.integration.vehicles.location');
         Route::post('/{vehicle}/location', [VehicleController::class, 'updateLocation'])->name('api.integration.vehicles.update-location');
     });
