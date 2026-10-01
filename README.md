@@ -47,9 +47,10 @@ flowchart TD
       end
 
       subgraph API["Fleet Management REST API"]
-            V_API["GET /api/vehicles\nPATCH /api/vehicles/{id}/assign-shop"]
+            V_API["GET|POST|PATCH|DELETE /api/vehicles\nGET|POST /api/vehicles/{id}/location\nPATCH /api/vehicles/{id}/assign-shop"]
             D_API["POST /api/vehicles/{id}/deployments"]
             M_API["GET|POST|PUT|DELETE /api/maintenance/tickets\n/api/maintenance/job-cards\n/api/maintenance/alerts"]
+            I_API["GET|POST|PATCH|DELETE /api/integration/vehicles\n(KPFC Admin mirror routes)"]
       end
 
       P365 -->|GPS & Telematics| SC1
@@ -151,16 +152,62 @@ The Fleet application operates as an OAuth 2.0 confidential client federated wit
 ## API Reference
 
 ### Fleet Vehicles
+
+> **Vehicle `{vehicle}` parameter** accepts an integer ID, plate number (e.g. `KBX 123A` or `KBX123A`), or IMEI.
+
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| `GET` | `/api/vehicles` | List vehicles with live locations, status, home shops, and active missions. Supports `?search=`, `?shop_id=`, `?active=`, `?all=1`. |
+| `GET` | `/api/vehicles` | List vehicles with live locations, status, home shops, and active missions. Supports `?search=`, `?shop_id=`, `?active=`, `?all=1`, `?per_page=`. |
+| `POST` | `/api/vehicles` | Create a new vehicle. `imei` is optional — a unique `FLEET-XXXXXXXXXX` placeholder is generated when omitted and can be updated once a tracker is assigned. |
 | `GET` | `/api/vehicles/{vehicle}` | Full telemetry, GPS record, route calculation, and deployment history. |
-| `GET` | `/api/vehicles/{vehicle}/location` | Live GPS position and telemetry. |
-| `POST` | `/api/vehicles/{vehicle}/location` | Ingest GPS position update. |
+| `PATCH` | `/api/vehicles/{vehicle}` | Update any vehicle field (all fields optional). Supplying `location_latitude`, `location_longitude`, or `assigned_shop_id` triggers an OSRM homebase distance recalculation. |
+| `DELETE` | `/api/vehicles/{vehicle}` | Delete a vehicle. Returns `409 Conflict` if an active deployment exists — cancel or release it first. |
+| `GET` | `/api/vehicles/location` | Query live location by `?plate_number=`, `?imei=`, or `?id=`. |
+| `GET` | `/api/vehicles/{vehicle}/location` | Live GPS position and telemetry for a single vehicle. |
+| `POST` | `/api/vehicles/{vehicle}/location` | Ingest a GPS position update (records a `vehicle_positions` entry and refreshes snapshot fields). |
 | `PATCH` | `/api/vehicles/{vehicle}/assign-shop` | Set or clear the vehicle's permanent home shop (`{"shop_id": 4}` or `{"shop_id": null}`). |
 | `POST` | `/api/vehicles/{vehicle}/deployments` | Dispatch vehicle on a temporary mission. |
 | `PATCH` | `/api/vehicles/{vehicle}/deployments/{deployment}/release` | Complete/release an active deployment. |
 | `PATCH` | `/api/vehicles/{vehicle}/deployments/{deployment}/cancel` | Cancel a planned or dispatched deployment. |
+
+#### `POST /api/vehicles` — Request fields
+
+| Field | Type | Required | Notes |
+| :--- | :--- | :--- | :--- |
+| `imei` | string | No | Max 20 chars, unique. Auto-generated as `FLEET-XXXXXXXXXX` when omitted. |
+| `plate_number` | string | No | Max 50 chars. |
+| `device_name` | string | No | Max 255 chars. |
+| `device_type` | string | No | Max 100 chars. |
+| `simcard` | string | No | Max 50 chars. |
+| `iccid` | string | No | Max 50 chars. |
+| `assigned_shop_id` | integer | No | Must be an **active** shop ID. |
+| `active` | boolean | No | Defaults to `true`. |
+| `activated_at` | date | No | ISO date string. |
+| `location_latitude` | numeric | No | `-90` to `90`. |
+| `location_longitude` | numeric | No | `-180` to `180`. |
+| `location_name` | string | No | Max 255 chars. |
+
+#### `PATCH /api/vehicles/{vehicle}` — Request fields
+Same fields as `POST`. Only fields present in the payload are updated. The existing IMEI may be re-submitted without triggering a uniqueness error.
+
+---
+
+### Integration Routes (External / KPFC Admin)
+
+Mirror of the vehicle CRUD endpoints under the `/api/integration/vehicles` prefix, for use by the KPFC Admin application. Behaviour is identical.
+
+| Method | Endpoint |
+| :--- | :--- |
+| `GET` | `/api/integration/vehicles` |
+| `POST` | `/api/integration/vehicles` |
+| `GET` | `/api/integration/vehicles/{vehicle}` |
+| `PATCH` | `/api/integration/vehicles/{vehicle}` |
+| `DELETE` | `/api/integration/vehicles/{vehicle}` |
+| `GET` | `/api/integration/vehicles/location` |
+| `GET` | `/api/integration/vehicles/{vehicle}/location` |
+| `POST` | `/api/integration/vehicles/{vehicle}/location` |
+
+---
 
 ### Maintenance — Tickets
 | Method | Endpoint | Description |

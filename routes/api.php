@@ -41,6 +41,12 @@ Route::middleware(['web', 'auth', 'fleet.access', 'fleet.write'])->group(functio
         // GET /api/vehicles/{vehicle} - Retrieve detailed information for a single vehicle
         Route::get('/{vehicle}', [VehicleController::class, 'show'])->name('api.vehicles.show');
 
+        // PATCH /api/vehicles/{vehicle} - Update vehicle details (write role required)
+        Route::patch('/{vehicle}', [VehicleController::class, 'update'])->name('api.vehicles.update');
+
+        // DELETE /api/vehicles/{vehicle} - Remove a vehicle from the fleet (write role required)
+        Route::delete('/{vehicle}', [VehicleController::class, 'destroy'])->name('api.vehicles.destroy');
+
         // GET /api/vehicles/{vehicle}/location - Retrieve vehicle live location and telemetry details
         Route::get('/{vehicle}/location', [VehicleController::class, 'location'])->name('api.vehicles.location');
 
@@ -114,6 +120,8 @@ Route::middleware(['web', 'auth', 'fleet.access', 'fleet.write'])->group(functio
         Route::post('/', [VehicleController::class, 'store'])->name('api.integration.vehicles.store');
         Route::get('/location', [VehicleController::class, 'queryLocation'])->name('api.integration.vehicles.query-location');
         Route::get('/{vehicle}', [VehicleController::class, 'show'])->name('api.integration.vehicles.show');
+        Route::patch('/{vehicle}', [VehicleController::class, 'update'])->name('api.integration.vehicles.update');
+        Route::delete('/{vehicle}', [VehicleController::class, 'destroy'])->name('api.integration.vehicles.destroy');
         Route::get('/{vehicle}/location', [VehicleController::class, 'location'])->name('api.integration.vehicles.location');
         Route::post('/{vehicle}/location', [VehicleController::class, 'updateLocation'])->name('api.integration.vehicles.update-location');
     });

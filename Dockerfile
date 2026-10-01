@@ -88,6 +88,19 @@ COPY --from=frontend /app/public/build ./public/build
 
 
 # --------------------------------------------
+# Preserve public directory template for volume syncing
+# --------------------------------------------
+RUN cp -a /var/www/html/public /var/www/html/public-template
+
+
+# --------------------------------------------
+# Entrypoint script
+# --------------------------------------------
+COPY docker/entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+
+# --------------------------------------------
 # Laravel writable directories
 # --------------------------------------------
 RUN mkdir -p \
@@ -103,7 +116,8 @@ RUN mkdir -p \
 # --------------------------------------------
 RUN chown -R www-data:www-data \
     storage \
-    bootstrap/cache
+    bootstrap/cache \
+    public
 
 
 # --------------------------------------------
@@ -124,4 +138,5 @@ RUN { \
 # --------------------------------------------
 EXPOSE 9000
 
+ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["php-fpm"]

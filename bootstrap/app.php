@@ -20,6 +20,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'fleet.write' => EnsureCanWrite::class,
         ]);
 
+        $middleware->trustProxies(at: '*');
+
         $middleware->redirectTo(
             guests: '/login',
             users: '/',

@@ -82,12 +82,12 @@ class VehicleIntegrationApiTest extends TestCase
      */
     public function test_create_vehicle_validation_rules(): void
     {
-        // 1. Missing IMEI fails
+        // 1. Missing IMEI auto-generates a FLEET- placeholder
         $response = $this->postJson('/api/vehicles', [
             'plate_number' => 'KDD 001A',
         ]);
-        $response->assertStatus(422)
-            ->assertJsonValidationErrors(['imei']);
+        $response->assertStatus(201);
+        $this->assertStringStartsWith('FLEET-', $response->json('vehicle.imei'));
 
         // 2. Duplicate IMEI fails
         Vehicle::create([
@@ -365,5 +365,145 @@ class VehicleIntegrationApiTest extends TestCase
             ->assertJsonPath('data.vehicle_id', $vehicleId)
             ->assertJsonPath('data.location.name', 'CBD Branch')
             ->assertJsonPath('data.plate_number', 'KDH 100P');
+    }
+
+    /**
+     * Test updating a vehicle's details via PATCH /api/vehicles/{vehicle}.
+     */
+    public function test_can_update_vehicle_via_api(): void
+    {
+        $vehicle = Vehicle::create([
+            'imei' => 'FLEET-0000000001',
+            'plate_number' => 'KDA 001A',
+            'device_name' => 'Van One',
+        ]);
+
+        $response = $this->patchJson("/api/vehicles/{$vehicle->id}", [
+            'imei' => '867530901111111',
+            'plate_number' => 'KDA 001B',
+            'device_name' => 'Van One Updated',
+            'active' => false,
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('message', 'Vehicle successfully updated.')
+            ->assertJsonPath('vehicle.imei', '867530901111111')
+            ->assertJsonPath('vehicle.plate_number', 'KDA 001B')
+            ->assertJsonPath('vehicle.active', false);
+
+        $this->assertDatabaseHas('vehicles', [
+            'id' => $vehicle->id,
+            'imei' => '867530901111111',
+            'plate_number' => 'KDA 001B',
+        ]);
+    }
+
+    /**
+     * Test that updating a vehicle with a duplicate IMEI (on a different vehicle) fails.
+     */
+    public function test_update_vehicle_rejects_duplicate_imei(): void
+    {
+        Vehicle::create(['imei' => '111110000011111', 'plate_number' => 'KDA 002A']);
+        $vehicle = Vehicle::create(['imei' => 'FLEET-0000000002', 'plate_number' => 'KDA 003A']);
+
+        $response = $this->patchJson("/api/vehicles/{$vehicle->id}", [
+            'imei' => '111110000011111',
+        ]);
+
+        $response->assertStatus(422)->assertJsonValidationErrors(['imei']);
+    }
+
+    /**
+     * Test that updating a vehicle with its own existing IMEI is allowed (ignore-self uniqueness).
+     */
+    public function test_update_vehicle_allows_same_imei(): void
+    {
+        $vehicle = Vehicle::create(['imei' => '999990000099999', 'plate_number' => 'KDA 004A']);
+
+        $response = $this->patchJson("/api/vehicles/{$vehicle->id}", [
+            'imei' => '999990000099999',
+            'device_name' => 'Same IMEI',
+        ]);
+
+        $response->assertStatus(200)->assertJsonPath('vehicle.imei', '999990000099999');
+    }
+
+    /**
+     * Test that updating with an inactive shop is rejected.
+     */
+    public function test_update_vehicle_rejects_inactive_shop(): void
+    {
+        $vehicle = Vehicle::create(['imei' => 'FLEET-0000000003', 'plate_number' => 'KDA 005A']);
+
+        $inactiveShop = Shop::create([
+            'name' => 'Closed Branch',
+            'latitude' => -1.28,
+            'longitude' => 36.81,
+            'active' => false,
+        ]);
+
+        $response = $this->patchJson("/api/vehicles/{$vehicle->id}", [
+            'assigned_shop_id' => $inactiveShop->id,
+        ]);
+
+        $response->assertStatus(422)->assertJsonValidationErrors(['assigned_shop_id']);
+    }
+
+    /**
+     * Test deleting a vehicle via DELETE /api/vehicles/{vehicle}.
+     */
+    public function test_can_delete_vehicle_via_api(): void
+    {
+        $vehicle = Vehicle::create(['imei' => 'FLEET-0000000004', 'plate_number' => 'KDA 006A']);
+
+        $response = $this->deleteJson("/api/vehicles/{$vehicle->id}");
+
+        $response->assertStatus(200)->assertJsonPath('message', 'Vehicle successfully deleted.');
+        $this->assertDatabaseMissing('vehicles', ['id' => $vehicle->id]);
+    }
+
+    /**
+     * Test that a vehicle with an active deployment cannot be deleted.
+     */
+    public function test_cannot_delete_vehicle_with_active_deployment(): void
+    {
+        $shop = Shop::create([
+            'name' => 'Test Shop',
+            'latitude' => -1.28,
+            'longitude' => 36.81,
+            'active' => true,
+        ]);
+
+        $vehicle = Vehicle::create(['imei' => 'FLEET-0000000005', 'plate_number' => 'KDA 007A']);
+
+        $vehicle->deployments()->create([
+            'destination_type' => 'shop',
+            'destination_id' => $shop->id,
+            'status' => 'in_progress',
+        ]);
+
+        $response = $this->deleteJson("/api/vehicles/{$vehicle->id}");
+
+        $response->assertStatus(409);
+        $this->assertDatabaseHas('vehicles', ['id' => $vehicle->id]);
+    }
+
+    /**
+     * Test update and delete mirror correctly on /api/integration/vehicles routes.
+     */
+    public function test_integration_update_and_delete_routes_work(): void
+    {
+        $vehicle = Vehicle::create(['imei' => 'FLEET-0000000006', 'plate_number' => 'KDA 008A']);
+
+        // Update via integration route
+        $updateRes = $this->patchJson("/api/integration/vehicles/{$vehicle->id}", [
+            'plate_number' => 'KDA 008B',
+        ]);
+        $updateRes->assertStatus(200)->assertJsonPath('vehicle.plate_number', 'KDA 008B');
+
+        // Delete via integration route
+        $deleteRes = $this->deleteJson("/api/integration/vehicles/{$vehicle->id}");
+        $deleteRes->assertStatus(200)->assertJsonPath('message', 'Vehicle successfully deleted.');
+        $this->assertDatabaseMissing('vehicles', ['id' => $vehicle->id]);
     }
 }
