@@ -41,4 +41,9 @@ class JobCardChecklist extends Model
     {
         return $this->hasMany(JobCardChecklistItem::class);
     }
+
+    public function fieldValues(): HasMany
+    {
+        return $this->hasMany(JobCardChecklistFieldValue::class);
+    }
 }

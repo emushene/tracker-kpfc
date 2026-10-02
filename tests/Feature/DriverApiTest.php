@@ -2,12 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Models\ChecklistTemplate;
 use App\Models\ReturnToBaseRequest;
 use App\Models\Shop;
 use App\Models\Trip;
 use App\Models\TripStop;
 use App\Models\User;
 use App\Models\Vehicle;
+use Database\Seeders\ChecklistTemplateSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -117,6 +119,96 @@ class DriverApiTest extends TestCase
         $response->assertOk()
             ->assertJsonPath('data.plate_number', 'KDG 999A')
             ->assertJsonPath('status', 'active_trip');
+    }
+
+    public function test_driver_can_load_daily_checklist_template_from_database(): void
+    {
+        $this->seed(ChecklistTemplateSeeder::class);
+        $vehicle = Vehicle::factory()->create();
+        Trip::factory()->inProgress()->create([
+            'vehicle_id' => $vehicle->id,
+            'driver_external_user_id' => $this->driverId,
+        ]);
+
+        $this->actingAs($this->driverUser)
+            ->getJson('/api/driver/checklists/daily')
+            ->assertOk()
+            ->assertJsonPath('data.template.template_key', 'driver_daily')
+            ->assertJsonPath('data.template.checklist_items.0.section_title', 'Walk-around')
+            ->assertJsonPath('data.assigned_vehicle.id', $vehicle->id);
+    }
+
+    public function test_driver_daily_checklist_submission_persists_answers_and_report_fields(): void
+    {
+        $this->seed(ChecklistTemplateSeeder::class);
+        $vehicle = Vehicle::factory()->create(['plate_number' => 'KDG 456Z']);
+        Trip::factory()->inProgress()->create([
+            'vehicle_id' => $vehicle->id,
+            'driver_external_user_id' => $this->driverId,
+        ]);
+        $template = ChecklistTemplate::query()
+            ->where('template_key', 'driver_daily')
+            ->with('checklistItems')
+            ->firstOrFail();
+        $items = $template->checklistItems->map(fn ($item): array => [
+            'item_key' => $item->item_key,
+            'result' => 'pass',
+        ])->all();
+
+        $response = $this->actingAs($this->driverUser)
+            ->postJson('/api/driver/checklists/daily/submissions', [
+                'vehicle_id' => $vehicle->id,
+                'odometer' => 62450,
+                'submission_date' => '2026-10-01',
+                'items' => $items,
+                'fields' => [
+                    'driver_vehicle_status' => 'Ready for trip',
+                    'driver_defects' => '',
+                    'driver_action' => '',
+                    'driver_signature' => 'Driver David',
+                    'route' => 'Depot to Westlands',
+                ],
+            ]);
+
+        $response->assertCreated()
+            ->assertJsonPath('data.vehicle_id', $vehicle->id)
+            ->assertJsonPath('data.driver_external_user_id', $this->driverId)
+            ->assertJsonPath('data.odometer', 62450)
+            ->assertJsonCount(10, 'data.items');
+
+        $submissionId = $response->json('data.id');
+        $this->assertDatabaseHas('driver_checklist_submissions', [
+            'id' => $submissionId,
+            'vehicle_id' => $vehicle->id,
+            'driver_external_user_id' => $this->driverId,
+            'vehicle_status' => 'Ready for trip',
+        ]);
+        $this->assertDatabaseCount('driver_checklist_submission_items', 10);
+        $this->assertDatabaseHas('driver_checklist_submission_field_values', [
+            'driver_checklist_submission_id' => $submissionId,
+            'field_key' => 'route',
+            'value' => 'Depot to Westlands',
+        ]);
+    }
+
+    public function test_driver_cannot_submit_daily_checklist_for_an_unassigned_vehicle(): void
+    {
+        $this->seed(ChecklistTemplateSeeder::class);
+        $assignedVehicle = Vehicle::factory()->create();
+        Trip::factory()->inProgress()->create([
+            'vehicle_id' => $assignedVehicle->id,
+            'driver_external_user_id' => $this->driverId,
+        ]);
+        $otherVehicle = Vehicle::factory()->create();
+
+        $this->actingAs($this->driverUser)
+            ->postJson('/api/driver/checklists/daily/submissions', [
+                'vehicle_id' => $otherVehicle->id,
+                'odometer' => 100,
+                'items' => [],
+                'fields' => [],
+            ])
+            ->assertForbidden();
     }
 
     public function test_driver_can_manually_start_trip_recording_start_details(): void

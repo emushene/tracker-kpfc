@@ -70,6 +70,14 @@
           <option value="closed">Closed</option>
         </select>
       </label>
+      <label class="flex items-center gap-2 text-xs font-medium text-slate-600">
+        Cards per page
+        <select id="maintenance-page-size" onchange="setMaintenancePageSize(this.value)" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 focus:border-blue-600 focus:outline-none">
+          <option value="6" selected>6</option>
+          <option value="12">12</option>
+          <option value="24">24</option>
+        </select>
+      </label>
     </section>
 
     <section class="grid grid-cols-2 gap-3 md:grid-cols-4" aria-label="Maintenance overview">
@@ -93,6 +101,24 @@
 
     <section class="space-y-3">
       <div class="flex items-center justify-between gap-3 border-b border-slate-300 pb-3">
+        <h2 class="text-base font-semibold text-slate-900">Daily driver reports</h2>
+        <span id="driver-checklist-result-count" class="text-xs text-slate-500"></span>
+      </div>
+      <div id="driver-checklist-list" class="grid grid-cols-1 gap-3 xl:grid-cols-2">
+        <p class="text-sm text-slate-500">Loading daily reports...</p>
+      </div>
+      <div data-card-pagination="driverReports" class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-3 text-[11px] text-slate-500">
+        <span data-card-range>Showing 0 of 0</span>
+        <div class="flex items-center gap-2">
+          <button type="button" data-page-action="previous" onclick="changeMaintenancePage('driverReports', -1)" class="rounded-md border border-slate-300 bg-white px-2.5 py-1.5 font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">Previous</button>
+          <span data-card-page class="min-w-20 text-center font-medium">Page 1 of 1</span>
+          <button type="button" data-page-action="next" onclick="changeMaintenancePage('driverReports', 1)" class="rounded-md border border-slate-300 bg-white px-2.5 py-1.5 font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">Next</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="space-y-3">
+      <div class="flex items-center justify-between gap-3 border-b border-slate-300 pb-3">
         <div>
           <h2 class="text-base font-semibold text-slate-900">Maintenance tickets</h2>
         </div>
@@ -100,6 +126,14 @@
       </div>
       <div id="ticket-list" class="grid grid-cols-1 gap-3 xl:grid-cols-2">
         <p class="text-sm text-slate-500">Loading tickets...</p>
+      </div>
+      <div data-card-pagination="tickets" class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-3 text-[11px] text-slate-500">
+        <span data-card-range>Showing 0 of 0</span>
+        <div class="flex items-center gap-2">
+          <button type="button" data-page-action="previous" onclick="changeMaintenancePage('tickets', -1)" class="rounded-md border border-slate-300 bg-white px-2.5 py-1.5 font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">Previous</button>
+          <span data-card-page class="min-w-20 text-center font-medium">Page 1 of 1</span>
+          <button type="button" data-page-action="next" onclick="changeMaintenancePage('tickets', 1)" class="rounded-md border border-slate-300 bg-white px-2.5 py-1.5 font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">Next</button>
+        </div>
       </div>
     </section>
 
@@ -111,6 +145,14 @@
         <div id="alert-list" class="space-y-2">
           <p class="text-sm text-slate-500">Loading alerts...</p>
         </div>
+        <div data-card-pagination="alerts" class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-3 text-[11px] text-slate-500">
+          <span data-card-range>Showing 0 of 0</span>
+          <div class="flex items-center gap-2">
+            <button type="button" data-page-action="previous" onclick="changeMaintenancePage('alerts', -1)" class="rounded-md border border-slate-300 bg-white px-2.5 py-1.5 font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">Previous</button>
+            <span data-card-page class="min-w-20 text-center font-medium">Page 1 of 1</span>
+            <button type="button" data-page-action="next" onclick="changeMaintenancePage('alerts', 1)" class="rounded-md border border-slate-300 bg-white px-2.5 py-1.5 font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">Next</button>
+          </div>
+        </div>
       </div>
 
       <div class="space-y-3">
@@ -119,6 +161,14 @@
         </div>
         <div id="job-card-list" class="space-y-2">
           <p class="text-sm text-slate-500">Loading job cards...</p>
+        </div>
+        <div data-card-pagination="jobCards" class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-3 text-[11px] text-slate-500">
+          <span data-card-range>Showing 0 of 0</span>
+          <div class="flex items-center gap-2">
+            <button type="button" data-page-action="previous" onclick="changeMaintenancePage('jobCards', -1)" class="rounded-md border border-slate-300 bg-white px-2.5 py-1.5 font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">Previous</button>
+            <span data-card-page class="min-w-20 text-center font-medium">Page 1 of 1</span>
+            <button type="button" data-page-action="next" onclick="changeMaintenancePage('jobCards', 1)" class="rounded-md border border-slate-300 bg-white px-2.5 py-1.5 font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">Next</button>
+          </div>
         </div>
       </div>
     </section>
@@ -169,6 +219,181 @@
     </div>
   </div>
 
+  <!-- Job Card Checklist & Parts Service Modal -->
+  <div id="job-card-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/60 backdrop-blur-xs p-3 sm:p-4" role="dialog" aria-modal="true" aria-labelledby="job-card-modal-title">
+    <div class="relative flex flex-col max-h-[92vh] w-full max-w-4xl overflow-hidden rounded-xl bg-white shadow-2xl border border-slate-200">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-5 py-4 shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-teal-700 text-white shadow-xs">
+            <i data-lucide="clipboard-check" class="h-5 w-5"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 id="job-card-modal-title" class="text-base font-bold text-slate-900">Job Card Checklist & Service</h2>
+              <span id="job-card-modal-status-badge" class="rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider"></span>
+            </div>
+            <p id="job-card-modal-subtitle" class="text-xs text-slate-500 mt-0.5"></p>
+          </div>
+        </div>
+        <button type="button" onclick="closeJobCardModal()" aria-label="Close job card modal" class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition">
+          <i data-lucide="x" class="h-5 w-5"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body (Scrollable) -->
+      <div class="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
+        
+        <!-- Job Card Meta Banner -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 border border-slate-200/80 rounded-lg p-3.5 text-xs">
+          <div>
+            <span class="text-slate-400 font-medium block text-[10px] uppercase">Vehicle</span>
+            <span id="jc-modal-vehicle" class="font-bold text-slate-800">--</span>
+          </div>
+          <div>
+            <span class="text-slate-400 font-medium block text-[10px] uppercase">Service Odometer</span>
+            <span id="jc-modal-odometer" class="font-bold text-slate-800">--</span>
+          </div>
+          <div>
+            <span class="text-slate-400 font-medium block text-[10px] uppercase">Mechanic</span>
+            <span id="jc-modal-mechanic" class="font-bold text-slate-800">--</span>
+          </div>
+          <div>
+            <span class="text-slate-400 font-medium block text-[10px] uppercase">Linked Ticket</span>
+            <span id="jc-modal-ticket" class="font-bold text-slate-800">--</span>
+          </div>
+          <div class="col-span-2 sm:col-span-4 border-t border-slate-200 pt-2 mt-1">
+            <span class="text-slate-400 font-medium block text-[10px] uppercase">Reported Problem / Work Scope</span>
+            <p id="jc-modal-problem" class="text-slate-700 font-medium mt-0.5"></p>
+          </div>
+        </div>
+
+        <!-- Section Navigation Tabs -->
+        <div class="flex items-center gap-2 border-b border-slate-200 pb-2">
+          <button type="button" onclick="switchJobCardTab('checklist')" id="tab-btn-checklist" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200 flex items-center gap-1.5">
+            <i data-lucide="check-square" class="w-3.5 h-3.5"></i> Inspection Checklist
+          </button>
+          <button type="button" onclick="switchJobCardTab('parts')" id="tab-btn-parts" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center gap-1.5">
+            <i data-lucide="package" class="w-3.5 h-3.5"></i> Parts & Inventory Consumed (<span id="jc-modal-parts-count">0</span>)
+          </button>
+          <button type="button" onclick="switchJobCardTab('details')" id="tab-btn-details" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center gap-1.5">
+            <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Notes & Work Report
+          </button>
+        </div>
+
+        <!-- Tab 1: Checklist Section -->
+        <div id="jc-tab-checklist" class="space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-bold text-slate-900">Vehicle Service Checklist</h3>
+              <p class="text-xs text-slate-500">Record results for each item: Pass, Fail, Repaired, Replaced, or N/A.</p>
+            </div>
+            <div class="flex items-center gap-2 text-xs">
+              <span id="jc-checklist-progress-text" class="font-semibold text-slate-600">0 inspected</span>
+            </div>
+          </div>
+          <div id="jc-checklist-container" class="space-y-4">
+            <!-- Dynamic checklist sections rendered here -->
+          </div>
+        </div>
+
+        <!-- Tab 2: Parts & Inventory Section -->
+        <div id="jc-tab-parts" class="space-y-4 hidden">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-bold text-slate-900">Consumed Parts & Inventory Ledger</h3>
+              <p class="text-xs text-slate-500">Allocated parts are automatically deducted from inventory. Removing returns stock to the warehouse.</p>
+            </div>
+          </div>
+
+          <!-- Add Part Form -->
+          <div class="bg-blue-50/70 border border-blue-200/80 rounded-xl p-4 space-y-3">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-blue-900 flex items-center gap-1.5">
+              <i data-lucide="plus-circle" class="w-4 h-4 text-blue-600"></i> Add Part from Inventory
+            </h4>
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+              <div class="sm:col-span-5">
+                <label for="jc-part-select" class="block text-[11px] font-semibold text-slate-700 mb-1">Select Inventory Part</label>
+                <select id="jc-part-select" onchange="onInventoryPartSelectChange()" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800 focus:border-blue-600 focus:outline-none">
+                  <option value="">-- Choose part from stock --</option>
+                </select>
+                <span id="jc-part-stock-hint" class="block text-[10px] text-slate-500 mt-1"></span>
+              </div>
+              <div class="sm:col-span-2">
+                <label for="jc-part-quantity" class="block text-[11px] font-semibold text-slate-700 mb-1">Quantity</label>
+                <input id="jc-part-quantity" type="number" min="1" value="1" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800 focus:border-blue-600 focus:outline-none">
+              </div>
+              <div class="sm:col-span-3">
+                <label for="jc-part-checklist-link" class="block text-[11px] font-semibold text-slate-700 mb-1">Checklist Item (Optional)</label>
+                <select id="jc-part-checklist-link" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800 focus:border-blue-600 focus:outline-none">
+                  <option value="">-- General Job Card Part --</option>
+                </select>
+              </div>
+              <div class="sm:col-span-2">
+                <button type="button" onclick="submitAllocateJobCardPart()" id="btn-allocate-part" class="w-full rounded-lg bg-blue-700 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-800 transition flex items-center justify-center gap-1">
+                  <i data-lucide="check" class="w-3.5 h-3.5"></i> Add Part
+                </button>
+              </div>
+            </div>
+            <div>
+              <input id="jc-part-notes" type="text" placeholder="Allocation notes or replacement rationale (optional)" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-800 focus:border-blue-600 focus:outline-none">
+            </div>
+          </div>
+
+          <!-- Allocated Parts Table / List -->
+          <div class="space-y-2">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700">Parts Currently Allocated to this Job Card</h4>
+            <div id="jc-parts-list" class="divide-y divide-slate-100 rounded-lg border border-slate-200 bg-white">
+              <!-- Dynamically populated parts -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 3: Work Details & Template Fields -->
+        <div id="jc-tab-details" class="space-y-4 hidden">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label for="jc-diagnosis" class="block text-xs font-semibold text-slate-700 mb-1">Diagnosis & Findings</label>
+              <textarea id="jc-diagnosis" rows="3" placeholder="Mechanic diagnosis and observations..." class="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-xs text-slate-800 focus:border-blue-600 focus:outline-none"></textarea>
+            </div>
+            <div>
+              <label for="jc-work-performed" class="block text-xs font-semibold text-slate-700 mb-1">Work Performed</label>
+              <textarea id="jc-work-performed" rows="3" placeholder="Summary of maintenance, repairs, or replacements carried out..." class="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-xs text-slate-800 focus:border-blue-600 focus:outline-none"></textarea>
+            </div>
+          </div>
+          <div>
+            <label for="jc-general-notes" class="block text-xs font-semibold text-slate-700 mb-1">General Job Card Notes</label>
+            <textarea id="jc-general-notes" rows="2" placeholder="Additional notes or recommendations for next inspection..." class="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-xs text-slate-800 focus:border-blue-600 focus:outline-none"></textarea>
+          </div>
+          <!-- Template Fields Container -->
+          <div id="jc-template-fields-container" class="space-y-3 pt-2 border-t border-slate-200">
+            <!-- Custom template fields rendered here -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer (Save & Close Actions) -->
+      <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 bg-slate-50 px-5 py-3.5 shrink-0">
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="closeJobCardModal()" class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition">
+            Close
+          </button>
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="saveJobCardProgress('in_progress')" id="btn-save-progress" class="rounded-lg border border-blue-300 bg-blue-50 px-4 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition flex items-center gap-1.5">
+            <i data-lucide="save" class="w-3.5 h-3.5"></i> Save Progress
+          </button>
+          <button type="button" onclick="saveJobCardProgress('completed')" id="btn-save-complete" class="rounded-lg bg-emerald-600 px-5 py-2 text-xs font-semibold text-white hover:bg-emerald-700 shadow-xs transition flex items-center gap-1.5">
+            <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Save & Complete Job Card
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
   <div id="toast" class="pointer-events-none fixed bottom-5 right-5 z-[60] flex max-w-sm translate-y-6 items-start gap-3 rounded-lg bg-slate-900 p-4 text-white opacity-0 shadow-xl transition-all">
     <i id="toast-icon" data-lucide="check-circle" class="mt-0.5 h-4 w-4 shrink-0 text-emerald-400"></i>
     <div>
@@ -179,12 +404,31 @@
 
   <script>
     let maintenanceTickets = [];
+    let maintenanceAlerts = [];
+    let maintenanceDriverReports = [];
     let fleetVehicles = [];
     let fleetVehiclesLoaded = false;
+    let allJobCards = [];
+    let activeJobCard = null;
+    let inventoryParts = [];
+    let maintenanceCardsPerPage = 6;
+    const maintenancePageNumbers = {
+      driverReports: 1,
+      tickets: 1,
+      alerts: 1,
+      jobCards: 1
+    };
 
     document.addEventListener('DOMContentLoaded', async () => {
       lucide.createIcons();
       await Promise.all([loadFleetVehicles(), loadMaintenanceData()]);
+
+      const pageUrl = new URL(window.location.href);
+      if (pageUrl.searchParams.get('create-ticket') === '1') {
+        pageUrl.searchParams.delete('create-ticket');
+        window.history.replaceState(null, '', `${pageUrl.pathname}${pageUrl.search}${pageUrl.hash}`);
+        await openTicketModal();
+      }
     });
 
     async function fetchJson(url, options = {}) {
@@ -209,11 +453,13 @@
 
     async function loadMaintenanceData() {
       try {
-        const [overview, tickets, alerts, jobCards] = await Promise.all([
+        const [overview, tickets, alerts, jobCards, driverReports, partsResponse] = await Promise.all([
           fetchJson('/api/maintenance/overview'),
           fetchJson('/api/maintenance/tickets'),
           fetchJson('/api/maintenance/alerts'),
-          fetchJson('/api/maintenance/job-cards')
+          fetchJson('/api/maintenance/job-cards'),
+          fetchJson('/api/maintenance/driver-checklist-submissions'),
+          fetchJson('/api/inventory/parts')
         ]);
 
         document.getElementById('maintenance-open').textContent = overview.open_tickets ?? 0;
@@ -221,16 +467,62 @@
         document.getElementById('maintenance-jobcards').textContent = overview.active_job_cards ?? 0;
         document.getElementById('maintenance-alerts').textContent = overview.active_alerts ?? 0;
         maintenanceTickets = tickets.data || [];
+        maintenanceAlerts = alerts.data || [];
+        allJobCards = jobCards.data || [];
+        maintenanceDriverReports = driverReports.data || [];
+        inventoryParts = partsResponse.data || [];
 
         renderTicketList();
-        renderAlertList(alerts.data || []);
-        renderJobCardList(jobCards.data || []);
+        renderAlertList(maintenanceAlerts);
+        renderJobCardList(allJobCards);
+        renderDriverChecklistReports(maintenanceDriverReports);
       } catch (error) {
         document.getElementById('ticket-list').textContent = 'Could not load maintenance tickets.';
         document.getElementById('alert-list').textContent = 'Could not load maintenance alerts.';
         document.getElementById('job-card-list').textContent = 'Could not load job cards.';
+        document.getElementById('driver-checklist-list').textContent = 'Could not load daily driver reports.';
         showToast('Maintenance load failed', error.message, true);
       }
+    }
+
+    function paginateMaintenanceCards(listKey, items) {
+      const totalPages = Math.max(1, Math.ceil(items.length / maintenanceCardsPerPage));
+      const page = Math.min(Math.max(maintenancePageNumbers[listKey], 1), totalPages);
+      const firstIndex = items.length ? (page - 1) * maintenanceCardsPerPage : 0;
+      const lastIndex = Math.min(firstIndex + maintenanceCardsPerPage, items.length);
+      maintenancePageNumbers[listKey] = page;
+
+      const controls = document.querySelector(`[data-card-pagination="${listKey}"]`);
+      controls.querySelector('[data-card-range]').textContent = items.length
+        ? `Showing ${firstIndex + 1}-${lastIndex} of ${items.length}`
+        : 'Showing 0 of 0';
+      controls.querySelector('[data-card-page]').textContent = `Page ${page} of ${totalPages}`;
+      controls.querySelector('[data-page-action="previous"]').disabled = page <= 1;
+      controls.querySelector('[data-page-action="next"]').disabled = page >= totalPages;
+
+      return items.slice(firstIndex, lastIndex);
+    }
+
+    function changeMaintenancePage(listKey, pageDelta) {
+      maintenancePageNumbers[listKey] += pageDelta;
+      const renderers = {
+        driverReports: () => renderDriverChecklistReports(maintenanceDriverReports),
+        tickets: renderTicketList,
+        alerts: () => renderAlertList(maintenanceAlerts),
+        jobCards: () => renderJobCardList(allJobCards)
+      };
+      renderers[listKey]?.();
+    }
+
+    function setMaintenancePageSize(pageSize) {
+      maintenanceCardsPerPage = Number(pageSize);
+      Object.keys(maintenancePageNumbers).forEach(listKey => {
+        maintenancePageNumbers[listKey] = 1;
+      });
+      renderTicketList();
+      renderDriverChecklistReports(maintenanceDriverReports);
+      renderAlertList(maintenanceAlerts);
+      renderJobCardList(allJobCards);
     }
 
     function createElement(tagName, className, text = '') {
@@ -255,13 +547,14 @@
       const filteredTickets = maintenanceTickets.filter(ticket => filter === 'all' || ticket.status === filter);
       list.innerHTML = '';
       document.getElementById('ticket-result-count').textContent = `${filteredTickets.length} tickets`;
+      const visibleTickets = paginateMaintenanceCards('tickets', filteredTickets);
 
       if (!filteredTickets.length) {
         list.append(createElement('p', 'text-sm text-slate-500', 'No tickets match this filter.'));
         return;
       }
 
-      filteredTickets.forEach(ticket => {
+      visibleTickets.forEach(ticket => {
         const item = createElement('article', 'rounded-lg border border-slate-200 bg-white p-4');
         const header = createElement('div', 'flex flex-wrap items-start justify-between gap-3');
         const titleGroup = createElement('div', 'min-w-0');
@@ -281,9 +574,43 @@
           createActionButton('Delete', 'rounded-md border border-rose-200 px-2.5 py-1.5 text-[10px] font-semibold text-rose-700 hover:bg-rose-50', () => deleteTicket(ticket.id))
         );
 
+        const linkedJobCards = Number(ticket.maintenance_job_cards_count || 0);
+        if (linkedJobCards > 0) {
+          actions.append(createElement('span', 'self-center text-[10px] font-semibold text-teal-700', `${linkedJobCards} job card${linkedJobCards === 1 ? '' : 's'} linked`));
+        } else if (ticket.status !== 'closed') {
+          const createJobCardButton = createActionButton(
+            'Create job card',
+            'rounded-md bg-teal-700 px-2.5 py-1.5 text-[10px] font-semibold text-white hover:bg-teal-800 disabled:cursor-wait disabled:opacity-60',
+            () => createJobCardFromTicket(ticket, createJobCardButton)
+          );
+          actions.append(createJobCardButton);
+        }
+
         item.append(header, actions);
         list.append(item);
       });
+    }
+
+    async function createJobCardFromTicket(ticket, button) {
+      button.disabled = true;
+      try {
+        const result = await fetchJson('/api/maintenance/job-cards', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            vehicle_id: ticket.vehicle_id,
+            maintenance_ticket_id: ticket.id,
+            reported_problem: ticket.description || ticket.title || 'Maintenance ticket work'
+          })
+        });
+        showToast('Job card created', `${result.data.job_card_number} linked with its mechanic checklist.`);
+        await loadMaintenanceData();
+        document.getElementById('job-card-list').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } catch (error) {
+        showToast('Job card creation failed', error.message, true);
+      } finally {
+        button.disabled = false;
+      }
     }
 
     function renderAlertList(alerts) {
@@ -294,18 +621,111 @@
         return;
       }
 
-      alerts.forEach(alert => {
-        const item = createElement('article', 'rounded-lg border border-slate-200 bg-white p-4');
+      paginateMaintenanceCards('alerts', alerts).forEach(alert => {
+        const item = createElement('article', 'rounded-lg border border-slate-200 bg-white p-4 space-y-3');
+
+        // Header row: title + severity badge
         const header = createElement('div', 'flex items-start justify-between gap-3');
+        const severityColors = {
+          critical: 'bg-red-100 text-red-800',
+          high:     'bg-rose-50 text-rose-700',
+          normal:   'bg-amber-50 text-amber-700',
+          low:      'bg-slate-100 text-slate-600',
+        };
+        const severityClass = severityColors[alert.severity] || severityColors.normal;
         header.append(
           createElement('h3', 'text-sm font-semibold text-slate-900', alert.title || alert.alert_type || 'Maintenance alert'),
-          createElement('span', 'rounded-full bg-rose-50 px-2 py-1 text-[10px] font-semibold uppercase text-rose-700', alert.severity || 'normal')
+          createElement('span', `rounded-full px-2 py-1 text-[10px] font-semibold uppercase ${severityClass}`, alert.severity || 'normal')
+        );
+
+        // Body: message + vehicle
+        const body = createElement('div', 'space-y-1');
+        body.append(
+          createElement('p', 'text-xs text-slate-600', alert.message || alert.alert_type || 'No alert details.'),
+          createElement('p', 'text-[11px] font-medium text-slate-500', `${alert.vehicle?.plate_number || 'Unknown vehicle'} · ${alert.alert_type || ''}`)
+        );
+
+        // Status badge
+        const statusColors = {
+          active:       'bg-rose-100 text-rose-700',
+          acknowledged: 'bg-amber-100 text-amber-700',
+          resolved:     'bg-emerald-100 text-emerald-800',
+        };
+        const statusClass = statusColors[alert.status] || statusColors.active;
+        const statusBadge = createElement('span', `inline-block rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${statusClass}`, alert.status || 'active');
+
+        // Action buttons — only show relevant transitions
+        const actions = createElement('div', 'flex flex-wrap items-center gap-2 border-t border-slate-100 pt-2.5');
+        actions.append(statusBadge);
+
+        if (alert.status === 'active') {
+          actions.append(
+            createActionButton('Acknowledge', 'rounded-md bg-amber-50 border border-amber-200 px-2.5 py-1.5 text-[10px] font-semibold text-amber-700 hover:bg-amber-100', () => updateAlertStatus(alert.id, 'acknowledged', item)),
+            createActionButton('Resolve', 'rounded-md bg-emerald-600 px-2.5 py-1.5 text-[10px] font-semibold text-white hover:bg-emerald-700', () => updateAlertStatus(alert.id, 'resolved', item))
+          );
+        } else if (alert.status === 'acknowledged') {
+          actions.append(
+            createActionButton('Resolve', 'rounded-md bg-emerald-600 px-2.5 py-1.5 text-[10px] font-semibold text-white hover:bg-emerald-700', () => updateAlertStatus(alert.id, 'resolved', item))
+          );
+        } else {
+          // resolved — read-only, just show when it was resolved
+          if (alert.resolved_at) {
+            actions.append(createElement('span', 'text-[10px] text-slate-400', `Resolved ${new Date(alert.resolved_at).toLocaleDateString()}`));
+          }
+        }
+
+        item.append(header, body, actions);
+        list.append(item);
+      });
+    }
+
+    async function updateAlertStatus(alertId, status, itemEl) {
+      try {
+        await fetchJson(`/api/maintenance/alerts/${alertId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status })
+        });
+        const label = status === 'acknowledged' ? 'Alert acknowledged' : 'Alert resolved';
+        showToast(label, `Alert marked as ${status.replace('_', ' ')}.`);
+        await loadMaintenanceData();
+      } catch (error) {
+        showToast('Update failed', error.message, true);
+      }
+    }
+
+    function renderDriverChecklistReports(reports) {
+      const list = document.getElementById('driver-checklist-list');
+      list.innerHTML = '';
+      document.getElementById('driver-checklist-result-count').textContent = `${reports.length} reports`;
+
+      if (!reports.length) {
+        list.append(createElement('p', 'text-sm text-slate-500', 'No daily driver reports submitted.'));
+        return;
+      }
+
+      paginateMaintenanceCards('driverReports', reports).forEach(report => {
+        const item = createElement('article', 'rounded-lg border border-slate-200 bg-white p-4');
+        const header = createElement('div', 'flex flex-wrap items-start justify-between gap-3');
+        header.append(
+          createElement('h3', 'text-sm font-semibold text-slate-900', `${report.vehicle?.plate_number || 'Unknown vehicle'} · ${report.submission_date || ''}`),
+          createElement('span', 'rounded-full bg-slate-100 px-2 py-1 text-[10px] font-semibold uppercase text-slate-700', report.vehicle_status || 'No status')
         );
         item.append(
           header,
-          createElement('p', 'mt-2 text-xs text-slate-600', alert.message || alert.alert_type || 'No alert details.'),
-          createElement('p', 'mt-2 text-[11px] font-medium text-slate-500', `${alert.vehicle?.plate_number || 'Unknown vehicle'} · ${alert.status || 'active'}`)
+          createElement('p', 'mt-2 text-[11px] text-slate-500', `${report.driver_external_user_id} · ${Number(report.odometer || 0).toLocaleString()} km`)
         );
+
+        if (report.defects) item.append(createElement('p', 'mt-2 text-xs text-rose-700', `Defects: ${report.defects}`));
+        if (report.action_taken) item.append(createElement('p', 'mt-1 text-xs text-slate-600', `Action: ${report.action_taken}`));
+
+        const failedItems = (report.items || []).filter(checklistItem => checklistItem.result === 'fail');
+        if (failedItems.length) {
+          const issueList = createElement('ul', 'mt-2 list-disc space-y-1 pl-5 text-xs text-rose-700');
+          failedItems.forEach(checklistItem => issueList.append(createElement('li', '', checklistItem.label)));
+          item.append(issueList);
+        }
+
         list.append(item);
       });
     }
@@ -318,20 +738,632 @@
         return;
       }
 
-      jobCards.forEach(jobCard => {
-        const item = createElement('article', 'rounded-lg border border-slate-200 bg-white p-4');
+      paginateMaintenanceCards('jobCards', jobCards).forEach(jobCard => {
+        const item = createElement('article', 'rounded-xl border border-slate-200 bg-white p-4 space-y-3.5 shadow-2xs hover:shadow-xs transition');
+
+        // Header: number + status badge + plate
+        const jcStatusColors = {
+          open:        'bg-teal-50 text-teal-700 border border-teal-200',
+          in_progress: 'bg-amber-50 text-amber-700 border border-amber-200',
+          completed:   'bg-emerald-50 text-emerald-700 border border-emerald-200',
+        };
+        const jcStatusClass = jcStatusColors[jobCard.status] || jcStatusColors.open;
         const header = createElement('div', 'flex items-start justify-between gap-3');
+        const titleArea = createElement('div', 'min-w-0');
+        titleArea.append(
+          createElement('h3', 'text-sm font-bold text-slate-900', jobCard.job_card_number || `Job card #${jobCard.id}`),
+          createElement('p', 'text-xs font-semibold text-slate-600 mt-0.5', `${jobCard.vehicle?.plate_number || 'Unknown vehicle'} ${jobCard.vehicle?.device_name ? '· ' + jobCard.vehicle.device_name : ''}`)
+        );
         header.append(
-          createElement('h3', 'text-sm font-semibold text-slate-900', jobCard.job_card_number || `Job card #${jobCard.id}`),
-          createElement('span', 'rounded-full bg-teal-50 px-2 py-1 text-[10px] font-semibold uppercase text-teal-700', jobCard.status || 'open')
+          titleArea,
+          createElement('span', `rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${jcStatusClass}`, (jobCard.status || 'open').replace('_', ' '))
         );
-        item.append(
-          header,
-          createElement('p', 'mt-2 text-xs text-slate-600', jobCard.reported_problem || jobCard.diagnosis || jobCard.work_performed || 'No job details entered.'),
-          createElement('p', 'mt-2 text-[11px] font-medium text-slate-500', `${jobCard.vehicle?.plate_number || 'Unknown vehicle'} · ${jobCard.maintenance_ticket?.ticket_number || 'No linked ticket'}`)
+
+        // Problem & Diagnosis description
+        const details = createElement('div', 'space-y-1 text-xs text-slate-600');
+        if (jobCard.reported_problem) {
+          details.append(createElement('p', 'line-clamp-2', `⚠️ ${jobCard.reported_problem}`));
+        } else if (jobCard.diagnosis) {
+          details.append(createElement('p', 'line-clamp-2', `🔍 ${jobCard.diagnosis}`));
+        } else if (jobCard.work_performed) {
+          details.append(createElement('p', 'line-clamp-2', `🔧 ${jobCard.work_performed}`));
+        } else {
+          details.append(createElement('p', 'italic text-slate-400', 'No job notes recorded yet.'));
+        }
+
+        // Summary Badges (Inspection & Parts)
+        let totalChecklistItems = 0;
+        let checkedCount = 0;
+        let repairedCount = 0;
+        let replacedCount = 0;
+        let failCount = 0;
+
+        (jobCard.job_card_checklists || []).forEach(cl => {
+          (cl.job_card_checklist_items || []).forEach(ci => {
+            totalChecklistItems++;
+            if (ci.result && ci.result !== 'unchecked') checkedCount++;
+            if (ci.result === 'repaired') repairedCount++;
+            if (ci.result === 'replaced') replacedCount++;
+            if (ci.result === 'fail') failCount++;
+          });
+        });
+
+        const partsCount = (jobCard.job_card_parts || []).length;
+
+        const summaryRow = createElement('div', 'flex flex-wrap gap-1.5 pt-1');
+        if (totalChecklistItems > 0) {
+          const isAllChecked = checkedCount === totalChecklistItems;
+          summaryRow.append(
+            createElement('span', `inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium ${isAllChecked ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'}`, `📋 ${checkedCount}/${totalChecklistItems} items`)
+          );
+        }
+        if (replacedCount > 0) {
+          summaryRow.append(createElement('span', 'inline-flex items-center gap-1 rounded-md bg-purple-50 px-2 py-1 text-[11px] font-semibold text-purple-700', `🔄 ${replacedCount} replaced`));
+        }
+        if (repairedCount > 0) {
+          summaryRow.append(createElement('span', 'inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-1 text-[11px] font-semibold text-blue-700', `🛠️ ${repairedCount} repaired`));
+        }
+        if (failCount > 0) {
+          summaryRow.append(createElement('span', 'inline-flex items-center gap-1 rounded-md bg-rose-50 px-2 py-1 text-[11px] font-semibold text-rose-700', `⚠️ ${failCount} fail`));
+        }
+        if (partsCount > 0) {
+          summaryRow.append(createElement('span', 'inline-flex items-center gap-1 rounded-md bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-700', `📦 ${partsCount} parts used`));
+        }
+
+        // Action Buttons Row
+        const actions = createElement('div', 'flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3');
+        const openChecklistBtn = createActionButton(
+          'Inspect Checklist & Parts',
+          'rounded-lg bg-teal-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-800 shadow-2xs transition flex items-center gap-1.5',
+          () => openJobCardModal(jobCard.id)
         );
+        openChecklistBtn.innerHTML = '<i data-lucide="clipboard-check" class="w-3.5 h-3.5 inline"></i> Inspect Checklist & Parts';
+
+        const statusGroup = createElement('div', 'flex items-center gap-1.5');
+        if (jobCard.status !== 'completed') {
+          if (jobCard.status === 'open') {
+            statusGroup.append(
+              createActionButton('Start Work', 'rounded-md bg-amber-50 border border-amber-200 px-2.5 py-1.5 text-[10px] font-semibold text-amber-700 hover:bg-amber-100', () => updateJobCardStatus(jobCard.id, 'in_progress'))
+            );
+          }
+          statusGroup.append(
+            createActionButton('Mark Complete', 'rounded-md bg-emerald-600 px-2.5 py-1.5 text-[10px] font-semibold text-white hover:bg-emerald-700', () => updateJobCardStatus(jobCard.id, 'completed'))
+          );
+        } else {
+          statusGroup.append(
+            createActionButton('Reopen', 'rounded-md bg-slate-100 px-2.5 py-1.5 text-[10px] font-semibold text-slate-700 hover:bg-slate-200', () => updateJobCardStatus(jobCard.id, 'open'))
+          );
+        }
+
+        actions.append(openChecklistBtn, statusGroup);
+        item.append(header, details, summaryRow, actions);
         list.append(item);
       });
+      lucide.createIcons();
+    }
+
+    async function openJobCardModal(jobCardId) {
+      try {
+        const result = await fetchJson(`/api/maintenance/job-cards/${jobCardId}`);
+        activeJobCard = result.data;
+      } catch (err) {
+        showToast('Error', 'Could not load job card: ' + err.message, true);
+        return;
+      }
+
+      const modal = document.getElementById('job-card-modal');
+      document.getElementById('job-card-modal-title').textContent = activeJobCard.job_card_number || `Job Card #${activeJobCard.id}`;
+      document.getElementById('job-card-modal-subtitle').textContent = `Assigned to ${activeJobCard.vehicle?.plate_number || 'Vehicle'} · Ticket: ${activeJobCard.maintenance_ticket?.ticket_number || 'None'}`;
+
+      const statusBadge = document.getElementById('job-card-modal-status-badge');
+      const jcStatusColors = {
+        open:        'bg-teal-50 text-teal-700 border border-teal-200',
+        in_progress: 'bg-amber-50 text-amber-700 border border-amber-200',
+        completed:   'bg-emerald-50 text-emerald-700 border border-emerald-200',
+      };
+      statusBadge.className = `rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${jcStatusColors[activeJobCard.status] || jcStatusColors.open}`;
+      statusBadge.textContent = (activeJobCard.status || 'open').replace('_', ' ');
+
+      // Meta banner
+      document.getElementById('jc-modal-vehicle').textContent = `${activeJobCard.vehicle?.plate_number || '--'} (${activeJobCard.vehicle?.device_name || 'Vehicle'})`;
+      document.getElementById('jc-modal-odometer').textContent = activeJobCard.mileage_at_service ? `${Number(activeJobCard.mileage_at_service).toLocaleString()} km` : 'Not recorded';
+      document.getElementById('jc-modal-mechanic').textContent = activeJobCard.mechanic_external_user_id || 'Unassigned';
+      document.getElementById('jc-modal-ticket').textContent = activeJobCard.maintenance_ticket?.ticket_number || 'Direct job card';
+      document.getElementById('jc-modal-problem').textContent = activeJobCard.reported_problem || 'No specific problem statement entered.';
+
+      // Details tab inputs
+      document.getElementById('jc-diagnosis').value = activeJobCard.diagnosis || '';
+      document.getElementById('jc-work-performed').value = activeJobCard.work_performed || '';
+      document.getElementById('jc-general-notes').value = activeJobCard.notes || '';
+
+      renderJobCardChecklistContent();
+      renderJobCardPartsContent();
+      renderJobCardTemplateFieldsContent();
+
+      switchJobCardTab('checklist');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      lucide.createIcons();
+    }
+
+    function closeJobCardModal() {
+      const modal = document.getElementById('job-card-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      activeJobCard = null;
+    }
+
+    function switchJobCardTab(tabName) {
+      const tabs = ['checklist', 'parts', 'details'];
+      tabs.forEach(t => {
+        const btn = document.getElementById(`tab-btn-${t}`);
+        const panel = document.getElementById(`jc-tab-${t}`);
+        if (t === tabName) {
+          btn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200 flex items-center gap-1.5 shadow-2xs';
+          panel.classList.remove('hidden');
+        } else {
+          btn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center gap-1.5 transition';
+          panel.classList.add('hidden');
+        }
+      });
+      lucide.createIcons();
+    }
+
+    function renderJobCardChecklistContent() {
+      const container = document.getElementById('jc-checklist-container');
+      container.innerHTML = '';
+
+      let totalCount = 0;
+      let inspectedCount = 0;
+
+      const checklists = activeJobCard.job_card_checklists || [];
+      if (!checklists.length) {
+        container.append(
+          createElement('p', 'text-sm text-slate-500', 'No checklist is attached to this job card yet.'),
+          createActionButton(
+            'Attach mechanic checklist',
+            'rounded-md bg-teal-700 px-3 py-2 text-xs font-semibold text-white hover:bg-teal-800',
+            event => attachMechanicChecklist(activeJobCard.id, event.currentTarget)
+          )
+        );
+        document.getElementById('jc-checklist-progress-text').textContent = '0 items';
+        return;
+      }
+
+      checklists.forEach(cl => {
+        const sectionBox = createElement('div', 'rounded-xl border border-slate-200 bg-slate-50/50 p-4 space-y-3');
+        sectionBox.append(createElement('h4', 'text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-1.5', `📋 ${cl.template_name}`));
+
+        let currentSectionTitle = null;
+        let currentSectionGroup = null;
+
+        (cl.job_card_checklist_items || []).forEach(ci => {
+          totalCount++;
+          if (ci.result && ci.result !== 'unchecked') inspectedCount++;
+
+          const sectionTitle = ci.section_title || 'General Items';
+          if (sectionTitle !== currentSectionTitle) {
+            currentSectionTitle = sectionTitle;
+            currentSectionGroup = createElement('div', 'space-y-2 mt-2');
+            currentSectionGroup.append(createElement('p', 'text-[11px] font-bold uppercase tracking-wide text-slate-500 pt-1 border-t border-slate-200/60', currentSectionTitle));
+            sectionBox.append(currentSectionGroup);
+          }
+
+          const row = createElement('div', 'rounded-lg border border-slate-200 bg-white p-3 space-y-2.5 transition hover:border-slate-300');
+          
+          // Header of item: Label + required
+          const itemHeader = createElement('div', 'flex flex-wrap items-start justify-between gap-2');
+          const itemTitle = createElement('div', 'min-w-0');
+          itemTitle.append(
+            createElement('p', 'text-xs font-bold text-slate-800', `${ci.sequence ? '#' + ci.sequence + ' ' : ''}${ci.label} ${ci.required ? '<span class="text-rose-500">*</span>' : ''}`)
+          );
+          if (ci.description) {
+            itemTitle.append(createElement('p', 'text-[11px] text-slate-500 mt-0.5', ci.description));
+          }
+          itemHeader.append(itemTitle);
+
+          // Outcome Selector Pills: Pass, Fail, Repaired, Replaced, N/A, Unchecked
+          const outcomeSelector = createElement('div', 'flex flex-wrap items-center gap-1.5');
+          const outcomeDefs = [
+            { key: 'pass', label: 'Pass', color: 'bg-emerald-600 text-white', inactive: 'bg-slate-100 text-slate-600 hover:bg-emerald-50 hover:text-emerald-700' },
+            { key: 'fail', label: 'Fail', color: 'bg-rose-600 text-white', inactive: 'bg-slate-100 text-slate-600 hover:bg-rose-50 hover:text-rose-700' },
+            { key: 'repaired', label: 'Repaired', color: 'bg-blue-600 text-white', inactive: 'bg-slate-100 text-slate-600 hover:bg-blue-50 hover:text-blue-700' },
+            { key: 'replaced', label: 'Replaced', color: 'bg-purple-600 text-white', inactive: 'bg-slate-100 text-slate-600 hover:bg-purple-50 hover:text-purple-700' },
+            { key: 'na', label: 'N/A', color: 'bg-slate-700 text-white', inactive: 'bg-slate-100 text-slate-600 hover:bg-slate-200' },
+          ];
+
+          outcomeDefs.forEach(o => {
+            const isSelected = ci.result === o.key;
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = `px-2.5 py-1 rounded-md text-[10px] font-bold uppercase transition ${isSelected ? o.color + ' shadow-2xs' : o.inactive}`;
+            btn.textContent = o.label;
+            btn.id = `ci-btn-${ci.id}-${o.key}`;
+            btn.addEventListener('click', () => setChecklistItemResult(ci.id, o.key));
+            outcomeSelector.append(btn);
+          });
+          itemHeader.append(outcomeSelector);
+
+          // Details row: Replacement info & Part link
+          const itemFooter = createElement('div', 'space-y-1.5 pt-1');
+          
+          // Show linked parts if this item was replaced using inventory
+          const linkedParts = (ci.job_card_parts || []);
+          if (ci.result === 'replaced' || linkedParts.length > 0) {
+            const partInfoBox = createElement('div', 'flex flex-wrap items-center justify-between gap-2 bg-purple-50/70 border border-purple-200/80 rounded-md p-2 text-xs text-purple-900');
+            const partText = createElement('div', 'flex items-center gap-1.5');
+            partText.innerHTML = `<i data-lucide="package" class="w-3.5 h-3.5 text-purple-600 inline"></i> <span class="font-bold">Replaced Component:</span> ${linkedParts.length ? linkedParts.map(lp => `${lp.inventory_part?.name || 'Part'} (${lp.quantity} pcs)`).join(', ') : 'No part recorded yet.'}`;
+            
+            const pickPartBtn = createActionButton(
+              '+ Pick Part from Stock',
+              'px-2 py-1 rounded-md bg-purple-600 text-white text-[10px] font-bold hover:bg-purple-700 transition flex items-center gap-1',
+              () => {
+                switchJobCardTab('parts');
+                const linkSelect = document.getElementById('jc-part-checklist-link');
+                if (linkSelect) linkSelect.value = ci.id;
+                document.getElementById('jc-part-notes').value = `Replaced for checklist item: ${ci.label}`;
+              }
+            );
+            partInfoBox.append(partText, pickPartBtn);
+            itemFooter.append(partInfoBox);
+          } else if (ci.result === 'repaired') {
+            const repairedBox = createElement('div', 'flex items-center gap-1.5 bg-blue-50/60 border border-blue-200/80 rounded-md px-2.5 py-1.5 text-xs text-blue-900 font-medium');
+            repairedBox.innerHTML = '<i data-lucide="wrench" class="w-3.5 h-3.5 text-blue-600 inline"></i> Repaired / Fixed without new replacement part.';
+            itemFooter.append(repairedBox);
+          }
+
+          // Item notes input
+          const notesInput = document.createElement('input');
+          notesInput.type = 'text';
+          notesInput.id = `ci-notes-${ci.id}`;
+          notesInput.value = ci.notes || '';
+          notesInput.placeholder = 'Inspection observations or notes (optional)...';
+          notesInput.className = 'w-full rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:border-teal-600 focus:outline-none';
+          notesInput.addEventListener('input', (e) => { ci.notes = e.target.value; });
+          itemFooter.append(notesInput);
+
+          row.append(itemHeader, itemFooter);
+          if (currentSectionGroup) {
+            currentSectionGroup.append(row);
+          } else {
+            sectionBox.append(row);
+          }
+        });
+
+        container.append(sectionBox);
+      });
+
+      document.getElementById('jc-checklist-progress-text').textContent = `${inspectedCount} of ${totalCount} inspected`;
+      lucide.createIcons();
+    }
+
+    async function attachMechanicChecklist(jobCardId, button) {
+      button.disabled = true;
+      try {
+        const result = await fetchJson(`/api/maintenance/job-cards/${jobCardId}/checklists`, { method: 'POST' });
+        activeJobCard = result.data;
+        renderJobCardChecklistContent();
+        renderJobCardPartsContent();
+        renderJobCardTemplateFieldsContent();
+        showToast('Checklist attached', 'The mechanic service checklist is ready to inspect.');
+        await loadMaintenanceData();
+      } catch (error) {
+        showToast('Checklist attachment failed', error.message, true);
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    function setChecklistItemResult(itemId, result) {
+      if (!activeJobCard) return;
+      (activeJobCard.job_card_checklists || []).forEach(cl => {
+        (cl.job_card_checklist_items || []).forEach(ci => {
+          if (ci.id === itemId) {
+            ci.result = result;
+            ci.is_checked = ['pass', 'repaired', 'replaced'].includes(result);
+          }
+        });
+      });
+      renderJobCardChecklistContent();
+    }
+
+    function renderJobCardPartsContent() {
+      const partsList = document.getElementById('jc-parts-list');
+      partsList.innerHTML = '';
+
+      const allocatedParts = activeJobCard.job_card_parts || [];
+      document.getElementById('jc-modal-parts-count').textContent = allocatedParts.length;
+
+      if (!allocatedParts.length) {
+        partsList.append(createElement('div', 'p-4 text-center text-xs text-slate-400 italic', 'No parts currently consumed on this job card. Pick an item above to deduct from inventory.'));
+      } else {
+        allocatedParts.forEach(p => {
+          const row = createElement('div', 'flex flex-wrap items-center justify-between gap-3 p-3 text-xs');
+          const partInfo = createElement('div', 'min-w-0');
+          partInfo.append(
+            createElement('p', 'font-bold text-slate-900', `${p.inventory_part?.name || 'Inventory Part'} · Part #${p.inventory_part?.part_number || 'N/A'}`),
+            createElement('p', 'text-slate-500 mt-0.5', `Quantity Used: <span class="font-bold text-slate-800">${p.quantity} ${p.inventory_part?.unit_of_measure || 'units'}</span> ${p.notes ? '· Note: ' + p.notes : ''}`)
+          );
+
+          const returnBtn = createActionButton(
+            'Return to Stock',
+            'rounded-md border border-rose-200 bg-rose-50 px-2.5 py-1 text-[11px] font-semibold text-rose-700 hover:bg-rose-100 transition flex items-center gap-1',
+            () => returnJobCardPart(p.id)
+          );
+          returnBtn.innerHTML = '<i data-lucide="rotate-ccw" class="w-3.5 h-3.5 inline"></i> Return Stock';
+
+          row.append(partInfo, returnBtn);
+          partsList.append(row);
+        });
+      }
+
+      // Populate parts select dropdown
+      const partSelect = document.getElementById('jc-part-select');
+      partSelect.innerHTML = '<option value="">-- Choose part from stock --</option>';
+      inventoryParts.forEach(part => {
+        const option = document.createElement('option');
+        option.value = part.id;
+        option.textContent = `[${part.part_number}] ${part.name} (Stock: ${part.quantity} ${part.unit_of_measure})`;
+        option.dataset.stock = part.quantity;
+        option.dataset.unit = part.unit_of_measure;
+        if (part.quantity <= 0) {
+          option.textContent += ' - OUT OF STOCK';
+          option.disabled = true;
+        }
+        partSelect.append(option);
+      });
+
+      // Populate checklist item link dropdown
+      const itemLinkSelect = document.getElementById('jc-part-checklist-link');
+      itemLinkSelect.innerHTML = '<option value="">-- General Job Card Part --</option>';
+      (activeJobCard.job_card_checklists || []).forEach(cl => {
+        (cl.job_card_checklist_items || []).forEach(ci => {
+          const opt = document.createElement('option');
+          opt.value = ci.id;
+          opt.textContent = `${ci.label} (${ci.result || 'unchecked'})`;
+          itemLinkSelect.append(opt);
+        });
+      });
+
+      document.getElementById('jc-part-stock-hint').textContent = '';
+      document.getElementById('jc-part-quantity').value = 1;
+      document.getElementById('jc-part-notes').value = '';
+      lucide.createIcons();
+    }
+
+    function onInventoryPartSelectChange() {
+      const select = document.getElementById('jc-part-select');
+      const hint = document.getElementById('jc-part-stock-hint');
+      const qtyInput = document.getElementById('jc-part-quantity');
+      const selectedOption = select.options[select.selectedIndex];
+
+      if (!selectedOption || !selectedOption.value) {
+        hint.textContent = '';
+        qtyInput.max = '';
+        return;
+      }
+
+      const stock = Number(selectedOption.dataset.stock || 0);
+      const unit = selectedOption.dataset.unit || 'units';
+      hint.textContent = `Available in inventory: ${stock} ${unit}`;
+      qtyInput.max = stock;
+      if (Number(qtyInput.value) > stock) {
+        qtyInput.value = stock > 0 ? stock : 1;
+      }
+    }
+
+    async function submitAllocateJobCardPart() {
+      if (!activeJobCard) return;
+
+      const partSelect = document.getElementById('jc-part-select');
+      const partId = partSelect.value;
+      const quantity = Number(document.getElementById('jc-part-quantity').value);
+      const checklistItemId = document.getElementById('jc-part-checklist-link').value;
+      const notes = document.getElementById('jc-part-notes').value.trim();
+
+      if (!partId) {
+        showToast('Select a part', 'Please select an inventory item to allocate.', true);
+        return;
+      }
+
+      if (!quantity || quantity < 1) {
+        showToast('Invalid quantity', 'Please specify a quantity of 1 or more.', true);
+        return;
+      }
+
+      const btn = document.getElementById('btn-allocate-part');
+      btn.disabled = true;
+
+      try {
+        const payload = {
+          inventory_part_id: Number(partId),
+          quantity: quantity,
+          job_card_checklist_item_id: checklistItemId ? Number(checklistItemId) : null,
+          notes: notes || null
+        };
+
+        const result = await fetchJson(`/api/maintenance/job-cards/${activeJobCard.id}/parts`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        showToast('Part Allocated', result.message || 'Inventory calculated and deducted.');
+
+        // Refresh job card and inventory
+        const [freshCard, freshParts] = await Promise.all([
+          fetchJson(`/api/maintenance/job-cards/${activeJobCard.id}`),
+          fetchJson('/api/inventory/parts')
+        ]);
+        activeJobCard = freshCard.data;
+        inventoryParts = freshParts.data || [];
+
+        renderJobCardPartsContent();
+        renderJobCardChecklistContent();
+        await loadMaintenanceData();
+      } catch (err) {
+        showToast('Allocation failed', err.message, true);
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    async function returnJobCardPart(jobCardPartId) {
+      if (!activeJobCard) return;
+      if (!window.confirm('Return this part back to inventory? Warehouse stock will be restored.')) return;
+
+      try {
+        const result = await fetchJson(`/api/maintenance/job-cards/${activeJobCard.id}/parts/${jobCardPartId}`, {
+          method: 'DELETE'
+        });
+
+        showToast('Part Returned', result.message || 'Inventory stock restored.');
+
+        const [freshCard, freshParts] = await Promise.all([
+          fetchJson(`/api/maintenance/job-cards/${activeJobCard.id}`),
+          fetchJson('/api/inventory/parts')
+        ]);
+        activeJobCard = freshCard.data;
+        inventoryParts = freshParts.data || [];
+
+        renderJobCardPartsContent();
+        renderJobCardChecklistContent();
+        await loadMaintenanceData();
+      } catch (err) {
+        showToast('Return failed', err.message, true);
+      }
+    }
+
+    function renderJobCardTemplateFieldsContent() {
+      const container = document.getElementById('jc-template-fields-container');
+      container.innerHTML = '';
+
+      let hasFields = false;
+      (activeJobCard.job_card_checklists || []).forEach(cl => {
+        (cl.field_values || []).forEach(fv => {
+          hasFields = true;
+          const templateField = fv.checklist_template_field;
+          const fieldWrapper = createElement('div', 'space-y-1');
+          fieldWrapper.append(createElement('label', 'block text-[11px] font-semibold text-slate-700', fv.label || templateField?.label || 'Field'));
+
+          let control;
+          if (templateField?.field_type === 'textarea') {
+            control = document.createElement('textarea');
+            control.rows = 2;
+          } else if (templateField?.field_type === 'select') {
+            control = document.createElement('select');
+            const emptyOpt = document.createElement('option');
+            emptyOpt.value = '';
+            emptyOpt.textContent = '-- Select --';
+            control.append(emptyOpt);
+            (templateField.options || []).forEach(opt => {
+              const optionEl = document.createElement('option');
+              optionEl.value = opt.option_value;
+              optionEl.textContent = opt.label;
+              control.append(optionEl);
+            });
+          } else {
+            control = document.createElement('input');
+            control.type = templateField?.field_type === 'number' ? 'number' : templateField?.field_type === 'date' ? 'date' : 'text';
+          }
+
+          control.id = `jc-field-${fv.id}`;
+          control.value = fv.value || '';
+          control.className = 'w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-800 focus:border-blue-600 focus:outline-none';
+          control.addEventListener('input', (e) => { fv.value = e.target.value; });
+          fieldWrapper.append(control);
+          container.append(fieldWrapper);
+        });
+      });
+
+      if (!hasFields) {
+        container.append(createElement('p', 'text-xs text-slate-400 italic', 'No custom report fields configured on this checklist template.'));
+      }
+    }
+
+    async function saveJobCardProgress(targetStatus = 'in_progress') {
+      if (!activeJobCard) return;
+
+      const saveProgressBtn = document.getElementById('btn-save-progress');
+      const saveCompleteBtn = document.getElementById('btn-save-complete');
+      if (saveProgressBtn) saveProgressBtn.disabled = true;
+      if (saveCompleteBtn) saveCompleteBtn.disabled = true;
+
+      try {
+        // Collect items
+        const items = [];
+        (activeJobCard.job_card_checklists || []).forEach(cl => {
+          (cl.job_card_checklist_items || []).forEach(ci => {
+            const notesInput = document.getElementById(`ci-notes-${ci.id}`);
+            items.push({
+              id: ci.id,
+              result: ci.result || 'unchecked',
+              notes: notesInput ? notesInput.value.trim() : (ci.notes || null)
+            });
+          });
+        });
+
+        // Collect fields
+        const fieldValues = [];
+        (activeJobCard.job_card_checklists || []).forEach(cl => {
+          (cl.field_values || []).forEach(fv => {
+            const input = document.getElementById(`jc-field-${fv.id}`);
+            fieldValues.push({
+              id: fv.id,
+              value: input ? input.value : (fv.value || null)
+            });
+          });
+        });
+
+        const payload = {
+          status: targetStatus,
+          diagnosis: document.getElementById('jc-diagnosis').value.trim() || null,
+          work_performed: document.getElementById('jc-work-performed').value.trim() || null,
+          notes: document.getElementById('jc-general-notes').value.trim() || null,
+          items: items,
+          field_values: fieldValues
+        };
+
+        const result = await fetchJson(`/api/maintenance/job-cards/${activeJobCard.id}/save-checklist`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        showToast(
+          targetStatus === 'completed' ? 'Job Card Completed' : 'Progress Saved',
+          targetStatus === 'completed' ? 'Checklist finalized and marked completed.' : 'All checklist items and reports saved.'
+        );
+
+        if (targetStatus === 'completed') {
+          closeJobCardModal();
+        } else {
+          activeJobCard = result.data;
+          renderJobCardChecklistContent();
+        }
+
+        await loadMaintenanceData();
+      } catch (err) {
+        showToast('Save Failed', err.message, true);
+      } finally {
+        if (saveProgressBtn) saveProgressBtn.disabled = false;
+        if (saveCompleteBtn) saveCompleteBtn.disabled = false;
+      }
+    }
+
+    async function updateJobCardStatus(jobCardId, status) {
+      try {
+        await fetchJson(`/api/maintenance/job-cards/${jobCardId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status })
+        });
+        const labels = { open: 'Reopened', in_progress: 'Work started', completed: 'Job card completed' };
+        showToast(labels[status] || 'Updated', `Job card status changed to ${status.replace('_', ' ')}.`);
+        await loadMaintenanceData();
+      } catch (error) {
+        showToast('Status update failed', error.message, true);
+      }
     }
 
     function getVehicleLabel(vehicle) {

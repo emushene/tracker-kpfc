@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.kpfc.fleet.driver.data.api.RetrofitClient
 import com.kpfc.fleet.driver.data.model.TripDto
 import com.kpfc.fleet.driver.data.model.TripStopDto
+import com.kpfc.fleet.driver.data.model.DriverDailyChecklistDto
+import com.kpfc.fleet.driver.data.model.DriverDailyChecklistSubmissionRequest
 import com.kpfc.fleet.driver.data.model.UserDto
 import com.kpfc.fleet.driver.data.model.VehicleDto
 import com.kpfc.fleet.driver.data.repository.DriverRepository
@@ -21,6 +23,7 @@ data class DriverUiState(
     val activeTrip: TripDto? = null,
     val upcomingTrips: List<TripDto> = emptyList(),
     val assignedVehicle: VehicleDto? = null,
+    val dailyChecklist: DriverDailyChecklistDto? = null,
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val successMessage: String? = null,
@@ -182,6 +185,44 @@ class DriverViewModel(
             repository.getActiveTrip().onSuccess { trip ->
                 _uiState.update { it.copy(activeTrip = trip) }
             }
+        }
+    }
+
+    fun loadDailyChecklist() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            repository.getDailyChecklist().fold(
+                onSuccess = { checklist ->
+                    _uiState.update { it.copy(isLoading = false, dailyChecklist = checklist) }
+                },
+                onFailure = { error ->
+                    _uiState.update {
+                        it.copy(isLoading = false, errorMessage = error.message ?: "Failed to load daily checklist")
+                    }
+                }
+            )
+        }
+    }
+
+    fun submitDailyChecklist(
+        request: DriverDailyChecklistSubmissionRequest,
+        onSuccess: () -> Unit = {}
+    ) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            repository.submitDailyChecklist(request).fold(
+                onSuccess = {
+                    _uiState.update {
+                        it.copy(isLoading = false, successMessage = "Daily vehicle checklist submitted")
+                    }
+                    onSuccess()
+                },
+                onFailure = { error ->
+                    _uiState.update {
+                        it.copy(isLoading = false, errorMessage = error.message ?: "Checklist submission failed")
+                    }
+                }
+            )
         }
     }
 

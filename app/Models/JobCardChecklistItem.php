@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property int $id
@@ -27,11 +28,14 @@ class JobCardChecklistItem extends Model
 
     protected $fillable = [
         'job_card_checklist_id',
+        'item_key',
+        'section_title',
         'sequence',
         'label',
         'description',
         'required',
         'is_checked',
+        'result',
         'checked_at',
         'checked_by_external_user_id',
         'notes',
@@ -47,5 +51,10 @@ class JobCardChecklistItem extends Model
     public function jobCardChecklist(): BelongsTo
     {
         return $this->belongsTo(JobCardChecklist::class);
+    }
+
+    public function jobCardParts(): HasMany
+    {
+        return $this->hasMany(JobCardPart::class);
     }
 }

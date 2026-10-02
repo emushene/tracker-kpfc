@@ -55,6 +55,7 @@ fun DashboardScreen(
     upcomingTrips: List<TripDto>,
     isLoading: Boolean,
     onRefresh: () -> Unit,
+    onOpenDailyChecklist: () -> Unit,
     onOpenTrip: (TripDto) -> Unit,
     onStartUpcomingTrip: (TripDto) -> Unit,
     onLogout: () -> Unit
@@ -195,6 +196,16 @@ fun DashboardScreen(
                             )
                         }
                     }
+                }
+            }
+
+            item {
+                OutlinedButton(
+                    onClick = onOpenDailyChecklist,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text("Daily vehicle check")
                 }
             }
 

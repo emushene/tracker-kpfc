@@ -2,6 +2,8 @@ package com.kpfc.fleet.driver.data.api
 
 import com.kpfc.fleet.driver.data.model.ApiResponse
 import com.kpfc.fleet.driver.data.model.CompleteTripRequest
+import com.kpfc.fleet.driver.data.model.DriverDailyChecklistDto
+import com.kpfc.fleet.driver.data.model.DriverDailyChecklistSubmissionRequest
 import com.kpfc.fleet.driver.data.model.LoginRequest
 import com.kpfc.fleet.driver.data.model.ReturnToBaseRequestDto
 import com.kpfc.fleet.driver.data.model.StartTripRequest
@@ -64,4 +66,12 @@ interface DriverApiService {
         @Path("tripId") tripId: Long,
         @Body request: CompleteTripRequest
     ): Response<ApiResponse<TripDto>>
+
+    @GET("api/driver/checklists/daily")
+    suspend fun getDailyChecklist(): Response<ApiResponse<DriverDailyChecklistDto>>
+
+    @POST("api/driver/checklists/daily/submissions")
+    suspend fun submitDailyChecklist(
+        @Body request: DriverDailyChecklistSubmissionRequest
+    ): Response<ApiResponse<Any>>
 }

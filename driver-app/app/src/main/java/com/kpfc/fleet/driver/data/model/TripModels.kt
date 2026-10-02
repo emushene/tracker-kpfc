@@ -76,3 +76,55 @@ data class ReturnToBaseRequestDto(
 data class CompleteTripRequest(
     @SerializedName("ending_mileage") val endingMileage: Int
 )
+
+data class ChecklistItemDto(
+    @SerializedName("id") val id: Long,
+    @SerializedName("item_key") val itemKey: String,
+    @SerializedName("section_title") val sectionTitle: String?,
+    @SerializedName("sequence") val sequence: Int,
+    @SerializedName("label") val label: String,
+    @SerializedName("description") val description: String?,
+    @SerializedName("required") val required: Boolean
+)
+
+data class ChecklistFieldOptionDto(
+    @SerializedName("option_value") val optionValue: String,
+    @SerializedName("label") val label: String
+)
+
+data class ChecklistTemplateFieldDto(
+    @SerializedName("field_key") val fieldKey: String,
+    @SerializedName("field_group") val fieldGroup: String,
+    @SerializedName("label") val label: String,
+    @SerializedName("field_type") val fieldType: String,
+    @SerializedName("required") val required: Boolean,
+    @SerializedName("options") val options: List<ChecklistFieldOptionDto> = emptyList()
+)
+
+data class ChecklistTemplateDto(
+    @SerializedName("id") val id: Long,
+    @SerializedName("template_key") val templateKey: String,
+    @SerializedName("name") val name: String,
+    @SerializedName("frequency") val frequency: String?,
+    @SerializedName("checklist_items") val checklistItems: List<ChecklistItemDto> = emptyList(),
+    @SerializedName("fields") val fields: List<ChecklistTemplateFieldDto> = emptyList()
+)
+
+data class DriverDailyChecklistDto(
+    @SerializedName("template") val template: ChecklistTemplateDto,
+    @SerializedName("assigned_vehicle") val assignedVehicle: VehicleDto?
+)
+
+data class DriverChecklistItemAnswer(
+    @SerializedName("item_key") val itemKey: String,
+    @SerializedName("result") val result: String,
+    @SerializedName("notes") val notes: String? = null
+)
+
+data class DriverDailyChecklistSubmissionRequest(
+    @SerializedName("vehicle_id") val vehicleId: Long,
+    @SerializedName("odometer") val odometer: Int,
+    @SerializedName("submission_date") val submissionDate: String,
+    @SerializedName("items") val items: List<DriverChecklistItemAnswer>,
+    @SerializedName("fields") val fields: Map<String, String>
+)

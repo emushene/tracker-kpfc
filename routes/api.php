@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\DeploymentController;
+use App\Http\Controllers\Api\DriverChecklistController;
 use App\Http\Controllers\Api\DriverTripController;
 use App\Http\Controllers\Api\InventoryController;
 use App\Http\Controllers\Api\MaintenanceController;
@@ -83,8 +84,15 @@ Route::middleware(['web', 'auth', 'fleet.access', 'fleet.write'])->group(functio
         Route::get('/job-cards', [MaintenanceController::class, 'jobCards'])->name('api.maintenance.job-cards');
         Route::post('/job-cards', [MaintenanceController::class, 'storeJobCard'])->name('api.maintenance.job-cards.store');
         Route::get('/job-cards/{jobCard}', [MaintenanceController::class, 'showJobCard'])->name('api.maintenance.job-cards.show');
+        Route::post('/job-cards/{jobCard}/checklists', [MaintenanceController::class, 'attachJobCardChecklist'])->name('api.maintenance.job-cards.checklists.attach');
         Route::put('/job-cards/{jobCard}', [MaintenanceController::class, 'updateJobCard'])->name('api.maintenance.job-cards.update');
         Route::delete('/job-cards/{jobCard}', [MaintenanceController::class, 'destroyJobCard'])->name('api.maintenance.job-cards.destroy');
+        Route::post('/job-cards/{jobCard}/parts', [MaintenanceController::class, 'attachJobCardPart'])->name('api.maintenance.job-cards.parts.store');
+        Route::delete('/job-cards/{jobCard}/parts/{jobCardPart}', [MaintenanceController::class, 'detachJobCardPart'])->name('api.maintenance.job-cards.parts.destroy');
+        Route::post('/job-cards/{jobCard}/save-checklist', [MaintenanceController::class, 'saveJobCardChecklist'])->name('api.maintenance.job-cards.checklist.save');
+        Route::patch('/job-card-checklist-items/{checklistItem}', [MaintenanceController::class, 'updateJobCardChecklistItem'])->name('api.maintenance.job-card-checklist-items.update');
+        Route::patch('/job-card-checklist-field-values/{fieldValue}', [MaintenanceController::class, 'updateJobCardChecklistFieldValue'])->name('api.maintenance.job-card-checklist-field-values.update');
+        Route::get('/driver-checklist-submissions', [MaintenanceController::class, 'driverChecklistSubmissions'])->name('api.maintenance.driver-checklist-submissions');
 
         Route::get('/alerts', [MaintenanceController::class, 'alerts'])->name('api.maintenance.alerts');
         Route::post('/alerts', [MaintenanceController::class, 'storeAlert'])->name('api.maintenance.alerts.store');
@@ -162,6 +170,9 @@ Route::middleware(['web', 'auth', 'fleet.access'])->prefix('driver')->group(func
     Route::post('/stops/{stop}/arrive', [DriverTripController::class, 'arriveStop'])->name('api.driver.stops.arrive');
     Route::post('/trips/{trip}/return-to-base', [DriverTripController::class, 'returnToBase'])->name('api.driver.trips.return-to-base');
     Route::post('/trips/{trip}/complete', [DriverTripController::class, 'completeTrip'])->name('api.driver.trips.complete');
+
+    Route::get('/checklists/daily', [DriverChecklistController::class, 'dailyTemplate'])->name('api.driver.checklists.daily');
+    Route::post('/checklists/daily/submissions', [DriverChecklistController::class, 'storeDailySubmission'])->name('api.driver.checklists.daily.submissions.store');
 });
 
 /*

@@ -78,4 +78,3 @@ Schedule::command('kpfc:sync-directories')
 Schedule::command('maintenance:check')
     ->dailyAt('02:00')
     ->withoutOverlapping();
-

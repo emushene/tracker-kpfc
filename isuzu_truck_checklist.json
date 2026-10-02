@@ -1,0 +1,98 @@
+{
+  "checklists": [
+    {
+      "id": "driver_daily",
+      "checklist_title": "Isuzu Truck Daily Driver Checklist & Report",
+      "role": "driver",
+      "frequency": "Before the first trip each day",
+      "metadata_fields": [
+        { "id": "vehicle_reg", "label": "Vehicle Reg/ID", "type": "text", "value": "" },
+        { "id": "date", "label": "Date", "type": "date", "value": "" },
+        { "id": "odometer", "label": "Odometer (km)", "type": "number", "value": "" },
+        { "id": "driver_name", "label": "Driver name", "type": "text", "value": "" },
+        { "id": "route", "label": "Route / assignment", "type": "text", "value": "" }
+      ],
+      "sections": [
+        {
+          "section_title": "Walk-around",
+          "items": [
+            { "id": "drv_tyres", "label": "Tyres and wheels", "description": "Look for visibly low or damaged tyres, loose wheel parts, or missing wheel nuts. Do not attempt repairs.", "checked": false },
+            { "id": "drv_leaks", "label": "Leaks or visible damage", "description": "Look under the vehicle and around the body for fresh leaks or damage.", "checked": false },
+            { "id": "drv_lights", "label": "Lights and indicators", "description": "Check headlights, indicators, hazard lights, brake lights, and reflectors.", "checked": false },
+            { "id": "drv_visibility", "label": "Visibility", "description": "Check mirrors, windscreen, wipers, and washers are usable and clear.", "checked": false },
+            { "id": "drv_load", "label": "Load and doors", "description": "Confirm the load is secure and doors, tailgate, and access steps are safe.", "checked": false }
+          ]
+        },
+        {
+          "section_title": "Cab and start-up",
+          "items": [
+            { "id": "drv_seatbelt", "label": "Seat belt", "description": "Check the seat belt is present and fastens correctly.", "checked": false },
+            { "id": "drv_dash", "label": "Dashboard warnings", "description": "After starting, note any warning light or message that remains on.", "checked": false },
+            { "id": "drv_horn", "label": "Horn", "description": "Check that the horn works.", "checked": false },
+            { "id": "drv_brakes", "label": "Brakes and steering feel", "description": "At low speed in a safe area, note any unusual brake response, steering, vibration, or noise.", "checked": false },
+            { "id": "drv_fuel", "label": "Fuel and AdBlue / DEF", "description": "Confirm there is enough fuel and exhaust fluid for the planned trip.", "checked": false }
+          ]
+        }
+      ],
+      "report_fields": [
+        { "id": "driver_vehicle_status", "label": "Vehicle status", "type": "select", "options": ["Ready for trip", "Needs attention", "Do not drive"], "value": "" },
+        { "id": "driver_defects", "label": "Defects or concerns found", "type": "textarea", "value": "" },
+        { "id": "driver_action", "label": "Action taken / person notified", "type": "textarea", "value": "" },
+        { "id": "driver_signature", "label": "Driver sign-off", "type": "text", "value": "" }
+      ]
+    },
+    {
+      "id": "mechanic_service",
+      "checklist_title": "Isuzu Truck Service & Mechanic Checklist",
+      "role": "mechanic",
+      "frequency": "At scheduled service or repair",
+      "metadata_fields": [
+        { "id": "vehicle_reg", "label": "Vehicle Reg/ID", "type": "text", "value": "" },
+        { "id": "service_date", "label": "Service date", "type": "date", "value": "" },
+        { "id": "service_odometer", "label": "Odometer at service (km)", "type": "number", "value": "" },
+        { "id": "mechanic_name", "label": "Mechanic / technician", "type": "text", "value": "" },
+        { "id": "work_order", "label": "Work order / ticket number", "type": "text", "value": "" },
+        { "id": "next_service_odometer", "label": "Next service due at (km)", "type": "number", "value": "" }
+      ],
+      "sections": [
+        {
+          "section_title": "Scheduled service",
+          "items": [
+            { "id": "mech_oil", "label": "Engine oil and filter", "description": "Drain and replace engine oil and oil filter to the manufacturer specification.", "checked": false },
+            { "id": "mech_fuel_filter", "label": "Fuel filter and sedimenter", "description": "Service or replace filters as required; drain water from the sedimenter and prime the fuel system.", "checked": false },
+            { "id": "mech_air_filter", "label": "Air intake filter", "description": "Inspect the air filter and housing; clean or replace as required.", "checked": false },
+            { "id": "mech_fluids", "label": "Fluids and leaks", "description": "Check coolant, brake, clutch, steering, transmission, and differential fluids; inspect for leaks.", "checked": false },
+            { "id": "mech_lubrication", "label": "Chassis lubrication", "description": "Lubricate service points according to the vehicle maintenance schedule.", "checked": false },
+            { "id": "mech_belts_hoses", "label": "Belts and hoses", "description": "Inspect condition, security, and tension; replace damaged components as authorized.", "checked": false },
+            { "id": "mech_battery", "label": "Battery and charging", "description": "Inspect terminals and mounting; test battery and charging system where required.", "checked": false }
+          ]
+        },
+        {
+          "section_title": "Safety and condition inspection",
+          "items": [
+            { "id": "mech_brakes", "label": "Brakes and air system", "description": "Inspect brake pads or linings, discs or drums, parking brake, and air system; record defects.", "checked": false },
+            { "id": "mech_tyres", "label": "Tyres and wheel fasteners", "description": "Check tyre condition and wear; verify wheel fasteners using the approved procedure and torque specification.", "checked": false },
+            { "id": "mech_suspension", "label": "Suspension and steering", "description": "Inspect springs, dampers, joints, steering links, and mounts for wear or damage.", "checked": false },
+            { "id": "mech_lights", "label": "Lights and electrical items", "description": "Verify exterior lights, indicators, warning lamps, horn, and relevant electrical connections.", "checked": false },
+            { "id": "mech_exhaust", "label": "Exhaust and emissions system", "description": "Inspect exhaust security and visible leaks; check DPF / emissions warnings where fitted.", "checked": false }
+          ]
+        },
+        {
+          "section_title": "Completion and release",
+          "items": [
+            { "id": "mech_recheck", "label": "Post-service leak and warning check", "description": "Run the engine and recheck for leaks, abnormal noise, and warning lights.", "checked": false },
+            { "id": "mech_road_test", "label": "Road test", "description": "Complete a controlled road test when safe and authorized; record any remaining concern.", "checked": false },
+            { "id": "mech_tools_removed", "label": "Vehicle ready for release", "description": "Confirm tools and materials are removed and any outstanding defect is documented.", "checked": false }
+          ]
+        }
+      ],
+      "report_fields": [
+        { "id": "mechanic_work_done", "label": "Work performed", "type": "textarea", "value": "" },
+        { "id": "mechanic_parts", "label": "Parts and fluids used", "type": "textarea", "value": "" },
+        { "id": "mechanic_defects", "label": "Defects found / follow-up required", "type": "textarea", "value": "" },
+        { "id": "mechanic_release_status", "label": "Release status", "type": "select", "options": ["Service complete", "Released with follow-up", "Do not release"], "value": "" },
+        { "id": "mechanic_signature", "label": "Mechanic sign-off", "type": "text", "value": "" }
+      ]
+    }
+  ]
+}
