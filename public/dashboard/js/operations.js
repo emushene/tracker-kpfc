@@ -27,7 +27,7 @@ export function populateDestinationDropdowns(destinations) {
   if (shops.length > 0) {
     html += '<optgroup label="🏢 Internal Branches & Shops">';
     shops.forEach(s => {
-      html += `<option value="shop:${s.id}" data-type="shop" data-id="${s.id}">Branch: ${s.name} (${s.code || 'Shop'})</option>`;
+      html += `<option value="shop:${s.id}" data-type="shop" data-id="${s.id}">${s.name} (${s.code || 'Shop'})</option>`;
     });
     html += '</optgroup>';
   }
