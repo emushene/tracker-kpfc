@@ -162,9 +162,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   try {
-    // 1. Load Shops
+    // 1. Load shops and destination catalog
     const shops = await api.fetchShops();
     state.shops = shops;
+
+    const destinations = await api.fetchDestinations();
+    state.destinations = destinations;
 
     // 2. Initialize Map & Geofences
     mapComp.initMap("map");
@@ -172,6 +175,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // 3. Populate dropdowns
     opsComp.populateShopDropdowns(state.shops);
+    opsComp.populateDestinationDropdowns(state.destinations);
     modalComp.populateVehicleModalShops(state.shops);
 
     // 4. Load Fleet Data
