@@ -7,6 +7,7 @@ use App\Models\Shop;
 use App\Models\Vehicle;
 use App\Models\VehicleDeployment;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use InvalidArgumentException;
 use RuntimeException;
 
@@ -59,18 +60,35 @@ class VehicleDeploymentService
 
             $this->ensureNoActiveDeployment($vehicle);
 
-            return VehicleDeployment::create([
+            $attributes = [
                 'vehicle_id' => $vehicle->id,
                 'destination_type' => $destinationType,
                 'destination_id' => $destinationId,
                 'purpose' => $purpose,
                 'status' => 'planned',
-                'notes' => $notes,
-                'driver_external_user_id' => $driverExternalUserId,
-                'driver_name' => $driverName,
-                'driver_phone' => $driverPhone,
-                'journey_state' => $journeyState,
-            ]);
+            ];
+
+            if (Schema::hasColumn('vehicle_deployments', 'notes')) {
+                $attributes['notes'] = $notes;
+            }
+
+            if (Schema::hasColumn('vehicle_deployments', 'driver_external_user_id')) {
+                $attributes['driver_external_user_id'] = $driverExternalUserId;
+            }
+
+            if (Schema::hasColumn('vehicle_deployments', 'driver_name')) {
+                $attributes['driver_name'] = $driverName;
+            }
+
+            if (Schema::hasColumn('vehicle_deployments', 'driver_phone')) {
+                $attributes['driver_phone'] = $driverPhone;
+            }
+
+            if (Schema::hasColumn('vehicle_deployments', 'journey_state')) {
+                $attributes['journey_state'] = $journeyState;
+            }
+
+            return VehicleDeployment::create($attributes);
         });
     }
 
@@ -172,6 +190,10 @@ class VehicleDeploymentService
             throw new InvalidArgumentException(
                 'Invalid journey state. Allowed values: going, at_stop, going_back, at_base.'
             );
+        }
+
+        if (! Schema::hasColumn('vehicle_deployments', 'journey_state')) {
+            return $deployment->fresh();
         }
 
         $deployment->update([

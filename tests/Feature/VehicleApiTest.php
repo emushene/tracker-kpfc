@@ -250,7 +250,9 @@ class VehicleApiTest extends TestCase
             ->assertJsonPath('deployment.destination_type', 'shop')
             ->assertJsonPath('deployment.destination_id', $shop->id)
             ->assertJsonPath('deployment.status', 'dispatched')
-            ->assertJsonPath('deployment.purpose', 'Goods Delivery');
+            ->assertJsonPath('deployment.purpose', 'Goods Delivery')
+            ->assertJsonPath('deployment.destination.id', $shop->id)
+            ->assertJsonPath('deployment.destination.name', 'Gilgil Branch');
 
         $this->assertDatabaseHas('vehicle_deployments', [
             'vehicle_id' => $vehicle->id,
