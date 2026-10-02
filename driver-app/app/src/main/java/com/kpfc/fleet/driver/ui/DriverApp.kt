@@ -11,6 +11,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kpfc.fleet.driver.data.model.TripDto
+import com.kpfc.fleet.driver.data.model.DriverDailyChecklistSubmissionRequest
+import com.kpfc.fleet.driver.ui.checklist.DailyChecklistScreen
 import com.kpfc.fleet.driver.ui.auth.LoginScreen
 import com.kpfc.fleet.driver.ui.dashboard.DashboardScreen
 import com.kpfc.fleet.driver.ui.theme.KpfcDriverTheme
@@ -23,6 +25,7 @@ import com.kpfc.fleet.driver.ui.map.LeafletMapScreen
 enum class AppScreen {
     LOGIN,
     DASHBOARD,
+    DAILY_CHECKLIST,
     TRIP_EXECUTION,
     TRIP_MAP
 }
@@ -92,6 +95,10 @@ fun DriverApp(
                     onRefresh = {
                         viewModel.loadDashboard()
                     },
+                    onOpenDailyChecklist = {
+                        currentScreen = AppScreen.DAILY_CHECKLIST
+                        viewModel.loadDailyChecklist()
+                    },
                     onOpenTrip = {
                         currentScreen = AppScreen.TRIP_EXECUTION
                     },
@@ -125,6 +132,20 @@ fun DriverApp(
                         }
                     )
                 }
+            }
+
+            AppScreen.DAILY_CHECKLIST -> {
+                DailyChecklistScreen(
+                    driverName = uiState.currentUser?.name ?: "Driver",
+                    checklist = uiState.dailyChecklist,
+                    isLoading = uiState.isLoading,
+                    onBack = { currentScreen = AppScreen.DASHBOARD },
+                    onSubmit = { request: DriverDailyChecklistSubmissionRequest ->
+                        viewModel.submitDailyChecklist(request) {
+                            currentScreen = AppScreen.DASHBOARD
+                        }
+                    }
+                )
             }
 
             AppScreen.TRIP_EXECUTION -> {

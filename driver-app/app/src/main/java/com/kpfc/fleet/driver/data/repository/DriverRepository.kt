@@ -8,6 +8,8 @@ import com.kpfc.fleet.driver.data.db.toDto
 import com.kpfc.fleet.driver.data.db.toEntity
 import com.kpfc.fleet.driver.data.model.ApiResponse
 import com.kpfc.fleet.driver.data.model.CompleteTripRequest
+import com.kpfc.fleet.driver.data.model.DriverDailyChecklistDto
+import com.kpfc.fleet.driver.data.model.DriverDailyChecklistSubmissionRequest
 import com.kpfc.fleet.driver.data.model.LoginRequest
 import com.kpfc.fleet.driver.data.model.ReturnToBaseRequestDto
 import com.kpfc.fleet.driver.data.model.StartTripRequest
@@ -273,6 +275,33 @@ class DriverRepository(context: Context) {
             }
         } catch (e: Exception) {
             Result.failure(Exception(e.localizedMessage ?: "Failed to complete trip"))
+        }
+    }
+
+    suspend fun getDailyChecklist(): Result<DriverDailyChecklistDto> = withContext(Dispatchers.IO) {
+        try {
+            val response = api.getDailyChecklist()
+            val checklist = response.body()?.data
+            if (response.isSuccessful && checklist != null) {
+                Result.success(checklist)
+            } else {
+                Result.failure(Exception(parseErrorMessage(response)))
+            }
+        } catch (e: Exception) {
+            Result.failure(Exception(e.localizedMessage ?: "Failed to load daily checklist"))
+        }
+    }
+
+    suspend fun submitDailyChecklist(request: DriverDailyChecklistSubmissionRequest): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val response = api.submitDailyChecklist(request)
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception(parseErrorMessage(response)))
+            }
+        } catch (e: Exception) {
+            Result.failure(Exception(e.localizedMessage ?: "Failed to submit daily checklist"))
         }
     }
 

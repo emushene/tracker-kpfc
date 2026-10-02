@@ -2,8 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\ChecklistItem;
-use App\Models\ChecklistTemplate;
 use App\Models\InventoryCategory;
 use App\Models\InventoryMovement;
 use App\Models\InventoryPart;
@@ -205,34 +203,7 @@ class MaintenanceAndInventorySeeder extends Seeder
             }
         }
 
-        // 4. Checklist Template
-        $template = ChecklistTemplate::firstOrCreate(
-            ['name' => '10,000 KM Routine Vehicle Service'],
-            [
-                'category' => 'service',
-                'description' => 'Comprehensive preventative maintenance checklist covering engine, brakes and safety items',
-                'active' => true,
-            ]
-        );
-
-        $checklistItems = [
-            'Inspect and top up brake, coolant, and washer fluids',
-            'Drain and replace engine oil and oil filter',
-            'Inspect brake pads and rotor thickness',
-            'Check tyre pressures (including spare) and tread depth',
-            'Inspect front suspension, ball joints, and tie rods',
-            'Test all exterior lighting and indicator bulbs',
-        ];
-
-        foreach ($checklistItems as $idx => $label) {
-            ChecklistItem::firstOrCreate([
-                'checklist_template_id' => $template->id,
-                'sequence' => $idx + 1,
-            ], [
-                'label' => $label,
-                'required' => true,
-            ]);
-        }
+        $this->call(ChecklistTemplateSeeder::class);
 
         // 5. Connect to some vehicles if vehicles exist
         $vehicles = Vehicle::take(5)->get();

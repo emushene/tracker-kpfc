@@ -48,8 +48,7 @@
         <a href="/" class="whitespace-nowrap transition hover:text-[#2563eb]">Home</a>
         <a href="/test-dashboard" class="whitespace-nowrap text-[#2563eb]">Dashboard</a>
         <a href="#live-map" class="whitespace-nowrap transition hover:text-[#2563eb]">Live map</a>
-        <a href="#fleet-vehicles" class="whitespace-nowrap transition hover:text-[#2563eb]">Vehicles</a>
-        <a href="#operations" class="whitespace-nowrap transition hover:text-[#2563eb]">Operations</a>
+        <a href="#fleet-workspace" class="whitespace-nowrap transition hover:text-[#2563eb]">Fleet Operations</a>
         <button id="maintenance-menu-trigger" type="button" onclick="toggleMaintenanceMenu(this)" aria-haspopup="dialog" aria-controls="maintenance-menu" aria-expanded="false" class="flex items-center gap-1 whitespace-nowrap transition hover:text-[#2563eb]">
             <i data-lucide="wrench" class="h-3.5 w-3.5 text-blue-500"></i> Maintenance
             <i data-lucide="chevron-down" class="h-3.5 w-3.5"></i>
@@ -80,6 +79,7 @@
       </div>
       <nav class="grid gap-1" aria-label="Maintenance sections">
         <a href="/maintenance" class="flex items-center gap-3 rounded-md px-3 py-3 text-sm hover:bg-slate-100"><i data-lucide="wrench" class="h-4 w-4 text-blue-700"></i>Maintenance</a>
+        <a href="/maintenance?create-ticket=1" class="flex items-center gap-3 rounded-md px-3 py-3 text-sm hover:bg-slate-100"><i data-lucide="plus" class="h-4 w-4 text-blue-700"></i>New maintenance ticket</a>
         <a href="/inventory" class="flex items-center gap-3 rounded-md px-3 py-3 text-sm hover:bg-slate-100"><i data-lucide="package" class="h-4 w-4 text-emerald-700"></i>Inventory</a>
         <a href="/admin-console" class="flex items-center gap-3 rounded-md px-3 py-3 text-sm hover:bg-slate-100"><i data-lucide="shield-check" class="h-4 w-4 text-slate-700"></i>Admin Console</a>
       </nav>
@@ -126,25 +126,38 @@
       <div id="map"></div>
     </div>
 
-    <!-- Fleet Table & Detail Controls -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Unified Fleet Workspace: Table & Operations Command -->
+    <div id="fleet-workspace" class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
 
-      <!-- Vehicles List (2 Cols) -->
-      <div id="fleet-vehicles" class="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+      <!-- Left Column: Fleet Vehicles Table (2 Cols) -->
+      <div id="fleet-vehicles" class="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4">
+        
+        <!-- Workspace Header & Action -->
+        <div class="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 class="text-base font-semibold text-[#172033]">Fleet Vehicles</h2>
-            <p class="text-xs text-slate-500">Live telemetry, assignments, and actions</p>
+            <h2 class="text-base font-bold text-[#172033]">Fleet Vehicles</h2>
+            <p class="text-xs text-slate-500">Click any vehicle to open its operations command and telemetry</p>
           </div>
           <div class="flex items-center gap-2">
-            <input id="search-input" oninput="filterVehicles()" type="text" placeholder="Search plate or IMEI..." class="bg-white border border-slate-300 px-3 py-1.5 text-xs rounded-lg focus:outline-none focus:border-[#2563eb] text-slate-700 w-44">
-            <button type="button" onclick="openCreateVehicleModal()" class="flex items-center gap-1.5 rounded-lg bg-[#2563eb] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[#1d4ed8]">
+            <input id="search-input" oninput="filterVehicles()" type="text" placeholder="Search plate, IMEI, name..." class="bg-white border border-slate-300 px-3 py-1.5 text-xs rounded-lg focus:outline-none focus:border-[#2563eb] text-slate-700 w-44">
+            <button type="button" onclick="openCreateVehicleModal()" class="flex items-center gap-1.5 rounded-lg bg-[#2563eb] px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#1d4ed8]">
               <i data-lucide="plus" class="h-3.5 w-3.5"></i>
-              <span>Add Vehicle</span>
+              <span>New Vehicle</span>
             </button>
           </div>
         </div>
+
+        <!-- Status Filter Pills -->
+        <div class="flex flex-wrap items-center gap-1.5 border-y border-slate-100 py-2.5 text-xs">
+          <span class="text-slate-400 text-[11px] font-semibold uppercase tracking-wider mr-1">Filter:</span>
+          <button type="button" onclick="setStatusFilter('all')" data-filter="all" class="filter-pill px-2.5 py-1 rounded-md text-xs font-semibold bg-[#2563eb] text-white shadow-sm transition">All</button>
+          <button type="button" onclick="setStatusFilter('moving')" data-filter="moving" class="filter-pill px-2.5 py-1 rounded-md text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-200/70 bg-slate-100 transition">Moving</button>
+          <button type="button" onclick="setStatusFilter('deployed')" data-filter="deployed" class="filter-pill px-2.5 py-1 rounded-md text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-200/70 bg-slate-100 transition">Deployed</button>
+          <button type="button" onclick="setStatusFilter('parked')" data-filter="parked" class="filter-pill px-2.5 py-1 rounded-md text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-200/70 bg-slate-100 transition">Parked</button>
+          <button type="button" onclick="setStatusFilter('no-tracker')" data-filter="no-tracker" class="filter-pill px-2.5 py-1 rounded-md text-xs font-medium text-amber-700 hover:bg-amber-100/70 bg-amber-50 border border-amber-200/60 transition" title="Vehicles waiting for hardware tracker installation">Pending Tracker</button>
+        </div>
         
+        <!-- Clean Table without actions column -->
         <div class="overflow-x-auto custom-scrollbar">
           <table class="w-full text-left text-xs text-slate-700">
             <thead class="bg-slate-50 uppercase text-[10px] text-slate-500 border-b border-slate-200">
@@ -154,77 +167,173 @@
                 <th class="py-3 px-3"><button type="button" onclick="sortVehicles('location')" class="flex items-center gap-1 font-semibold transition hover:text-[#2563eb]">Live Location <span id="sort-location" aria-hidden="true"></span></button></th>
                 <th class="py-3 px-3"><button type="button" onclick="sortVehicles('homebase')" class="flex items-center gap-1 font-semibold transition hover:text-[#2563eb]">Home Base / Distance <span id="sort-homebase" aria-hidden="true"></span></button></th>
                 <th class="py-3 px-3"><button type="button" onclick="sortVehicles('mission')" class="flex items-center gap-1 font-semibold transition hover:text-[#2563eb]">Mission / Route <span id="sort-mission" aria-hidden="true"></span></button></th>
-                <th class="py-3 px-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody id="vehicle-table-body" class="divide-y divide-slate-100">
               <tr>
-                <td colspan="6" class="text-center py-8 text-slate-500">Loading fleet data...</td>
+                <td colspan="5" class="text-center py-8 text-slate-500">Loading fleet data...</td>
               </tr>
             </tbody>
           </table>
         </div>
-        <div class="mt-4 flex items-center justify-between gap-3 border-t border-slate-200 pt-3 text-xs text-slate-500">
+
+        <!-- Pagination -->
+        <div class="flex items-center justify-between gap-3 border-t border-slate-200 pt-3 text-xs text-slate-500">
           <span id="pagination-info">Showing 0 vehicles</span>
           <div class="flex items-center gap-2">
             <button id="previous-page" type="button" onclick="changeVehiclePage(-1)" class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">Previous</button>
-            <span id="pagination-page" class="min-w-16 text-center">Page 1 of 1</span>
+            <span id="pagination-page" class="min-w-16 text-center font-medium">Page 1 of 1</span>
             <button id="next-page" type="button" onclick="changeVehiclePage(1)" class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">Next</button>
           </div>
         </div>
       </div>
 
-      <!-- Action Panel (Home Base & Deployments) (1 Col) -->
-      <div id="operations" class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-6">
+      <!-- Right Column: Vehicle Operations Command Center (1 Col) -->
+      <div id="operations" class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-5">
         
-        <!-- Selection Header -->
-        <div>
-          <h2 class="text-base font-semibold text-[#172033]">Vehicle Operations</h2>
-          <p id="selected-vehicle-title" class="text-xs text-slate-500 mt-0.5">Select a vehicle from the list to test assignments.</p>
+        <!-- Header -->
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div class="flex items-center gap-2">
+            <i data-lucide="sliders" class="w-4 h-4 text-[#2563eb]"></i>
+            <h2 class="text-sm font-bold text-[#172033] uppercase tracking-wider">Vehicle Operations</h2>
+          </div>
+          <button type="button" onclick="openCreateVehicleModal()" class="text-xs text-[#2563eb] hover:text-[#1d4ed8] font-semibold flex items-center gap-1">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i> New Vehicle
+          </button>
         </div>
 
-        <div id="operations-panel" class="space-y-6 opacity-40 pointer-events-none transition-opacity">
+        <!-- Empty State (When no vehicle selected) -->
+        <div id="operations-empty-state" class="py-12 px-4 text-center space-y-3">
+          <div class="mx-auto w-12 h-12 rounded-full bg-blue-50 text-[#2563eb] flex items-center justify-center">
+            <i data-lucide="crosshair" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-slate-800">No Vehicle Selected</h3>
+            <p class="text-xs text-slate-500 mt-1 max-w-xs mx-auto">Click any row in the fleet table to open telemetry details, assign home base, or dispatch missions.</p>
+          </div>
+          <button type="button" onclick="openCreateVehicleModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 transition">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i> Register Vehicle
+          </button>
+        </div>
 
-          <!-- 1. Assign Permanent Home Base -->
-          <div class="bg-slate-50 border border-slate-200 p-4 rounded-lg space-y-3">
-            <div class="flex items-center gap-2">
-              <i data-lucide="home" class="w-4 h-4 text-indigo-400"></i>
-              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700">Assign Permanent Home Base</h3>
+        <!-- Active Vehicle Operations Workspace -->
+        <div id="operations-active-content" class="space-y-5 hidden">
+
+          <!-- 1. Profile & Live Telemetry Card -->
+          <div class="bg-slate-50 border border-slate-200/90 rounded-lg p-4 space-y-3">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <h3 id="op-vehicle-plate" class="text-lg font-black text-[#172033] tracking-tight">--</h3>
+                <p id="op-vehicle-name" class="text-xs text-slate-500">Commercial Fleet Asset</p>
+              </div>
+              <div id="op-vehicle-status">--</div>
             </div>
-            <p class="text-[11px] text-slate-600">Default base branch used for OSRM return distance & duration calculations.</p>
-            <select id="assign-shop-select" class="w-full bg-white border border-slate-300 text-xs rounded-lg px-3 py-2 text-slate-700 focus:outline-none focus:border-[#2563eb]"></select>
-            <div class="flex gap-2">
-              <button onclick="submitAssignShop()" class="flex-1 bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-xs font-semibold py-2 rounded-lg transition">Save Home Base</button>
-              <button onclick="submitClearShop()" class="bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 text-xs px-3 py-2 rounded-lg transition">Clear</button>
+
+            <div class="flex flex-wrap items-center gap-1.5">
+              <span id="op-vehicle-imei">--</span>
+            </div>
+
+            <div class="pt-2 border-t border-slate-200 text-xs text-slate-600 flex items-center gap-1.5">
+              <i data-lucide="map-pin" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
+              <span id="op-vehicle-location" class="truncate font-medium">Resolving GPS...</span>
+            </div>
+
+            <!-- Telemetry Metrics Grid -->
+            <div class="grid grid-cols-4 gap-2 pt-2 border-t border-slate-200 text-center">
+              <div class="bg-white p-2 rounded border border-slate-200/60">
+                <span class="text-[10px] text-slate-400 block font-medium uppercase">Speed</span>
+                <span id="op-telemetry-speed" class="text-xs font-bold text-slate-800">--</span>
+              </div>
+              <div class="bg-white p-2 rounded border border-slate-200/60">
+                <span class="text-[10px] text-slate-400 block font-medium uppercase">Ignition</span>
+                <span id="op-telemetry-ignition" class="text-xs font-bold text-slate-800">--</span>
+              </div>
+              <div class="bg-white p-2 rounded border border-slate-200/60">
+                <span class="text-[10px] text-slate-400 block font-medium uppercase">Battery</span>
+                <span id="op-telemetry-battery" class="text-xs font-bold text-slate-800">--</span>
+              </div>
+              <div class="bg-white p-2 rounded border border-slate-200/60">
+                <span class="text-[10px] text-slate-400 block font-medium uppercase">Odometer</span>
+                <span id="op-telemetry-odometer" class="text-xs font-bold text-slate-800">--</span>
+              </div>
+            </div>
+
+            <!-- Vehicle Action Buttons (Moved from Table) -->
+            <div class="flex items-center gap-2 pt-2 border-t border-slate-200">
+              <button type="button" onclick="locateSelectedVehicle()" class="flex-1 inline-flex items-center justify-center gap-1 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 text-xs font-semibold py-1.5 rounded-lg transition" title="Center on map">
+                <i data-lucide="crosshair" class="w-3.5 h-3.5 text-[#2563eb]"></i> Locate
+              </button>
+              <button type="button" onclick="openEditVehicleModal(window.selectedVehicleId || state.selectedVehicleId)" class="flex-1 inline-flex items-center justify-center gap-1 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 text-xs font-semibold py-1.5 rounded-lg transition" title="Edit vehicle details">
+                <i data-lucide="edit-3" class="w-3.5 h-3.5 text-slate-600"></i> Edit
+              </button>
+              <button type="button" onclick="deleteVehicle(window.selectedVehicleId || state.selectedVehicleId)" class="inline-flex items-center justify-center gap-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold px-3 py-1.5 rounded-lg transition" title="Delete vehicle">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+              </button>
             </div>
           </div>
 
-          <!-- 2. Dispatch Deployment Mission -->
+          <!-- 2. Dispatch Mission Operation Card -->
           <div class="bg-slate-50 border border-slate-200 p-4 rounded-lg space-y-3">
             <div class="flex items-center gap-2">
               <i data-lucide="send" class="w-4 h-4 text-amber-500"></i>
-              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700">Dispatch on Temporary Mission</h3>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700">Mission & Dispatch</h3>
             </div>
-            <p class="text-[11px] text-slate-600">Assigns a temporary destination (another shop or client site). Overrides home base routing.</p>
             
-            <div>
-              <label class="text-[10px] uppercase text-slate-400 block mb-1">Destination Shop</label>
-              <select id="deploy-shop-select" class="w-full bg-white border border-slate-300 text-xs rounded-lg px-3 py-2 text-slate-700 focus:outline-none focus:border-amber-500"></select>
-            </div>
-
-            <div>
-              <label class="text-[10px] uppercase text-slate-400 block mb-1">Mission Purpose</label>
-              <input id="deploy-purpose" type="text" placeholder="e.g. Urgent Branch Delivery" class="w-full bg-white border border-slate-300 text-xs rounded-lg px-3 py-2 text-slate-700 focus:outline-none focus:border-amber-500">
-            </div>
-
-            <button onclick="submitDispatch()" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs py-2 rounded-lg transition">Dispatch Vehicle</button>
-
-            <div id="deployment-actions" class="hidden border-t border-slate-200 pt-3 space-y-2">
-              <p id="deployment-status" class="text-[11px] text-slate-500 font-medium"></p>
-              <div class="flex gap-2">
-                <button onclick="releaseDeployment()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold py-2 rounded-lg transition">Release Vehicle</button>
-                <button id="cancel-deployment-button" onclick="cancelDeployment()" class="flex-1 bg-red-600 hover:bg-red-500 text-white text-xs font-semibold py-2 rounded-lg transition">Cancel Deployment</button>
+            <!-- Active Mission View -->
+            <div id="op-deployment-active" class="hidden bg-white border border-amber-200 rounded-lg p-3 space-y-2.5 shadow-xs">
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Active Mission</span>
+                <span id="op-deployment-status" class="text-[10px] font-bold px-2 py-0.5 rounded uppercase bg-amber-100 text-amber-800">--</span>
               </div>
+              <div class="text-xs text-slate-800">
+                <div class="font-bold" id="op-deployment-destination">--</div>
+                <div class="text-slate-500 text-[11px]" id="op-deployment-purpose">--</div>
+              </div>
+              <div class="flex gap-2 pt-1 border-t border-slate-100">
+                <button onclick="openMissionRouteMap()" class="inline-flex items-center justify-center gap-1 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-lg transition" title="View plotted mission route on map">
+                  <i data-lucide="map" class="w-3.5 h-3.5 text-amber-500"></i> Route
+                </button>
+                <button onclick="releaseDeployment()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold py-1.5 rounded-lg transition">Complete Mission</button>
+                <button id="cancel-deployment-button" onclick="cancelDeployment()" class="flex-1 bg-red-600 hover:bg-red-500 text-white text-xs font-semibold py-1.5 rounded-lg transition">Cancel Mission</button>
+              </div>
+            </div>
+
+            <!-- New Mission Form -->
+            <div id="op-deployment-form" class="space-y-2.5">
+              <p class="text-[11px] text-slate-600">Assign a temporary destination shop or client depot. Overrides home base routing.</p>
+              <div>
+                <label class="text-[10px] uppercase font-bold text-slate-500 block mb-1">Destination Branch</label>
+                <select id="deploy-shop-select" class="w-full bg-white border border-slate-300 text-xs rounded-lg px-3 py-2 text-slate-700 focus:outline-none focus:border-amber-500"></select>
+              </div>
+
+              <div>
+                <label class="text-[10px] uppercase font-bold text-slate-500 block mb-1">Mission Purpose</label>
+                <input id="deploy-purpose" type="text" placeholder="e.g. Stock Transfer / Customer Delivery" class="w-full bg-white border border-slate-300 text-xs rounded-lg px-3 py-2 text-slate-700 focus:outline-none focus:border-amber-500">
+              </div>
+
+              <button onclick="submitDispatch()" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs py-2 rounded-lg transition shadow-xs">Dispatch Vehicle</button>
+            </div>
+          </div>
+
+          <!-- 3. Permanent Home Base Operation Card -->
+          <div class="bg-slate-50 border border-slate-200 p-4 rounded-lg space-y-3">
+            <div class="flex items-center gap-2">
+              <i data-lucide="home" class="w-4 h-4 text-indigo-500"></i>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700">Permanent Home Base</h3>
+            </div>
+            
+            <div class="bg-white border border-slate-200 rounded-lg p-2.5 text-xs">
+              <div class="font-bold text-slate-800" id="op-homebase-current">--</div>
+              <div class="text-[11px] text-slate-500" id="op-homebase-distance">--</div>
+            </div>
+
+            <p class="text-[11px] text-slate-600">Base branch used for automated OSRM return distance & duration calculations.</p>
+            
+            <select id="assign-shop-select" class="w-full bg-white border border-slate-300 text-xs rounded-lg px-3 py-2 text-slate-700 focus:outline-none focus:border-[#2563eb]"></select>
+            
+            <div class="flex gap-2">
+              <button onclick="submitAssignShop()" class="flex-1 bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-xs font-semibold py-2 rounded-lg transition shadow-xs">Save Home Base</button>
+              <button onclick="submitClearShop()" class="bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 text-xs px-3 py-2 rounded-lg transition">Clear</button>
             </div>
           </div>
 
@@ -259,19 +368,19 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label class="block text-slate-700 font-semibold mb-1">License Plate</label>
+            <label class="block text-slate-700 font-semibold mb-1">License Plate Number</label>
             <input type="text" id="vehicle-plate" placeholder="e.g. KDD 456B" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:border-blue-600">
           </div>
           <div>
-            <label class="block text-slate-700 font-semibold mb-1">Device / Vehicle Name</label>
+            <label class="block text-slate-700 font-semibold mb-1">Vehicle / Device Name</label>
             <input type="text" id="vehicle-name" placeholder="e.g. Delivery Van 02" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:border-blue-600">
           </div>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label class="block text-slate-700 font-semibold mb-1">Device Type</label>
-            <input type="text" id="vehicle-type" placeholder="e.g. GPS-Tracker-v2" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:border-blue-600">
+            <label class="block text-slate-700 font-semibold mb-1">Device / Vehicle Type</label>
+            <input type="text" id="vehicle-type" placeholder="e.g. Isuzu FRR / Van" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:border-blue-600">
           </div>
           <div>
             <label class="block text-slate-700 font-semibold mb-1">SIM Card Number</label>
@@ -286,12 +395,12 @@
 
         <div class="flex items-center gap-2 pt-1">
           <input type="checkbox" id="vehicle-active" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 h-4 w-4" checked>
-          <label for="vehicle-active" class="text-slate-700 font-medium">Vehicle is Active</label>
+          <label for="vehicle-active" class="text-slate-700 font-medium">Vehicle is Active in Fleet</label>
         </div>
 
         <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-200">
           <button id="vehicle-modal-cancel" type="button" class="px-4 py-2 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 font-medium">Cancel</button>
-          <button id="vehicle-modal-submit" type="submit" class="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-sm">Save Vehicle</button>
+          <button id="vehicle-modal-submit" type="submit" class="px-5 py-2 rounded-lg bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-semibold shadow-sm">Save Vehicle</button>
         </div>
       </form>
     </div>

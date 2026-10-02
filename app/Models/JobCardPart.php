@@ -24,6 +24,7 @@ class JobCardPart extends Model
     protected $fillable = [
         'maintenance_job_card_id',
         'inventory_part_id',
+        'job_card_checklist_item_id',
         'quantity',
         'notes',
         'allocated_by_external_user_id',
@@ -47,5 +48,13 @@ class JobCardPart extends Model
     public function inventoryPart(): BelongsTo
     {
         return $this->belongsTo(InventoryPart::class);
+    }
+
+    /**
+     * Associated checklist item (if replaced or repaired as part of checklist).
+     */
+    public function jobCardChecklistItem(): BelongsTo
+    {
+        return $this->belongsTo(JobCardChecklistItem::class);
     }
 }

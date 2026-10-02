@@ -23,6 +23,8 @@ class ChecklistItem extends Model
 
     protected $fillable = [
         'checklist_template_id',
+        'item_key',
+        'section_title',
         'sequence',
         'label',
         'description',

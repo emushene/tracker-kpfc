@@ -15,9 +15,9 @@ use Illuminate\Support\Facades\Notification;
 #[Description('Check vehicle mileage and time to automate maintenance tickets and notifications.')]
 class CheckMaintenanceWindows extends Command
 {
-    public function handle()
+    public function handle(): int
     {
-        $schedules = MaintenanceSchedule::with('vehicle.mileage')->where('active', true)->get();
+        $schedules = MaintenanceSchedule::with('vehicle')->where('active', true)->get();
 
         $maintenanceTeamEmail = config('mail.maintenance_team_email', 'maintenance@kpfc.co.ke');
 
@@ -31,13 +31,28 @@ class CheckMaintenanceWindows extends Command
             $dueReason = '';
 
             // Check based on schedule type
-            if ($schedule->schedule_type === 'mileage' && $schedule->next_service_km) {
-                $latestMileageRecord = $vehicle->mileage()->latest('date')->first();
-                $currentOdometer = $latestMileageRecord ? $latestMileageRecord->odometer : 0;
+            if ($schedule->schedule_type === 'mileage') {
+                $currentOdometer = $vehicle->mileage()
+                    ->whereNotNull('odometer')
+                    ->latest('date')
+                    ->value('odometer');
+
+                if ($currentOdometer !== null) {
+                    $currentOdometer = (int) $currentOdometer;
+                }
+
+                if ($schedule->next_service_km === null && $schedule->interval_km > 0) {
+                    $serviceBaseline = $schedule->last_service_km ?? $currentOdometer;
+
+                    if ($serviceBaseline !== null) {
+                        $schedule->next_service_km = $serviceBaseline + $schedule->interval_km;
+                        $schedule->save();
+                    }
+                }
 
                 $threshold = $schedule->alert_threshold_km ?? 500;
 
-                if ($currentOdometer >= ($schedule->next_service_km - $threshold)) {
+                if ($currentOdometer !== null && $schedule->next_service_km !== null && $currentOdometer >= ($schedule->next_service_km - $threshold)) {
                     $isDue = true;
                     $dueReason = "Mileage due: Current odometer {$currentOdometer}km approaches next service at {$schedule->next_service_km}km.";
                 }
@@ -91,5 +106,7 @@ class CheckMaintenanceWindows extends Command
         }
 
         $this->info('Maintenance windows check completed.');
+
+        return self::SUCCESS;
     }
 }

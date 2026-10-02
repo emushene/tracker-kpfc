@@ -21,9 +21,12 @@ class ChecklistTemplate extends Model
     use HasFactory;
 
     protected $fillable = [
+        'template_key',
         'name',
         'description',
         'category',
+        'role',
+        'frequency',
         'active',
     ];
 
@@ -34,5 +37,10 @@ class ChecklistTemplate extends Model
     public function checklistItems(): HasMany
     {
         return $this->hasMany(ChecklistItem::class);
+    }
+
+    public function fields(): HasMany
+    {
+        return $this->hasMany(ChecklistTemplateField::class)->orderBy('sequence');
     }
 }

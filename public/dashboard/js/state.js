@@ -10,6 +10,7 @@ export const state = {
   sortKey: "vehicle",
   sortDirection: "asc",
   searchQuery: "",
+  statusFilter: "all",
   activeVehicleForModal: null,
 };
 
