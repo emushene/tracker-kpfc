@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - docker-cicd-aapanel
-
   pull_request:
     branches:
       - docker-cicd-aapanel
@@ -14,13 +13,10 @@ permissions:
   packages: write
 
 jobs:
-
   docker-build:
     name: Build and Push Docker Image
     runs-on: ubuntu-latest
-
     steps:
-
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -54,3 +50,106 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy Containers to Server
+    needs: docker-build
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH to server and recreate application containers
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT || 22 }}
+          script: |
+            # 1. Authenticate server to GHCR
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            # 2. Pull the latest image
+            docker pull ghcr.io/emushene/tracker-kpfc:latest
+
+            # 3. Update kpfc-fleet-app
+            docker stop kpfc-fleet-app || true
+            docker rm kpfc-fleet-app || true
+            docker run -d \
+              --name kpfc-fleet-app \
+              --restart unless-stopped \
+              --network bridge \
+              ghcr.io/emushene/tracker-kpfc:latest
+
+            # 4. Update kpfc-fleet-scheduler
+            docker stop kpfc-fleet-scheduler || true
+            docker rm kpfc-fleet-scheduler || true
+            docker run -d \
+              --name kpfc-fleet-scheduler \
+              --restart unless-stopped \
+              --network bridge \
+              ghcr.io/emushene/tracker-kpfc:latest php artisan schedule:run
+
+            # 5. Clean up old dangling images
+            docker image prune -f
+
+
+
+
+
+
+
+# name: Docker CI/CD
+# on:
+#   push:
+#     branches:
+#       - docker-cicd-aapanel
+
+#   pull_request:
+#     branches:
+#       - docker-cicd-aapanel
+
+# permissions:
+#   contents: read
+#   packages: write
+
+# jobs:
+
+#   docker-build:
+#     name: Build and Push Docker Image
+#     runs-on: ubuntu-latest
+
+#     steps:
+
+#       - name: Checkout repository
+#         uses: actions/checkout@v4
+
+#       - name: Set up Docker Buildx
+#         uses: docker/setup-buildx-action@v3
+
+#       - name: Log in to GitHub Container Registry
+#         if: github.event_name == 'push'
+#         uses: docker/login-action@v3
+#         with:
+#           registry: ghcr.io
+#           username: ${{ github.actor }}
+#           password: ${{ secrets.GITHUB_TOKEN }}
+
+#       - name: Extract Docker metadata
+#         id: meta
+#         uses: docker/metadata-action@v5
+#         with:
+#           images: ghcr.io/emushene/tracker-kpfc
+#           tags: |
+#             type=sha
+#             type=raw,value=latest
+
+#       - name: Build Docker image
+#         uses: docker/build-push-action@v6
+#         with:
+#           context: .
+#           file: ./Dockerfile
+#           push: ${{ github.event_name == 'push' }}
+#           tags: ${{ steps.meta.outputs.tags }}
+#           labels: ${{ steps.meta.outputs.labels }}
+#           cache-from: type=gha
+#           cache-to: type=gha,mode=max
