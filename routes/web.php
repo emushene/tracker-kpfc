@@ -41,28 +41,22 @@ Route::middleware(['auth', 'fleet.access'])->group(function (): void {
         return response()->file(public_path('admin-console.html'));
     })->name('admin-console.index');
 
-    Route::get('/protrack/test', function (
-        ProtrackClient $protrack
-    ) {
+    Route::get('/protrack/test', function (ProtrackClient $protrack) {
         return [
             'status' => 'connected',
-            'token_received' => ! empty(
+            'token_received' => !empty(
                 $protrack->getAccessToken()
             ),
         ];
     });
 
-    Route::get('/protrack/devices', function (
-        ProtrackClient $protrack
-    ) {
+    Route::get('/protrack/devices', function (ProtrackClient $protrack) {
         return response()->json(
             $protrack->devices()
         );
     });
 
-    Route::get('/protrack/device-count', function (
-        ProtrackClient $protrack
-    ) {
+    Route::get('/protrack/device-count', function (ProtrackClient $protrack) {
         $devices = $protrack->devices();
 
         return response()->json([
@@ -71,9 +65,7 @@ Route::middleware(['auth', 'fleet.access'])->group(function (): void {
         ]);
     });
 
-    Route::get('/protrack/accounts', function (
-        ProtrackClient $protrack
-    ) {
+    Route::get('/protrack/accounts', function (ProtrackClient $protrack) {
         $accounts = config('protrack.accounts', []);
 
         $result = [];
@@ -91,15 +83,13 @@ Route::middleware(['auth', 'fleet.access'])->group(function (): void {
         return response()->json($result);
     });
 
-    Route::get('/protrack/track/{imei}', function (
-        string $imei
-    ) {
+    Route::get('/protrack/track/{imei}', function (string $imei) {
         $vehicle = Vehicle::query()
             ->where('imei', $imei)
             ->where('active', true)
             ->first();
 
-        if (! $vehicle) {
+        if (!$vehicle) {
             return response()->json([
                 'error' => 'Vehicle not found',
                 'imei' => $imei,
@@ -112,7 +102,7 @@ Route::middleware(['auth', 'fleet.access'])->group(function (): void {
             ->latest('gps_time')
             ->first();
 
-        if (! $position) {
+        if (!$position) {
             return response()->json([
                 'error' => 'No GPS position found',
                 'imei' => $imei,
@@ -141,6 +131,14 @@ Route::middleware(['auth', 'fleet.access'])->group(function (): void {
             'location' => $vehicle->location_name,
 
             'location_updated_at' => $vehicle->location_updated_at,
+        ]);
+    });
+    ## Debug Route for Authorization Header
+    Route::get('/debug-auth-header', function (\Illuminate\Http\Request $request) {
+        return response()->json([
+            'authorization' => $request->header('Authorization'),
+            'bearer_length' => strlen((string) $request->bearerToken()),
+            'server_authorization' => $_SERVER['HTTP_AUTHORIZATION'] ?? null,
         ]);
     });
 });

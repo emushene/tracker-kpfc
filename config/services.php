@@ -50,5 +50,8 @@ return [
         'webhook_secret' => env('KPFC_SSO_WEBHOOK_SECRET'),
         'webhook_secret_old' => env('KPFC_SSO_WEBHOOK_SECRET_OLD'),
     ],
+    'kpfc_admin' => [
+        'integration_token' => env('KPFC_ADMIN_INTEGRATION_TOKEN'),
+    ],
 
 ];
