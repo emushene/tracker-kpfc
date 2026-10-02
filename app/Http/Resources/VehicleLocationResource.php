@@ -49,6 +49,8 @@ class VehicleLocationResource extends JsonResource
             $isOnline = $this->online_at->gt(now()->subMinutes(15));
         }
 
+        $activeMission = $this->resolveActiveMissionDetails();
+
         return [
             'vehicle_id' => $this->id,
             'plate_number' => $this->plate_number,
@@ -89,9 +91,17 @@ class VehicleLocationResource extends JsonResource
                 'radius_meters' => $this->assignedShop->radius_meters,
             ] : null,
 
+            'active_mission' => $activeMission,
+            'active_deployment' => $activeDeployment ? new VehicleDeploymentResource($activeDeployment) : null,
+
             'routing' => [
                 'destination_type' => $this->route_destination_type,
                 'destination_id' => $this->route_destination_id,
+                'destination_name' => $activeMission['destination']['name'] ?? ($activeMission['direction'] === 'going_back' ? ($this->assignedShop?->name ?? 'Home Base') : null),
+                'destination_address' => $activeMission['destination']['address'] ?? null,
+                'destination_latitude' => $activeMission['destination']['latitude'] ?? null,
+                'destination_longitude' => $activeMission['destination']['longitude'] ?? null,
+                'is_return_to_base' => $activeMission['direction'] === 'going_back',
                 'distance_meters' => $this->road_distance_meters,
                 'distance_km' => $this->road_distance_meters !== null
                     ? round($this->road_distance_meters / 1000, 2)

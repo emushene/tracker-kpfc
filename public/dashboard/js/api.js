@@ -53,6 +53,11 @@ export async function fetchShops() {
   }));
 }
 
+export async function fetchDestinations() {
+  const json = await request("/api/destinations");
+  return json.data || { shops: [], locations: [], all: [] };
+}
+
 export async function fetchVehicles() {
   const json = await request("/api/vehicles?all=1");
   return json.data || [];
@@ -65,14 +70,17 @@ export async function assignHomeShop(vehicleId, shopId) {
   });
 }
 
-export async function dispatchDeployment(vehicleId, destinationId, purpose) {
+export async function dispatchDeployment(vehicleId, destinationType, destinationId, purpose, driverInfo = {}) {
   return request(`/api/vehicles/${vehicleId}/deployments`, {
     method: "POST",
     body: JSON.stringify({
-      destination_type: "shop",
+      destination_type: destinationType || "shop",
       destination_id: parseInt(destinationId),
       purpose: purpose || "Delivery Mission",
       status: "dispatched",
+      driver_name: driverInfo.driverName || null,
+      driver_phone: driverInfo.driverPhone || null,
+      journey_state: "going",
     }),
   });
 }
@@ -80,6 +88,13 @@ export async function dispatchDeployment(vehicleId, destinationId, purpose) {
 export async function updateDeploymentAction(vehicleId, deploymentId, action) {
   return request(`/api/vehicles/${vehicleId}/deployments/${deploymentId}/${action}`, {
     method: "PATCH",
+  });
+}
+
+export async function updateDeploymentJourneyState(vehicleId, deploymentId, journeyState) {
+  return request(`/api/vehicles/${vehicleId}/deployments/${deploymentId}/journey-state`, {
+    method: "PATCH",
+    body: JSON.stringify({ journey_state: journeyState }),
   });
 }
 

@@ -221,4 +221,153 @@ class Vehicle extends Model
     {
         return $this->hasOne(Trip::class)->whereIn('status', ['in_progress', 'returning_to_base'])->latestOfMany();
     }
+
+    public function activeDeployment(): HasOne
+    {
+        return $this->hasOne(VehicleDeployment::class)
+            ->whereIn('status', ['planned', 'dispatched', 'in_progress'])
+            ->latestOfMany();
+    }
+
+    /**
+     * Resolve the active mission details, combining VehicleDeployment and Trip
+     * into a single unified contract for direction, destination, driver, and routing.
+     *
+     * @return array<string, mixed>
+     */
+    public function resolveActiveMissionDetails(): array
+    {
+        $deployment = $this->relationLoaded('deployments')
+            ? $this->deployments->first(fn ($d) => in_array($d->status, ['planned', 'dispatched', 'in_progress'], true))
+            : ($this->relationLoaded('activeDeployment') ? $this->activeDeployment : $this->activeDeployment()->with('destination')->first());
+
+        $trip = $this->relationLoaded('activeTrip')
+            ? $this->activeTrip
+            : $this->activeTrip()->with(['stops', 'activeReturnRequest'])->first();
+
+        $hasActiveMission = $deployment !== null || $trip !== null;
+
+        if (! $hasActiveMission) {
+            $isAtBase = $this->assigned_shop_id !== null && (
+                $this->location_name === $this->assignedShop?->name
+                || ($this->road_distance_meters !== null && $this->road_distance_meters < 500)
+            );
+
+            return [
+                'has_active_mission' => false,
+                'mission_type' => null,
+                'direction' => $isAtBase ? 'at_base' : ($this->active ? 'parked' : 'idle'),
+                'direction_label' => $isAtBase && $this->assignedShop ? "At Base ({$this->assignedShop->name})" : 'Idle / No Active Mission',
+                'status' => 'idle',
+                'destination' => null,
+                'driver' => null,
+                'current_stop' => null,
+                'origin_base' => $this->assignedShop ? [
+                    'id' => $this->assignedShop->id,
+                    'name' => $this->assignedShop->name,
+                    'code' => $this->assignedShop->code,
+                    'address' => $this->assignedShop->address,
+                    'latitude' => (float) $this->assignedShop->latitude,
+                    'longitude' => (float) $this->assignedShop->longitude,
+                ] : null,
+                'distance_remaining_km' => null,
+                'eta_minutes' => null,
+                'started_at' => null,
+            ];
+        }
+
+        $missionType = $deployment ? 'deployment' : 'trip';
+        $missionStatus = $deployment ? $deployment->status : $trip->status;
+        $driverId = $deployment?->driver_external_user_id ?? $trip?->driver_external_user_id;
+        $driverName = $deployment?->driver_name;
+        $driverPhone = $deployment?->driver_phone;
+        $startedAt = $deployment?->started_at ?? $deployment?->dispatched_at ?? $trip?->actual_start;
+
+        $destinationData = null;
+        $currentStopData = null;
+
+        if ($deployment && $deployment->destination) {
+            $dest = $deployment->destination;
+            $destinationData = [
+                'type' => $deployment->destination_type,
+                'id' => $dest->id,
+                'name' => $dest->name,
+                'address' => $dest->address,
+                'latitude' => (float) $dest->latitude,
+                'longitude' => (float) $dest->longitude,
+            ];
+        } elseif ($trip) {
+            $currentStop = $trip->stops?->first(fn ($s) => in_array($s->status, ['arrived', 'pending'], true))
+                ?? $trip->stops?->last();
+
+            if ($currentStop) {
+                $currentStopData = [
+                    'id' => $currentStop->id,
+                    'sequence' => $currentStop->sequence,
+                    'location_name' => $currentStop->location_name,
+                    'address' => $currentStop->address,
+                    'latitude' => (float) $currentStop->latitude,
+                    'longitude' => (float) $currentStop->longitude,
+                    'status' => $currentStop->status,
+                ];
+
+                $destinationData = [
+                    'type' => $currentStop->shop_id ? 'shop' : 'location',
+                    'id' => $currentStop->shop_id ?? $currentStop->id,
+                    'name' => $currentStop->location_name,
+                    'address' => $currentStop->address,
+                    'latitude' => (float) $currentStop->latitude,
+                    'longitude' => (float) $currentStop->longitude,
+                ];
+            }
+        }
+
+        $isReturning = ($deployment && $deployment->journey_state === 'going_back')
+            || ($trip && $trip->status === 'returning_to_base');
+
+        $isAtStop = ($deployment && $deployment->journey_state === 'at_stop')
+            || ($trip && $trip->stops?->contains(fn ($s) => $s->status === 'arrived'));
+
+        $direction = 'going';
+        $directionLabel = 'Going to Destination';
+
+        if ($isReturning) {
+            $direction = 'going_back';
+            $baseName = $this->assignedShop?->name ?? 'Home Base';
+            $directionLabel = "Going Back to Base ({$baseName})";
+        } elseif ($isAtStop) {
+            $direction = 'at_stop';
+            $destName = $destinationData['name'] ?? 'Stop';
+            $directionLabel = "At Stop ({$destName})";
+        } elseif ($destinationData) {
+            $direction = 'going';
+            $directionLabel = "Going to {$destinationData['name']}";
+        }
+
+        return [
+            'has_active_mission' => true,
+            'mission_type' => $missionType,
+            'direction' => $direction,
+            'direction_label' => $directionLabel,
+            'status' => $missionStatus,
+            'destination' => $destinationData,
+            'driver' => [
+                'external_id' => $driverId,
+                'name' => $driverName,
+                'phone' => $driverPhone,
+            ],
+            'current_stop' => $currentStopData,
+            'origin_base' => $this->assignedShop ? [
+                'id' => $this->assignedShop->id,
+                'name' => $this->assignedShop->name,
+                'code' => $this->assignedShop->code,
+                'address' => $this->assignedShop->address,
+                'latitude' => (float) $this->assignedShop->latitude,
+                'longitude' => (float) $this->assignedShop->longitude,
+            ] : null,
+            'distance_remaining_km' => $this->road_distance_meters !== null ? round($this->road_distance_meters / 1000, 2) : null,
+            'eta_minutes' => $this->road_duration_seconds !== null ? (int) round($this->road_duration_seconds / 60) : null,
+            'started_at' => $startedAt?->toIso8601String(),
+        ];
+    }
 }

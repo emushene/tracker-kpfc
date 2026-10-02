@@ -3,6 +3,7 @@
  */
 export const state = {
   shops: [],
+  destinations: { shops: [], locations: [], all: [] },
   vehicles: [],
   selectedVehicleId: null,
   currentPage: 1,

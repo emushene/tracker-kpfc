@@ -41,6 +41,12 @@ class StoreDeploymentRequest extends FormRequest
 
             // Deployment status: defaults to dispatched if not specified.
             'status' => ['nullable', 'string', 'in:planned,dispatched'],
+
+            // Driver assignment and journey state
+            'driver_external_user_id' => ['nullable', 'string', 'max:100'],
+            'driver_name' => ['nullable', 'string', 'max:255'],
+            'driver_phone' => ['nullable', 'string', 'max:50'],
+            'journey_state' => ['nullable', 'string', 'in:going,at_stop,going_back,at_base'],
         ];
     }
 

@@ -138,17 +138,48 @@ export function renderFleetTable() {
 
   tbody.innerHTML = pagedVehicles.map(v => {
     const isSelected = state.selectedVehicleId === v.id;
-    const deploymentDestination = v.active_deployment?.destination?.name || null;
+    const mission = v.active_mission || {};
+    const hasMission = Boolean(mission.has_active_mission || v.active_deployment);
+    const direction = mission.direction || (v.assigned_shop_id ? "at_base" : "idle");
 
-    const statusBadge = v.status === "moving"
-      ? '<span class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200/70 px-2 py-0.5 rounded-full text-[10px] font-semibold"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>Moving</span>'
-      : (v.status === "deployed"
-        ? `<span class="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 border border-amber-200/70 px-2 py-0.5 rounded-full text-[10px] font-semibold"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Deployed</span><div class="text-[10px] text-amber-600 mt-0.5 font-medium truncate max-w-[120px]">To: ${deploymentDestination || "--"}</div>`
-        : '<span class="inline-flex items-center gap-1.5 bg-slate-100 text-slate-600 border border-slate-200 px-2 py-0.5 rounded-full text-[10px] font-semibold"><span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>Parked</span>');
+    // Direction & Operational status badge
+    let statusBadge = '';
+    if (v.status === "moving") {
+      statusBadge = '<span class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200/70 px-2 py-0.5 rounded-full text-[10px] font-semibold"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>Moving</span>';
+    } else if (direction === "going_back") {
+      statusBadge = '<span class="inline-flex items-center gap-1.5 bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-full text-[10px] font-bold"><span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>⬅️ Going Back</span>';
+    } else if (direction === "going") {
+      statusBadge = '<span class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full text-[10px] font-bold"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>➡️ Going</span>';
+    } else if (direction === "at_stop") {
+      statusBadge = '<span class="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full text-[10px] font-bold"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>📍 At Stop</span>';
+    } else if (hasMission) {
+      statusBadge = '<span class="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 border border-amber-200/70 px-2 py-0.5 rounded-full text-[10px] font-semibold"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Deployed</span>';
+    } else {
+      statusBadge = '<span class="inline-flex items-center gap-1.5 bg-slate-100 text-slate-600 border border-slate-200 px-2 py-0.5 rounded-full text-[10px] font-semibold"><span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>Parked</span>';
+    }
 
-    const routingInfo = v.routing?.distance_km
-      ? `<span class="text-indigo-600 font-mono font-medium">${v.routing.distance_km} km</span> <span class="text-slate-400 text-[11px]">(~${v.routing.duration_minutes}m)</span>`
-      : '<span class="text-slate-400">--</span>';
+    // Mission & Where it was sent
+    let missionInfo = '';
+    if (hasMission) {
+      const destName = mission.destination?.name || v.active_deployment?.destination?.name || v.routing?.destination_name || "Destination";
+      const destType = mission.destination?.type === "location" ? "📍 Site" : "🏢 Branch";
+      const isReturn = direction === "going_back";
+
+      missionInfo = `
+        <div>
+          <span class="font-bold ${isReturn ? 'text-indigo-700' : 'text-slate-800'} text-xs">
+            ${isReturn ? `⬅️ Return to: ${v.assigned_shop?.name || 'Base'}` : `➡️ ${destType}: ${destName}`}
+          </span>
+          ${mission.destination?.address ? `<div class="text-[10px] text-slate-500 truncate max-w-[190px]" title="${mission.destination.address}">${mission.destination.address}</div>` : ''}
+          <div class="text-[10px] text-slate-600 mt-0.5">
+            ${v.routing?.distance_km ? `<span class="text-indigo-600 font-mono font-medium">${v.routing.distance_km} km</span> <span class="text-slate-400">(~${v.routing.duration_minutes}m)</span>` : ''}
+            ${mission.driver?.name ? `<span class="ml-1 text-slate-500 font-medium">• ${mission.driver.name}</span>` : ''}
+          </div>
+        </div>
+      `;
+    } else {
+      missionInfo = '<span class="text-slate-400 italic">No Active Mission</span>';
+    }
 
     const homebaseInfo = v.assigned_shop
       ? `<span class="font-medium text-slate-800">${v.assigned_shop.name}</span><br><span class="text-[10px] text-slate-500">${v.homebase_distance?.distance_km ?? "--"} km away</span>`
@@ -162,6 +193,10 @@ export function renderFleetTable() {
            Pending Tracker
          </span>`
       : `<span class="text-[10px] font-normal font-mono text-slate-500">${v.imei}</span>`;
+
+    const lat = v.location_latitude || v.latest_telemetry?.latitude;
+    const lng = v.location_longitude || v.latest_telemetry?.longitude;
+    const coordsStr = (lat && lng) ? `${Number(lat).toFixed(4)}, ${Number(lng).toFixed(4)}` : null;
 
     return `
       <tr class="hover:bg-blue-50/40 transition cursor-pointer ${
@@ -177,12 +212,13 @@ export function renderFleetTable() {
           <div>${trackerIndicator}</div>
         </td>
         <td class="py-3 px-3">${statusBadge}</td>
-        <td class="py-3 px-3 max-w-[170px] truncate text-slate-700" title="${v.location_name || ""}">
+        <td class="py-3 px-3 max-w-[190px] truncate text-slate-700" title="${v.location_name || ""}">
           <span class="font-medium text-slate-800">${v.location_name || '<span class="text-slate-400">In Transit</span>'}</span>
-          ${v.latest_telemetry?.speed ? `<br><span class="text-[10px] text-emerald-600 font-medium">${v.latest_telemetry.speed} km/h</span>` : ''}
+          ${coordsStr ? `<div class="text-[10px] font-mono text-slate-400">${coordsStr}</div>` : ''}
+          ${v.latest_telemetry?.speed ? `<span class="text-[10px] text-emerald-600 font-medium">${v.latest_telemetry.speed} km/h</span>` : ''}
         </td>
         <td class="py-3 px-3 text-slate-700">${homebaseInfo}</td>
-        <td class="py-3 px-3 text-xs">${routingInfo}</td>
+        <td class="py-3 px-3 max-w-[220px]">${missionInfo}</td>
       </tr>
     `;
   }).join("");

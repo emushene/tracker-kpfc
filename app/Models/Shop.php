@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Shop extends Model
 {
@@ -30,6 +31,14 @@ class Shop extends Model
         return $this->hasMany(
             Vehicle::class,
             'assigned_shop_id'
+        );
+    }
+
+    public function deployments(): MorphMany
+    {
+        return $this->morphMany(
+            VehicleDeployment::class,
+            'destination'
         );
     }
 }

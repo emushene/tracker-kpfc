@@ -79,7 +79,7 @@
       </div>
       <nav class="grid gap-1" aria-label="Maintenance sections">
         <a href="/maintenance" class="flex items-center gap-3 rounded-md px-3 py-3 text-sm hover:bg-slate-100"><i data-lucide="wrench" class="h-4 w-4 text-blue-700"></i>Maintenance</a>
-        <a href="/maintenance?create-ticket=1" class="flex items-center gap-3 rounded-md px-3 py-3 text-sm hover:bg-slate-100"><i data-lucide="plus" class="h-4 w-4 text-blue-700"></i>New maintenance ticket</a>
+        <!-- <a href="/maintenance?create-ticket=1" class="flex items-center gap-3 rounded-md px-3 py-3 text-sm hover:bg-slate-100"><i data-lucide="plus" class="h-4 w-4 text-blue-700"></i>New maintenance ticket</a>  -->
         <a href="/inventory" class="flex items-center gap-3 rounded-md px-3 py-3 text-sm hover:bg-slate-100"><i data-lucide="package" class="h-4 w-4 text-emerald-700"></i>Inventory</a>
         <a href="/admin-console" class="flex items-center gap-3 rounded-md px-3 py-3 text-sm hover:bg-slate-100"><i data-lucide="shield-check" class="h-4 w-4 text-slate-700"></i>Admin Console</a>
       </nav>
@@ -283,32 +283,64 @@
             <div id="op-deployment-active" class="hidden bg-white border border-amber-200 rounded-lg p-3 space-y-2.5 shadow-xs">
               <div class="flex items-center justify-between">
                 <span class="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Active Mission</span>
-                <span id="op-deployment-status" class="text-[10px] font-bold px-2 py-0.5 rounded uppercase bg-amber-100 text-amber-800">--</span>
+                <div class="flex items-center gap-1.5">
+                  <span id="op-deployment-direction" class="text-[10px] font-bold px-2 py-0.5 rounded uppercase bg-emerald-100 text-emerald-800">➡️ GOING</span>
+                  <span id="op-deployment-status" class="text-[10px] font-bold px-2 py-0.5 rounded uppercase bg-amber-100 text-amber-800">--</span>
+                </div>
               </div>
-              <div class="text-xs text-slate-800">
-                <div class="font-bold" id="op-deployment-destination">--</div>
+              <div class="text-xs text-slate-800 space-y-1">
+                <div class="flex items-center gap-1">
+                  <span id="op-deployment-type-badge" class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-slate-100 text-slate-600">DESTINATION</span>
+                  <span class="font-bold text-slate-900" id="op-deployment-destination">--</span>
+                </div>
+                <div class="text-slate-500 text-[11px]" id="op-deployment-address">--</div>
                 <div class="text-slate-500 text-[11px]" id="op-deployment-purpose">--</div>
+                <div id="op-deployment-driver" class="text-[11px] text-slate-600 font-medium hidden">
+                  <span class="text-slate-400 font-normal">Driver:</span> <span id="op-driver-name">--</span> (<span id="op-driver-phone">--</span>)
+                </div>
               </div>
+
+              <!-- Driver Journey State Controls -->
+              <div class="pt-2 border-t border-slate-100">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Driver Journey Status:</span>
+                <div class="grid grid-cols-3 gap-1">
+                  <button type="button" onclick="window.setDeploymentJourneyState('going')" class="px-2 py-1 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 text-center transition" title="Driver is en route to destination">➡️ Going</button>
+                  <button type="button" onclick="window.setDeploymentJourneyState('at_stop')" class="px-2 py-1 rounded text-[11px] font-semibold bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 text-center transition" title="Driver has arrived at destination stop">📍 At Stop</button>
+                  <button type="button" onclick="window.setDeploymentJourneyState('going_back')" class="px-2 py-1 rounded text-[11px] font-semibold bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 text-center transition" title="Driver is heading back to home base">⬅️ Going Back</button>
+                </div>
+              </div>
+
               <div class="flex gap-2 pt-1 border-t border-slate-100">
                 <button onclick="openMissionRouteMap()" class="inline-flex items-center justify-center gap-1 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-lg transition" title="View plotted mission route on map">
                   <i data-lucide="map" class="w-3.5 h-3.5 text-amber-500"></i> Route
                 </button>
-                <button onclick="releaseDeployment()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold py-1.5 rounded-lg transition">Complete Mission</button>
-                <button id="cancel-deployment-button" onclick="cancelDeployment()" class="flex-1 bg-red-600 hover:bg-red-500 text-white text-xs font-semibold py-1.5 rounded-lg transition">Cancel Mission</button>
+                <button onclick="releaseDeployment()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold py-1.5 rounded-lg transition">Complete</button>
+                <button id="cancel-deployment-button" onclick="cancelDeployment()" class="flex-1 bg-red-600 hover:bg-red-500 text-white text-xs font-semibold py-1.5 rounded-lg transition">Cancel</button>
               </div>
             </div>
 
             <!-- New Mission Form -->
             <div id="op-deployment-form" class="space-y-2.5">
-              <p class="text-[11px] text-slate-600">Assign a temporary destination shop or client depot. Overrides home base routing.</p>
+              <p class="text-[11px] text-slate-600">Dispatch vehicle to an internal branch or client site/depot.</p>
               <div>
-                <label class="text-[10px] uppercase font-bold text-slate-500 block mb-1">Destination Branch</label>
+                <label class="text-[10px] uppercase font-bold text-slate-500 block mb-1">Destination (Branch or Customer Site)</label>
                 <select id="deploy-shop-select" class="w-full bg-white border border-slate-300 text-xs rounded-lg px-3 py-2 text-slate-700 focus:outline-none focus:border-amber-500"></select>
               </div>
 
               <div>
                 <label class="text-[10px] uppercase font-bold text-slate-500 block mb-1">Mission Purpose</label>
-                <input id="deploy-purpose" type="text" placeholder="e.g. Stock Transfer / Customer Delivery" class="w-full bg-white border border-slate-300 text-xs rounded-lg px-3 py-2 text-slate-700 focus:outline-none focus:border-amber-500">
+                <input id="deploy-purpose" type="text" placeholder="e.g. Stock Delivery / Depot Transfer" class="w-full bg-white border border-slate-300 text-xs rounded-lg px-3 py-2 text-slate-700 focus:outline-none focus:border-amber-500">
+              </div>
+
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="text-[10px] uppercase font-bold text-slate-500 block mb-1">Driver Name (Optional)</label>
+                  <input id="deploy-driver-name" type="text" placeholder="e.g. John Doe" class="w-full bg-white border border-slate-300 text-xs rounded-lg px-3 py-1.5 text-slate-700 focus:outline-none focus:border-amber-500">
+                </div>
+                <div>
+                  <label class="text-[10px] uppercase font-bold text-slate-500 block mb-1">Driver Phone (Optional)</label>
+                  <input id="deploy-driver-phone" type="text" placeholder="e.g. 0712345678" class="w-full bg-white border border-slate-300 text-xs rounded-lg px-3 py-1.5 text-slate-700 focus:outline-none focus:border-amber-500">
+                </div>
               </div>
 
               <button onclick="submitDispatch()" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs py-2 rounded-lg transition shadow-xs">Dispatch Vehicle</button>

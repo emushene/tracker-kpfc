@@ -3,23 +3,45 @@
  */
 
 import { state, getSelectedVehicle } from "./state.js";
-import { assignHomeShop, dispatchDeployment, updateDeploymentAction } from "./api.js";
+import { assignHomeShop, dispatchDeployment, updateDeploymentAction, updateDeploymentJourneyState } from "./api.js";
 import { showToast } from "./toast.js";
 import { flyToCoordinates } from "./map.js";
 
 export function populateShopDropdowns(shops) {
   const assignSelect = document.getElementById("assign-shop-select");
-  const deploySelect = document.getElementById("deploy-shop-select");
-
   if (assignSelect) {
     assignSelect.innerHTML = '<option value="">-- Choose Home Base --</option>' +
       shops.map(s => `<option value="${s.id}">${s.name} (${s.code})</option>`).join("");
   }
+}
 
-  if (deploySelect) {
-    deploySelect.innerHTML = '<option value="">-- Choose Destination --</option>' +
-      shops.map(s => `<option value="${s.id}">${s.name} (${s.code})</option>`).join("");
+export function populateDestinationDropdowns(destinations) {
+  const deploySelect = document.getElementById("deploy-shop-select");
+  if (!deploySelect) return;
+
+  const shops = destinations?.shops || [];
+  const locations = destinations?.locations || [];
+
+  let html = '<option value="">-- Choose Destination (Branch or Customer Site) --</option>';
+
+  if (shops.length > 0) {
+    html += '<optgroup label="🏢 Internal Branches & Shops">';
+    shops.forEach(s => {
+      html += `<option value="shop:${s.id}" data-type="shop" data-id="${s.id}">Branch: ${s.name} (${s.code || 'Shop'})</option>`;
+    });
+    html += '</optgroup>';
   }
+
+  if (locations.length > 0) {
+    html += '<optgroup label="📍 Customer Sites, Depots & Hubs">';
+    locations.forEach(l => {
+      const addr = l.address ? ` - ${l.address}` : '';
+      html += `<option value="location:${l.id}" data-type="location" data-id="${l.id}">${l.name} (${l.code || 'Site'})${addr}</option>`;
+    });
+    html += '</optgroup>';
+  }
+
+  deploySelect.innerHTML = html;
 }
 
 export function updateOperationsPanel() {
@@ -92,25 +114,72 @@ export function updateOperationsPanel() {
   const deployActiveContainer = document.getElementById("op-deployment-active");
   const deployFormContainer = document.getElementById("op-deployment-form");
   const deployStatus = document.getElementById("op-deployment-status");
+  const deployDirection = document.getElementById("op-deployment-direction");
+  const deployTypeBadge = document.getElementById("op-deployment-type-badge");
   const deployDestination = document.getElementById("op-deployment-destination");
+  const deployAddress = document.getElementById("op-deployment-address");
   const deployPurpose = document.getElementById("op-deployment-purpose");
+  const deployDriverContainer = document.getElementById("op-deployment-driver");
+  const deployDriverName = document.getElementById("op-driver-name");
+  const deployDriverPhone = document.getElementById("op-driver-phone");
   const deployCancelBtn = document.getElementById("cancel-deployment-button");
 
   const deployment = vehicle.active_deployment;
+  const mission = vehicle.active_mission || {};
+  const hasActiveMission = Boolean(deployment || mission.has_active_mission);
 
-  if (deployment) {
+  if (hasActiveMission) {
     if (deployActiveContainer) deployActiveContainer.classList.remove("hidden");
     if (deployFormContainer) deployFormContainer.classList.add("hidden");
-    if (deployDestination) deployDestination.innerText = deployment.destination?.name || "Branch Destination";
-    if (deployPurpose) deployPurpose.innerText = deployment.purpose || "Urgent Branch Delivery";
+
+    const dest = mission.destination || deployment?.destination || {};
+    const destName = dest.name || "Destination";
+    const destType = dest.type === "location" ? "Customer Site / Depot" : "Branch Shop";
+    const destAddr = dest.address || (dest.latitude && dest.longitude ? `GPS: ${Number(dest.latitude).toFixed(4)}, ${Number(dest.longitude).toFixed(4)}` : "");
+    const direction = mission.direction || deployment?.journey_state || "going";
+
+    if (deployDestination) deployDestination.innerText = destName;
+    if (deployTypeBadge) {
+      deployTypeBadge.innerText = destType.toUpperCase();
+      deployTypeBadge.className = `px-1.5 py-0.2 rounded text-[10px] font-bold ${dest.type === "location" ? "bg-amber-100 text-amber-800" : "bg-blue-100 text-blue-800"}`;
+    }
+    if (deployAddress) deployAddress.innerText = destAddr || "No street address recorded";
+    if (deployPurpose) deployPurpose.innerText = deployment?.purpose || mission.status || "Operational Fleet Mission";
+
+    if (deployDirection) {
+      if (direction === "going_back") {
+        deployDirection.innerText = "⬅️ RETURNING TO BASE";
+        deployDirection.className = "text-[10px] font-bold px-2 py-0.5 rounded uppercase bg-indigo-100 text-indigo-800";
+      } else if (direction === "at_stop") {
+        deployDirection.innerText = "📍 AT STOP / SITE";
+        deployDirection.className = "text-[10px] font-bold px-2 py-0.5 rounded uppercase bg-amber-100 text-amber-800";
+      } else {
+        deployDirection.innerText = "➡️ GOING (OUTBOUND)";
+        deployDirection.className = "text-[10px] font-bold px-2 py-0.5 rounded uppercase bg-emerald-100 text-emerald-800";
+      }
+    }
+
     if (deployStatus) {
-      deployStatus.innerText = deployment.status.toUpperCase();
+      const statusText = (deployment?.status || mission.status || "ACTIVE").toUpperCase();
+      deployStatus.innerText = statusText;
       deployStatus.className = `text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
-        deployment.status === "in_progress" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
+        statusText === "IN_PROGRESS" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
       }`;
     }
+
+    const driver = mission.driver || deployment?.driver || {};
+    if (deployDriverContainer) {
+      if (driver.name || driver.external_id) {
+        deployDriverContainer.classList.remove("hidden");
+        if (deployDriverName) deployDriverName.innerText = driver.name || driver.external_id;
+        if (deployDriverPhone) deployDriverPhone.innerText = driver.phone || "No phone";
+      } else {
+        deployDriverContainer.classList.add("hidden");
+      }
+    }
+
     if (deployCancelBtn) {
-      deployCancelBtn.classList.toggle("hidden", deployment.status === "in_progress");
+      deployCancelBtn.classList.toggle("hidden", deployment?.status === "in_progress" || !deployment);
     }
   } else {
     if (deployActiveContainer) deployActiveContainer.classList.add("hidden");
@@ -189,24 +258,63 @@ export async function submitDispatch(onSuccess) {
 
   const deploySelect = document.getElementById("deploy-shop-select");
   const purposeInput = document.getElementById("deploy-purpose");
+  const driverNameInput = document.getElementById("deploy-driver-name");
+  const driverPhoneInput = document.getElementById("deploy-driver-phone");
 
-  const destinationId = deploySelect ? deploySelect.value : null;
+  const selectedValue = deploySelect ? deploySelect.value : null;
   const purpose = purposeInput ? purposeInput.value.trim() : "";
+  const driverName = driverNameInput ? driverNameInput.value.trim() : "";
+  const driverPhone = driverPhoneInput ? driverPhoneInput.value.trim() : "";
 
-  if (!destinationId) {
-    alert("Please select a destination shop.");
+  if (!selectedValue) {
+    alert("Please select a destination (branch shop or customer site).");
     return;
   }
 
+  let destinationType = "shop";
+  let destinationId = selectedValue;
+
+  if (String(selectedValue).includes(":")) {
+    const parts = String(selectedValue).split(":");
+    destinationType = parts[0];
+    destinationId = parseInt(parts[1], 10);
+  } else {
+    destinationId = parseInt(selectedValue, 10);
+  }
+
   try {
-    await dispatchDeployment(vehicle.id, destinationId, purpose);
-    showToast("Vehicle Dispatched!", "Mission destination set.");
+    await dispatchDeployment(vehicle.id, destinationType, destinationId, purpose, { driverName, driverPhone });
+    showToast("Vehicle Dispatched!", "Mission destination and driver route set.");
     if (purposeInput) purposeInput.value = "";
+    if (driverNameInput) driverNameInput.value = "";
+    if (driverPhoneInput) driverPhoneInput.value = "";
     if (typeof onSuccess === "function") {
       await onSuccess(vehicle.id);
     }
   } catch (err) {
     showToast("Dispatch Failed", err.message, true);
+  }
+}
+
+export async function submitUpdateDeploymentJourneyState(journeyState, onSuccess) {
+  const vehicle = getSelectedVehicle();
+  if (!vehicle) return;
+
+  const deploymentId = vehicle.active_deployment?.id;
+  if (!deploymentId) {
+    showToast("No Active Deployment", "This vehicle has no active deployment.", true);
+    return;
+  }
+
+  try {
+    await updateDeploymentJourneyState(vehicle.id, deploymentId, journeyState);
+    const label = journeyState === "going_back" ? "Returning to Base" : (journeyState === "at_stop" ? "At Stop" : "En Route (Going)");
+    showToast("Journey Updated", `Driver state set to: ${label}`);
+    if (typeof onSuccess === "function") {
+      await onSuccess(vehicle.id);
+    }
+  } catch (err) {
+    showToast("Journey Update Failed", err.message, true);
   }
 }
 

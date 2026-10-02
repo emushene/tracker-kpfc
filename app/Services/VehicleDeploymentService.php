@@ -35,14 +35,22 @@ class VehicleDeploymentService
         string $destinationType,
         int $destinationId,
         ?string $purpose = null,
-        ?string $notes = null
+        ?string $notes = null,
+        ?string $driverExternalUserId = null,
+        ?string $driverName = null,
+        ?string $driverPhone = null,
+        string $journeyState = 'going'
     ): VehicleDeployment {
         return DB::transaction(function () use (
             $vehicle,
             $destinationType,
             $destinationId,
             $purpose,
-            $notes
+            $notes,
+            $driverExternalUserId,
+            $driverName,
+            $driverPhone,
+            $journeyState
         ) {
             $this->validateDestination(
                 $destinationType,
@@ -58,6 +66,10 @@ class VehicleDeploymentService
                 'purpose' => $purpose,
                 'status' => 'planned',
                 'notes' => $notes,
+                'driver_external_user_id' => $driverExternalUserId,
+                'driver_name' => $driverName,
+                'driver_phone' => $driverPhone,
+                'journey_state' => $journeyState,
             ]);
         });
     }
@@ -150,6 +162,26 @@ class VehicleDeploymentService
     }
 
     /**
+     * Update the driver's journey state on a deployment (e.g. going, at_stop, going_back, at_base).
+     */
+    public function updateJourneyState(
+        VehicleDeployment $deployment,
+        string $journeyState
+    ): VehicleDeployment {
+        if (! in_array($journeyState, ['going', 'at_stop', 'going_back', 'at_base'], true)) {
+            throw new InvalidArgumentException(
+                'Invalid journey state. Allowed values: going, at_stop, going_back, at_base.'
+            );
+        }
+
+        $deployment->update([
+            'journey_state' => $journeyState,
+        ]);
+
+        return $deployment->fresh();
+    }
+
+    /**
      * Return the vehicle's current active deployment.
      */
     public function activeDeployment(
@@ -164,8 +196,8 @@ class VehicleDeploymentService
     /**
      * Determine the current routing destination.
      *
-     * Active deployment destination takes priority.
-     * Otherwise the vehicle routes to its permanent home shop.
+     * Active deployment destination takes priority unless returning to base.
+     * When returning to base (or without active deployment), the vehicle routes to its permanent home shop.
      */
     public function routingDestination(
         Vehicle $vehicle
@@ -173,9 +205,40 @@ class VehicleDeploymentService
         $deployment = $this->activeDeployment($vehicle);
 
         if ($deployment !== null) {
+            // When driver is returning to base, route back towards assigned home shop
+            if ($deployment->journey_state === 'going_back') {
+                $homeShop = $vehicle->assignedShop;
+                if ($homeShop !== null) {
+                    return [
+                        'type' => 'shop',
+                        'id' => $homeShop->id,
+                        'name' => $homeShop->name,
+                        'latitude' => (float) $homeShop->latitude,
+                        'longitude' => (float) $homeShop->longitude,
+                        'is_return_to_base' => true,
+                    ];
+                }
+            }
+
             return $this->resolveDeploymentDestination(
                 $deployment
             );
+        }
+
+        // Check active trip if returning to base
+        $trip = $vehicle->activeTrip;
+        if ($trip !== null && $trip->status === 'returning_to_base') {
+            $homeShop = $vehicle->assignedShop;
+            if ($homeShop !== null) {
+                return [
+                    'type' => 'shop',
+                    'id' => $homeShop->id,
+                    'name' => $homeShop->name,
+                    'latitude' => (float) $homeShop->latitude,
+                    'longitude' => (float) $homeShop->longitude,
+                    'is_return_to_base' => true,
+                ];
+            }
         }
 
         $shop = $vehicle->assignedShop;

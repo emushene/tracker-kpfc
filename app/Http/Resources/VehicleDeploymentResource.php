@@ -32,6 +32,12 @@ class VehicleDeploymentResource extends JsonResource
             ] : null,
             'purpose' => $this->purpose,
             'status' => $this->status,
+            'journey_state' => $this->journey_state ?? 'going',
+            'driver' => [
+                'external_user_id' => $this->driver_external_user_id,
+                'name' => $this->driver_name,
+                'phone' => $this->driver_phone,
+            ],
             'dispatched_at' => $this->dispatched_at?->toIso8601String(),
             'started_at' => $this->started_at?->toIso8601String(),
             'completed_at' => $this->completed_at?->toIso8601String(),

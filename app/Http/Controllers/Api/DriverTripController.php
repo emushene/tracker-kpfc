@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Trip;
 use App\Models\TripStop;
 use App\Models\VehicleMileage;
+use App\Services\VehicleRouteService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -260,6 +261,78 @@ class DriverTripController extends Controller
             'message' => 'Return-to-base request submitted successfully.',
             'data' => $returnRequest,
         ], 201);
+    }
+
+    /**
+     * Update driver journey direction (going, at_stop, going_back) and live position.
+     */
+    public function updateJourneyState(
+        Request $request,
+        Trip $trip,
+        VehicleRouteService $routeService
+    ): JsonResponse {
+        $driverId = $this->resolveDriverId($request);
+
+        if ($trip->driver_external_user_id !== $driverId && ! $request->user()?->canWrite()) {
+            return response()->json([
+                'message' => 'You are not authorized to update journey state for this trip.',
+            ], 403);
+        }
+
+        if (! $trip->isActive()) {
+            return response()->json([
+                'message' => 'Journey state can only be updated for active trips.',
+            ], 422);
+        }
+
+        $validated = $request->validate([
+            'direction' => ['required', 'string', 'in:going,at_stop,going_back'],
+            'latitude' => ['nullable', 'numeric'],
+            'longitude' => ['nullable', 'numeric'],
+            'location_name' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $direction = $validated['direction'];
+
+        if ($direction === 'going_back') {
+            $trip->update([
+                'status' => 'returning_to_base',
+            ]);
+        } elseif ($trip->status === 'returning_to_base' && $direction === 'going') {
+            $trip->update([
+                'status' => 'in_progress',
+            ]);
+        }
+
+        if (! empty($validated['latitude']) && ! empty($validated['longitude']) && $trip->vehicle) {
+            $trip->vehicle->positions()->create([
+                'latitude' => (float) $validated['latitude'],
+                'longitude' => (float) $validated['longitude'],
+                'gps_time' => now()->timestamp,
+            ]);
+
+            $trip->vehicle->update([
+                'location_name' => $validated['location_name'] ?? $trip->vehicle->location_name,
+                'location_latitude' => (float) $validated['latitude'],
+                'location_longitude' => (float) $validated['longitude'],
+                'location_updated_at' => now(),
+                'last_position_at' => now(),
+            ]);
+        }
+
+        if ($trip->vehicle) {
+            try {
+                $routeService->updateRoute($trip->vehicle->fresh());
+            } catch (\Throwable $e) {
+                // Ignore route calculation failure
+            }
+        }
+
+        return response()->json([
+            'message' => "Journey direction updated to {$direction}.",
+            'direction' => $direction,
+            'data' => $trip->fresh(['vehicle.assignedShop', 'stops']),
+        ]);
     }
 
     /**

@@ -38,8 +38,11 @@ class ReturnToBaseController extends Controller
     /**
      * Review and approve or deny a return-to-base request.
      */
-    public function decision(Request $request, ReturnToBaseRequest $returnRequest): JsonResponse
-    {
+    public function decision(
+        Request $request,
+        ReturnToBaseRequest $returnRequest,
+        \App\Services\VehicleRouteService $routeService
+    ): JsonResponse {
         if ($returnRequest->status !== 'pending') {
             return response()->json([
                 'message' => "This return request has already been {$returnRequest->status}.",
@@ -63,11 +66,19 @@ class ReturnToBaseController extends Controller
             'manager_comments' => $validated['manager_comments'] ?? null,
         ]);
 
-        // If approved, update the parent trip status to returning_to_base
+        // If approved, update the parent trip status to returning_to_base and recalculate route to base
         if ($decision === 'approved') {
             $returnRequest->trip->update([
                 'status' => 'returning_to_base',
             ]);
+
+            if ($returnRequest->trip->vehicle) {
+                try {
+                    $routeService->updateRoute($returnRequest->trip->vehicle->fresh());
+                } catch (\Throwable $e) {
+                    // Ignore route calculation errors in decision endpoint
+                }
+            }
         }
 
         return response()->json([

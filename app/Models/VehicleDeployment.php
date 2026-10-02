@@ -18,6 +18,10 @@ class VehicleDeployment extends Model
         'started_at',
         'completed_at',
         'notes',
+        'driver_external_user_id',
+        'driver_name',
+        'driver_phone',
+        'journey_state',
     ];
 
     protected $casts = [
@@ -76,5 +80,29 @@ class VehicleDeployment extends Model
     public function isCancelled(): bool
     {
         return $this->status === 'cancelled';
+    }
+
+    /**
+     * Determine if driver is currently going outbound to destination.
+     */
+    public function isGoing(): bool
+    {
+        return $this->journey_state === 'going';
+    }
+
+    /**
+     * Determine if driver is currently returning to base.
+     */
+    public function isGoingBack(): bool
+    {
+        return $this->journey_state === 'going_back';
+    }
+
+    /**
+     * Determine if driver has arrived at the destination/stop.
+     */
+    public function isAtStop(): bool
+    {
+        return $this->journey_state === 'at_stop';
     }
 }

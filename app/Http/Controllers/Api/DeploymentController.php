@@ -10,6 +10,7 @@ use App\Models\VehicleDeployment;
 use App\Services\VehicleDeploymentService;
 use App\Services\VehicleRouteService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
@@ -31,6 +32,10 @@ class DeploymentController extends Controller
         $destinationId = (int) $request->input('destination_id');
         $purpose = $request->input('purpose');
         $notes = $request->input('notes');
+        $driverId = $request->input('driver_external_user_id');
+        $driverName = $request->input('driver_name');
+        $driverPhone = $request->input('driver_phone');
+        $journeyState = $request->input('journey_state', 'going');
 
         // Status defaults to 'dispatched' to satisfy immediate dispatch requirements
         $requestedStatus = $request->input('status', 'dispatched');
@@ -41,7 +46,11 @@ class DeploymentController extends Controller
             destinationType: $destinationType,
             destinationId: $destinationId,
             purpose: $purpose,
-            notes: $notes
+            notes: $notes,
+            driverExternalUserId: $driverId,
+            driverName: $driverName,
+            driverPhone: $driverPhone,
+            journeyState: $journeyState
         );
 
         // Step 2: If dispatched status is requested, transition the deployment immediately
@@ -112,6 +121,39 @@ class DeploymentController extends Controller
         return response()->json([
             'message' => 'Vehicle deployment cancelled successfully.',
             'deployment' => new VehicleDeploymentResource($deploymentModel->load('destination')),
+        ]);
+    }
+
+    /**
+     * Update the driver's journey state on an active deployment (going, at_stop, going_back, at_base).
+     */
+    public function updateJourneyState(
+        Request $request,
+        Vehicle $vehicle,
+        int $deployment,
+        VehicleDeploymentService $deploymentService,
+        VehicleRouteService $routeService
+    ): JsonResponse {
+        $validated = $request->validate([
+            'journey_state' => ['required', 'string', 'in:going,at_stop,going_back,at_base'],
+        ]);
+
+        $deploymentModel = $this->deploymentForVehicle($vehicle, $deployment);
+
+        try {
+            $deploymentModel = $deploymentService->updateJourneyState(
+                $deploymentModel,
+                $validated['journey_state']
+            );
+        } catch (\InvalidArgumentException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 422);
+        }
+
+        $this->recalculateRoute($vehicle, $routeService, $deploymentModel->id);
+
+        return response()->json([
+            'message' => "Deployment journey state updated to {$deploymentModel->journey_state}.",
+            'deployment' => new VehicleDeploymentResource($deploymentModel->load(['destination', 'vehicle'])),
         ]);
     }
 

@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\DeploymentController;
 use App\Http\Controllers\Api\DriverChecklistController;
 use App\Http\Controllers\Api\DriverTripController;
 use App\Http\Controllers\Api\InventoryController;
+use App\Http\Controllers\Api\LocationController;
 use App\Http\Controllers\Api\MaintenanceController;
 use App\Http\Controllers\Api\ReturnToBaseController;
 use App\Http\Controllers\Api\ShopController;
@@ -29,6 +30,12 @@ use App\Http\Middleware\VerifyKpfcAdminToken;
 Route::middleware(['web', 'auth', 'fleet.access', 'fleet.write'])->group(function (): void {
     // GET /api/shops - List active shops for map geofences and vehicle operations
     Route::get('/shops', [ShopController::class, 'index'])->name('api.shops.index');
+
+    // GET /api/locations - List active customer sites & depots
+    Route::get('/locations', [LocationController::class, 'index'])->name('api.locations.index');
+
+    // GET /api/destinations - List categorized destinations (shops + locations) for dispatch
+    Route::get('/destinations', [LocationController::class, 'destinations'])->name('api.destinations.index');
 
     Route::prefix('vehicles')->group(function (): void {
         // GET /api/vehicles - List all vehicles with live locations, status, home shops, and active missions
@@ -66,6 +73,9 @@ Route::middleware(['web', 'auth', 'fleet.access', 'fleet.write'])->group(functio
 
         // PATCH /api/vehicles/{vehicle}/deployments/{deployment}/cancel - Cancel a planned or dispatched deployment (write role required)
         Route::patch('/{vehicle}/deployments/{deployment}/cancel', [DeploymentController::class, 'cancel'])->name('api.vehicles.deployments.cancel');
+
+        // PATCH /api/vehicles/{vehicle}/deployments/{deployment}/journey-state - Update driver journey direction (write role required)
+        Route::patch('/{vehicle}/deployments/{deployment}/journey-state', [DeploymentController::class, 'updateJourneyState'])->name('api.vehicles.deployments.journey-state');
     });
 
     /*
@@ -158,6 +168,7 @@ Route::middleware(['web', 'auth', 'fleet.access'])->prefix('driver')->group(func
     Route::get('/trips/{trip}/stops', [DriverTripController::class, 'stops'])->name('api.driver.trips.stops');
     Route::post('/stops/{stop}/arrive', [DriverTripController::class, 'arriveStop'])->name('api.driver.stops.arrive');
     Route::post('/trips/{trip}/return-to-base', [DriverTripController::class, 'returnToBase'])->name('api.driver.trips.return-to-base');
+    Route::post('/trips/{trip}/journey-state', [DriverTripController::class, 'updateJourneyState'])->name('api.driver.trips.journey-state');
     Route::post('/trips/{trip}/complete', [DriverTripController::class, 'completeTrip'])->name('api.driver.trips.complete');
 
     Route::get('/checklists/daily', [DriverChecklistController::class, 'dailyTemplate'])->name('api.driver.checklists.daily');

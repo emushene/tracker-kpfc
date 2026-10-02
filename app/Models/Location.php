@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Location extends Model
 {
@@ -22,11 +22,11 @@ class Location extends Model
         'active' => 'boolean',
     ];
 
-    public function deployments(): HasMany
+    public function deployments(): MorphMany
     {
-        return $this->hasMany(
+        return $this->morphMany(
             VehicleDeployment::class,
-            'destination_location_id'
+            'destination'
         );
     }
 }

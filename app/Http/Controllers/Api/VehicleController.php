@@ -36,6 +36,7 @@ class VehicleController extends Controller
                 'assignedShop',
                 'deployments' => fn ($q) => $q->whereIn('status', ['planned', 'dispatched', 'in_progress'])->with('destination'),
                 'positions' => fn ($q) => $q->latest('gps_time')->limit(1),
+                'activeTrip.stops',
             ]);
 
         // Filter by assigned home shop
@@ -78,6 +79,7 @@ class VehicleController extends Controller
             'assignedShop',
             'deployments' => fn ($q) => $q->whereIn('status', ['planned', 'dispatched', 'in_progress'])->with('destination'),
             'positions' => fn ($q) => $q->latest('gps_time')->limit(1),
+            'activeTrip.stops',
         ]);
 
         return new VehicleResource($vehicle);
@@ -248,6 +250,7 @@ class VehicleController extends Controller
             'assignedShop',
             'deployments' => fn ($q) => $q->whereIn('status', ['planned', 'dispatched', 'in_progress'])->with('destination'),
             'positions' => fn ($q) => $q->latest('gps_time')->limit(1),
+            'activeTrip.stops',
         ]);
 
         return new VehicleLocationResource($vehicle);
@@ -281,6 +284,7 @@ class VehicleController extends Controller
             'assignedShop',
             'deployments' => fn ($q) => $q->whereIn('status', ['planned', 'dispatched', 'in_progress'])->with('destination'),
             'positions' => fn ($q) => $q->latest('gps_time')->limit(1),
+            'activeTrip.stops',
         ])->first();
 
         if (! $vehicle) {
@@ -358,6 +362,7 @@ class VehicleController extends Controller
             'assignedShop',
             'deployments' => fn ($q) => $q->whereIn('status', ['planned', 'dispatched', 'in_progress'])->with('destination'),
             'positions' => fn ($q) => $q->latest('gps_time')->limit(1),
+            'activeTrip.stops',
         ]);
 
         return response()->json([
