@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\ShopController;
 use App\Http\Controllers\Api\VehicleController;
 use App\Http\Controllers\Auth\KpfcSsoController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Middleware\VerifyKpfcAdminToken;
 
 /*
 |--------------------------------------------------------------------------
@@ -118,21 +119,7 @@ Route::middleware(['web', 'auth', 'fleet.access', 'fleet.write'])->group(functio
         Route::post('/tools/{tool}/return', [InventoryController::class, 'returnTool'])->name('api.inventory.tools.return');
     });
 
-    /*
-    |--------------------------------------------------------------------------
-    | Integration API Routes (External Systems / KPFC Admin & Business)
-    |--------------------------------------------------------------------------
-    */
-    Route::prefix('integration/vehicles')->group(function (): void {
-        Route::get('/', [VehicleController::class, 'index'])->name('api.integration.vehicles.index');
-        Route::post('/', [VehicleController::class, 'store'])->name('api.integration.vehicles.store');
-        Route::get('/location', [VehicleController::class, 'queryLocation'])->name('api.integration.vehicles.query-location');
-        Route::get('/{vehicle}', [VehicleController::class, 'show'])->name('api.integration.vehicles.show');
-        Route::patch('/{vehicle}', [VehicleController::class, 'update'])->name('api.integration.vehicles.update');
-        Route::delete('/{vehicle}', [VehicleController::class, 'destroy'])->name('api.integration.vehicles.destroy');
-        Route::get('/{vehicle}/location', [VehicleController::class, 'location'])->name('api.integration.vehicles.location');
-        Route::post('/{vehicle}/location', [VehicleController::class, 'updateLocation'])->name('api.integration.vehicles.update-location');
-    });
+
 
     /*
     |--------------------------------------------------------------------------
@@ -144,6 +131,8 @@ Route::middleware(['web', 'auth', 'fleet.access', 'fleet.write'])->group(functio
         Route::post('/{returnRequest}/decision', [ReturnToBaseController::class, 'decision'])->name('api.fleet.return-requests.decision');
     });
 });
+
+
 
 /*
 |--------------------------------------------------------------------------
@@ -191,3 +180,21 @@ Route::middleware('web')->group(function (): void {
     Route::get('/auth/kpfc/callback', [KpfcSsoController::class, 'callback'])->name('api.auth.kpfc.callback');
     Route::post('/auth/kpfc/logout', [KpfcSsoController::class, 'logout'])->name('api.auth.kpfc.logout');
 });
+
+/*
+    |--------------------------------------------------------------------------
+    | Integration API Routes (External Systems / KPFC Admin & Business)
+    |--------------------------------------------------------------------------
+    */
+Route::prefix('integration/vehicles')
+    ->middleware(VerifyKpfcAdminToken::class)
+    ->group(function (): void {
+        Route::get('/', [VehicleController::class, 'index'])->name('api.integration.vehicles.index');
+        Route::post('/', [VehicleController::class, 'store'])->name('api.integration.vehicles.store');
+        Route::get('/location', [VehicleController::class, 'queryLocation'])->name('api.integration.vehicles.query-location');
+        Route::get('/{vehicle}', [VehicleController::class, 'show'])->name('api.integration.vehicles.show');
+        Route::patch('/{vehicle}', [VehicleController::class, 'update'])->name('api.integration.vehicles.update');
+        Route::delete('/{vehicle}', [VehicleController::class, 'destroy'])->name('api.integration.vehicles.destroy');
+        Route::get('/{vehicle}/location', [VehicleController::class, 'location'])->name('api.integration.vehicles.location');
+        Route::post('/{vehicle}/location', [VehicleController::class, 'updateLocation'])->name('api.integration.vehicles.update-location');
+    });
