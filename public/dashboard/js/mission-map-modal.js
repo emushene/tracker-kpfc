@@ -10,6 +10,7 @@ import { showToast } from "./toast.js";
 
 let modalMap = null;
 let routeLayer = null;
+let routeFenceLayer = null;
 let originMarker = null;
 let destMarker = null;
 
@@ -111,6 +112,9 @@ function ensureModalExists() {
         <span class="flex items-center gap-1.5">
           <span class="block w-6 h-0.5 bg-amber-500 rounded"></span> Road Route
         </span>
+        <span class="flex items-center gap-1.5">
+          <span class="block w-6 h-2 bg-sky-300 rounded opacity-80"></span> 20m Route Fence
+        </span>
         <span class="ml-auto text-[10px]">Route data © OSRM / OpenStreetMap contributors</span>
       </div>
     </div>
@@ -157,11 +161,62 @@ function createLeafletMap() {
 
 function clearRouteOverlays() {
   if (!modalMap) return;
+  if (routeFenceLayer) { modalMap.removeLayer(routeFenceLayer); routeFenceLayer = null; }
   if (routeLayer) { modalMap.removeLayer(routeLayer); routeLayer = null; }
   if (originMarker) { modalMap.removeLayer(originMarker); originMarker = null; }
   if (destMarker) { modalMap.removeLayer(destMarker); destMarker = null; }
 }
 
+function createRouteFencePolygon(latlngs, widthMeters = 20) {
+  if (!Array.isArray(latlngs) || latlngs.length < 2) return null;
+
+  const leftSide = [];
+  const rightSide = [];
+  const metersPerLatitude = 111_320;
+
+  for (let i = 0; i < latlngs.length; i += 1) {
+    const [lat, lng] = latlngs[i];
+    const prev = latlngs[Math.max(0, i - 1)];
+    const next = latlngs[Math.min(latlngs.length - 1, i + 1)];
+
+    const [prevLat, prevLng] = prev;
+    const [nextLat, nextLng] = next;
+
+    const avgLat = (lat + prevLat + nextLat) / 3;
+    const avgLatRad = (avgLat * Math.PI) / 180;
+    const metersPerLongitude = 111_320 * Math.cos(avgLatRad);
+
+    let dx = nextLng - prevLng;
+    let dy = nextLat - prevLat;
+
+    if (i === 0) {
+      dx = nextLng - lng;
+      dy = nextLat - lat;
+    } else if (i === latlngs.length - 1) {
+      dx = lng - prevLng;
+      dy = lat - prevLat;
+    }
+
+    const segmentLength = Math.hypot(dx * metersPerLongitude, dy * metersPerLatitude) || 1;
+    const normalX = -((dy * metersPerLatitude) / segmentLength);
+    const normalY = ((dx * metersPerLongitude) / segmentLength);
+
+    const latOffset = (normalY * widthMeters) / metersPerLatitude;
+    const lngOffset = (normalX * widthMeters) / metersPerLongitude;
+
+    leftSide.push([lat + latOffset, lng + lngOffset]);
+    rightSide.push([lat - latOffset, lng - lngOffset]);
+  }
+
+  const polygon = [
+    ...leftSide,
+    ...[...rightSide].reverse(),
+  ];
+
+  if (polygon.length < 3) return null;
+
+  return polygon;
+}
 
 // ─── OSRM Route Fetch ─────────────────────────────────────────────────────────
 
@@ -301,6 +356,14 @@ async function _initMapAndRoute(vehicle, deployment, destShop, plate, dest, load
 
       // OSRM returns [lng, lat]; Leaflet needs [lat, lng]
       const latlngs = route.coordinates.map(([lng, lat]) => [lat, lng]);
+
+      routeFenceLayer = L.polygon(createRouteFencePolygon(latlngs, 20), {
+        color: "#38bdf8",
+        weight: 1,
+        opacity: 0.9,
+        fillColor: "#7dd3fc",
+        fillOpacity: 0.18,
+      }).addTo(map);
 
       routeLayer = L.polyline(latlngs, {
         color: "#f59e0b",

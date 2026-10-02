@@ -35,6 +35,7 @@ class Vehicle extends Model
         'route_calculated_at',
         'route_latitude',
         'route_longitude',
+        'route_geometry',
         'route_destination_type',
         'route_destination_id',
     ];
@@ -53,6 +54,7 @@ class Vehicle extends Model
         'route_calculated_at' => 'datetime',
         'route_latitude' => 'float',
         'route_longitude' => 'float',
+        'route_geometry' => 'array',
         'route_destination_id' => 'integer',
     ];
 

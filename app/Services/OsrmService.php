@@ -26,7 +26,8 @@ class OsrmService
                 '/route/v1/driving/'.
                 $coordinates,
                 [
-                    'overview' => 'false',
+                    'overview' => 'full',
+                    'geometries' => 'geojson',
                     'steps' => 'false',
                 ]
             );
@@ -54,6 +55,8 @@ class OsrmService
 
         $route = $data['routes'][0];
 
+        $geometry = $route['geometry']['coordinates'] ?? [];
+
         return [
             'distance_meters' => (int) round(
                 (float) ($route['distance'] ?? 0)
@@ -61,6 +64,7 @@ class OsrmService
             'duration_seconds' => (int) round(
                 (float) ($route['duration'] ?? 0)
             ),
+            'geometry' => is_array($geometry) ? $geometry : [],
         ];
     }
 }

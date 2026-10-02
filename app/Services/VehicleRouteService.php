@@ -141,6 +141,7 @@ class VehicleRouteService
             // Position used for this OSRM calculation.
             'route_latitude' => $latitude,
             'route_longitude' => $longitude,
+            'route_geometry' => $route['geometry'] ?? [],
 
             // Destination used for this OSRM calculation.
             'route_destination_type' => $destination['type'],

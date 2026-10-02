@@ -10,6 +10,7 @@ use App\Http\Requests\UpdateVehicleRequest;
 use App\Http\Resources\VehicleLocationResource;
 use App\Http\Resources\VehicleResource;
 use App\Models\Vehicle;
+use App\Services\RouteFenceAlertService;
 use App\Services\ShopLocationService;
 use App\Services\VehicleRouteService;
 use Illuminate\Http\JsonResponse;
@@ -303,7 +304,8 @@ class VehicleController extends Controller
         UpdateVehicleLocationRequest $request,
         Vehicle $vehicle,
         ShopLocationService $shopLocationService,
-        VehicleRouteService $routeService
+        VehicleRouteService $routeService,
+        RouteFenceAlertService $routeFenceAlertService
     ): JsonResponse {
         $validated = $request->validated();
 
@@ -350,7 +352,9 @@ class VehicleController extends Controller
 
         // Trigger route recalculation if vehicle is dispatched or assigned to a home shop
         try {
-            $routeService->updateRoute($vehicle->fresh());
+            $vehicle = $vehicle->fresh();
+            $routeService->updateRoute($vehicle);
+            $routeFenceAlertService->checkAndTrigger($vehicle, $latitude, $longitude, $validated['speed'] ?? null);
         } catch (\Throwable $e) {
             Log::warning('OSRM route calculation failed after vehicle location update.', [
                 'vehicle_id' => $vehicle->id,
