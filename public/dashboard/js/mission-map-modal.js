@@ -78,7 +78,7 @@ function ensureModalExists() {
       </div>
 
       <!-- Map fills remaining space -->
-      <div id="mission-map-container" class="flex-1 relative">
+      <div id="mission-map-container" class="flex-1 relative min-h-0" style="min-height: 280px;">
         <!-- Loading overlay -->
         <div id="mission-map-loading" class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white gap-3">
           <div class="w-10 h-10 rounded-full border-4 border-amber-200 border-t-amber-500 animate-spin"></div>
@@ -332,6 +332,7 @@ export function openMissionMapModal(vehicle, deployment, destShop) {
 async function _initMapAndRoute(vehicle, deployment, destShop, plate, dest, loading, errorDiv, errorMsg, statsBar) {
   // Create the map now that the container is visible and has real dimensions
   const map = createLeafletMap();
+  requestAnimationFrame(() => map.invalidateSize());
 
   // Coordinates
   const fromLat = Number(vehicle.location_latitude || vehicle.latest_telemetry?.latitude);
@@ -358,33 +359,33 @@ async function _initMapAndRoute(vehicle, deployment, destShop, plate, dest, load
       const latlngs = route.coordinates.map(([lng, lat]) => [lat, lng]);
 
       routeFenceLayer = L.polygon(createRouteFencePolygon(latlngs, 20), {
-        color: "#38bdf8",
-        weight: 1,
-        opacity: 0.9,
-        fillColor: "#7dd3fc",
-        fillOpacity: 0.18,
+        color: "#0284c7",
+        weight: 2,
+        opacity: 1,
+        fillColor: "#38bdf8",
+        fillOpacity: 0.32,
       }).addTo(map);
 
-      routeLayer = L.polyline(latlngs, {
-        color: "#f59e0b",
-        weight: 5,
-        opacity: 0.9,
+      L.polyline(latlngs, {
+        color: "#ffffff",
+        weight: 10,
+        opacity: 0.95,
         lineJoin: "round",
         lineCap: "round",
       }).addTo(map);
 
-      // White dashed centre-line for visual depth
-      L.polyline(latlngs, {
-        color: "#ffffff",
-        weight: 2,
-        opacity: 0.55,
-        dashArray: "8 12",
+      routeLayer = L.polyline(latlngs, {
+        color: "#dc2626",
+        weight: 6,
+        opacity: 1,
+        lineJoin: "round",
+        lineCap: "round",
       }).addTo(map);
 
       originMarker = createPinMarker(fromLat, fromLng, "#2563eb", `${plate}<br>Current Position`).addTo(map);
       destMarker   = createPinMarker(toLat,   toLng,   "#f59e0b", `${dest}<br>Mission Destination`).addTo(map);
 
-      map.fitBounds(L.latLngBounds([[fromLat, fromLng], [toLat, toLng]]), { padding: [48, 48] });
+      map.fitBounds(L.latLngBounds(latlngs), { padding: [48, 48] });
 
       document.getElementById("mission-stat-distance").textContent = formatDistance(route.distanceMeters);
       document.getElementById("mission-stat-duration").textContent = formatDuration(route.durationSeconds);
